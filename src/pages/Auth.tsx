@@ -9,15 +9,31 @@ import { z } from "zod";
 import logo from "@/assets/logo.png";
 
 const emailSchema = z.string().email("Ogiltig e-postadress");
-const passwordSchema = z.string().min(6, "Lösenord måste vara minst 6 tecken");
+const passwordSchema = z
+  .string()
+  .min(8, "Lösenord måste vara minst 8 tecken")
+  .regex(/[A-Z]/, "Lösenord måste innehålla minst en stor bokstav")
+  .regex(/[a-z]/, "Lösenord måste innehålla minst en liten bokstav")
+  .regex(/[0-9]/, "Lösenord måste innehålla minst en siffra");
 const nameSchema = z.string().min(2, "Namn måste vara minst 2 tecken");
 
 type AuthMode = "login" | "signup";
 
+interface RateLimitState {
+  attempts: number;
+  lastAttemptTime: number;
+  blockedUntil: number | null;
+}
+
+const RATE_LIMIT_KEY = "auth_rate_limit";
+const MAX_ATTEMPTS = 5;
+const INITIAL_DELAY = 1000; // 1 second
+const MAX_DELAY = 60000; // 1 minute
+
 const Auth = () => {
   const navigate = useNavigate();
   const { user, signIn, signUp, loading } = useAuth();
-  
+
   const [mode, setMode] = useState<AuthMode>("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -25,12 +41,95 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+
+  // Check rate limit status on mount and periodically
+  useEffect(() => {
+    const checkRateLimit = () => {
+      const now = Date.now();
+      const stored = localStorage.getItem(RATE_LIMIT_KEY);
+
+      if (stored) {
+        const state: RateLimitState = JSON.parse(stored);
+
+        if (state.blockedUntil && state.blockedUntil > now) {
+          setRateLimitedUntil(state.blockedUntil);
+        } else if (state.blockedUntil && state.blockedUntil <= now) {
+          // Block period expired, reset
+          localStorage.removeItem(RATE_LIMIT_KEY);
+          setRateLimitedUntil(null);
+        }
+      }
+    };
+
+    checkRateLimit();
+    const interval = setInterval(checkRateLimit, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     if (user && !loading) {
+      // Clear rate limiting on successful auth
+      localStorage.removeItem(RATE_LIMIT_KEY);
+      setRateLimitedUntil(null);
       navigate("/dashboard");
     }
   }, [user, loading, navigate]);
+
+  const getRateLimitState = (): RateLimitState => {
+    const stored = localStorage.getItem(RATE_LIMIT_KEY);
+    if (stored) {
+      return JSON.parse(stored);
+    }
+    return { attempts: 0, lastAttemptTime: 0, blockedUntil: null };
+  };
+
+  const recordFailedAttempt = () => {
+    const now = Date.now();
+    const state = getRateLimitState();
+    const newAttempts = state.attempts + 1;
+
+    if (newAttempts >= MAX_ATTEMPTS) {
+      // Calculate exponential backoff delay
+      const delayMultiplier = Math.pow(2, newAttempts - MAX_ATTEMPTS);
+      const delay = Math.min(INITIAL_DELAY * delayMultiplier, MAX_DELAY);
+      const blockedUntil = now + delay;
+
+      const newState: RateLimitState = {
+        attempts: newAttempts,
+        lastAttemptTime: now,
+        blockedUntil,
+      };
+
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(newState));
+      setRateLimitedUntil(blockedUntil);
+
+      const seconds = Math.ceil(delay / 1000);
+      toast.error(`För många misslyckade försök. Vänta ${seconds} sekunder.`);
+    } else {
+      const newState: RateLimitState = {
+        attempts: newAttempts,
+        lastAttemptTime: now,
+        blockedUntil: null,
+      };
+
+      localStorage.setItem(RATE_LIMIT_KEY, JSON.stringify(newState));
+
+      if (newAttempts >= 3) {
+        toast.warning(`Varning: ${MAX_ATTEMPTS - newAttempts} försök kvar innan tillfällig spärr.`);
+      }
+    }
+  };
+
+  const isRateLimited = (): boolean => {
+    if (rateLimitedUntil && rateLimitedUntil > Date.now()) {
+      const remainingSeconds = Math.ceil((rateLimitedUntil - Date.now()) / 1000);
+      toast.error(`Vänta ${remainingSeconds} sekunder innan du försöker igen.`);
+      return true;
+    }
+    return false;
+  };
 
   const validate = (): boolean => {
     const newErrors: { email?: string; password?: string; name?: string } = {};
@@ -58,31 +157,35 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
+    // Check rate limiting first
+    if (isRateLimited()) {
+      return;
+    }
+
     if (!validate()) return;
-    
+
     setIsSubmitting(true);
-    
+
     try {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) {
-          if (error.message.includes("Invalid login")) {
-            toast.error("Fel e-post eller lösenord");
-          } else {
-            toast.error(error.message);
-          }
+          // Record failed login attempt for rate limiting
+          recordFailedAttempt();
+
+          // Generic error message to prevent email enumeration
+          toast.error("Inloggningen misslyckades. Kontrollera dina uppgifter och försök igen.");
         } else {
+          // Success - rate limit cleared in useEffect
           navigate("/dashboard");
         }
       } else {
         const { error } = await signUp(email, password, name);
         if (error) {
-          if (error.message.includes("already registered")) {
-            toast.error("E-postadressen är redan registrerad");
-          } else {
-            toast.error(error.message);
-          }
+          // Generic error message to prevent email enumeration
+          // Don't reveal whether email is already registered
+          toast.error("Registreringen misslyckades. Försök igen eller kontakta support.");
         } else {
           toast.success("Verifieringslänk skickad till din e-post");
           navigate("/verify-email");
@@ -215,7 +318,7 @@ const Auth = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Minst 6 tecken"
+                    placeholder="Minst 8 tecken (stor/liten bokstav + siffra)"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     autoComplete={mode === "login" ? "current-password" : "new-password"}
@@ -237,10 +340,12 @@ const Auth = () => {
               <Button
                 type="submit"
                 className="w-full h-11 text-base font-medium mt-6"
-                disabled={isSubmitting}
+                disabled={isSubmitting || (rateLimitedUntil !== null && rateLimitedUntil > Date.now())}
               >
                 {isSubmitting
                   ? (mode === "login" ? "Loggar in..." : "Skapar konto...")
+                  : rateLimitedUntil && rateLimitedUntil > Date.now()
+                  ? `Vänta ${Math.ceil((rateLimitedUntil - Date.now()) / 1000)}s`
                   : (mode === "login" ? "Logga in" : "Skapa konto")}
               </Button>
             </form>
