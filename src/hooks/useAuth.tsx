@@ -145,7 +145,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
 
-    const { error } = await supabase.auth.signUp({
+    console.log("Attempting signup with email:", email, "redirect:", redirectUrl);
+    
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -154,15 +156,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
+    console.log("Signup response:", { data, error });
+    
     return { error: error as Error | null };
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    console.log("Attempting signin with email:", email);
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
+    console.log("Signin response:", { data, error });
+    
     return { error: error as Error | null };
   }, []);
 
