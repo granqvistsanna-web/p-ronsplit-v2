@@ -170,11 +170,12 @@ The project uses Supabase for authentication and database. Connection details ar
 ### Do
 - Use the custom theme colors (income/expense semantic colors)
 - Implement proper loading states (the app has offline support)
-- Add proper error handling with React Query
+- Use centralized error handling (see `ERROR_HANDLING_GUIDE.md`)
 - Use the established modal patterns (AddExpenseModal, EditExpenseModal, etc.)
 - Test offline functionality for new features
 - Follow the existing form validation pattern (React Hook Form + Zod)
 - Use the centralized utilities in `lib/` for common operations
+- Always use `handleAuthError`, `handleDatabaseError`, etc. instead of raw console.error
 
 ## Environment & Deployment
 
@@ -205,6 +206,77 @@ Before deploying, ensure the Supabase database is properly configured:
 - Development server runs on Vite (typically port 5173)
 - Production builds optimized with Vite's production settings
 - **Important:** Ensure environment variables are configured in your deployment platform
+
+## Error Handling
+
+### Centralized Error Handling
+The project uses a centralized error handling system for consistent logging and user feedback:
+
+**Location:** `src/lib/errorHandling.ts`
+
+**Features:**
+- Structured error logging with categories (AUTH, DATABASE, NETWORK, etc.)
+- Severity levels (INFO, WARNING, ERROR, CRITICAL)
+- Automatic user feedback via toast notifications
+- In-memory error log (last 50 errors)
+- Swedish error messages
+- Ready for external monitoring (Sentry, LogRocket, etc.)
+
+**Usage:**
+```typescript
+import { handleAuthError, handleDatabaseError } from "@/lib/errorHandling";
+
+// Auth errors
+try {
+  await signIn(email, password);
+} catch (error) {
+  handleAuthError(error, "Inloggningen misslyckades", { email });
+}
+
+// Database errors
+try {
+  await supabase.from('expenses').insert(data);
+} catch (error) {
+  handleDatabaseError(error, "Kunde inte spara utgift");
+}
+```
+
+**Documentation:** See `ERROR_HANDLING_GUIDE.md` for complete usage guide.
+
+### Error Handling Best Practices
+- Always use centralized error handlers instead of raw `console.error`
+- Provide context-specific Swedish error messages
+- Include metadata for debugging (user IDs, operation names, etc.)
+- Use appropriate severity levels
+- Never expose sensitive information in error messages
+
+## Security Features
+
+### Authentication Security
+The application implements comprehensive authentication security measures:
+
+- ✅ Email verification enforced for new users
+- ✅ Password complexity requirements (8+ chars, uppercase, lowercase, number)
+- ✅ Rate limiting on login/signup attempts (5 attempts → temporary block)
+- ✅ Idle timeout (30 minutes of inactivity)
+- ✅ Generic error messages (prevents email enumeration)
+- ✅ Complete account deletion via Edge Function
+- ✅ Secure session management
+
+**Documentation:**
+- `AUTH_QA_REPORT.md` - Complete security audit
+- `AUTH_IMPLEMENTATION_PLAN.md` - Implementation details
+- `SUPABASE_RATE_LIMITING.md` - Rate limiting configuration
+- `SUPABASE_EDGE_FUNCTION_SETUP.md` - Edge Function setup
+
+### Optional: Multi-Factor Authentication (MFA)
+MFA is documented but not yet implemented. See `MFA_SETUP_GUIDE.md` for:
+- TOTP-based authentication setup
+- Integration with Google Authenticator, Authy, etc.
+- Recovery code generation
+- Complete implementation guide
+
+**When to implement:** Consider MFA for users managing significant shared expenses or for compliance requirements.
 
 ---
 
