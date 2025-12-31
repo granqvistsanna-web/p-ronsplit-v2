@@ -59,6 +59,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           (sessionUser.email ? sessionUser.email.split("@")[0] : null) ||
           "Användare";
 
+        console.log("Creating profile for user:", sessionUser.id, "with name:", displayName);
+
         const { data: inserted, error: insertError } = await supabase
           .from("profiles")
           .insert({
@@ -67,15 +69,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             email: sessionUser.email ?? "",
           })
           .select("*")
-          .maybeSingle();
+          .single();
 
         if (insertError) {
           console.error("Error creating profile:", insertError);
+
+          // If insert failed due to duplicate, try fetching again
+          if (insertError.code === '23505') { // Unique violation error code
+            console.log("Profile already exists, fetching again...");
+            const { data: existingProfile, error: refetchError } = await supabase
+              .from("profiles")
+              .select("*")
+              .eq("user_id", sessionUser.id)
+              .single();
+
+            if (!refetchError && existingProfile) {
+              setProfile(existingProfile);
+              return;
+            }
+          }
+
+          // If we still can't get/create the profile, this is a critical error
+          console.error("Failed to create or fetch profile after retry");
           return;
         }
 
         if (inserted) {
+          console.log("Profile created successfully:", inserted);
           setProfile(inserted);
+        } else {
+          console.error("Profile insert succeeded but no data returned");
         }
         return;
       }
