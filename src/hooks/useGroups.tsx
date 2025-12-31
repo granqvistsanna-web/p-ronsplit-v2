@@ -60,11 +60,15 @@ export function useGroups() {
         .insert({
           name: "Mitt hushåll",
           is_temporary: false,
-        } as { name: string; is_temporary: boolean; invite_code: string })
+          created_by: user.id,
+        })
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error("Error creating household:", groupError);
+        throw groupError;
+      }
 
       // Add user as member
       const { error: memberError } = await supabase
@@ -338,18 +342,32 @@ export function useGroups() {
       return null;
     }
 
+    console.log("Creating group with name:", name, "for user:", user.id);
+
     try {
-      // Create the group
+      // Create the group - let the database generate invite_code via default
       const { data: groupData, error: groupError } = await supabase
         .from("groups")
         .insert({
           name,
           is_temporary: false,
-        } as { name: string; is_temporary: boolean; invite_code: string })
+          created_by: user.id,
+        })
         .select()
         .single();
 
-      if (groupError) throw groupError;
+      if (groupError) {
+        console.error("Group insert error:", groupError);
+        console.error("Error details:", {
+          code: groupError.code,
+          message: groupError.message,
+          details: groupError.details,
+          hint: groupError.hint,
+        });
+        throw groupError;
+      }
+
+      console.log("Group created:", groupData);
 
       // Add user as member
       const { error: memberError } = await supabase
@@ -359,7 +377,12 @@ export function useGroups() {
           user_id: user.id,
         });
 
-      if (memberError) throw memberError;
+      if (memberError) {
+        console.error("Member insert error:", memberError);
+        throw memberError;
+      }
+
+      console.log("Member added to group");
 
       await fetchGroups();
       
