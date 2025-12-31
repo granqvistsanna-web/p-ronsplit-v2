@@ -157,6 +157,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const signOut = useCallback(async () => {
+    try {
+      // Sign out from Supabase - this will trigger the auth state listener
+      // which will automatically clear user, session, and profile
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        handleAuthError(error, "Kunde inte logga ut", {
+          location: 'signOut'
+        });
+        throw error;
+      }
+
+      // Note: We don't manually clear state here because the
+      // onAuthStateChange listener will handle it automatically
+      // This prevents race conditions and ensures proper state synchronization
+    } catch (error) {
+      // If signOut fails, manually clear state as fallback
+      handleError(error, {
+        category: ErrorCategory.AUTH,
+        severity: ErrorSeverity.ERROR,
+        userMessage: "Utloggning misslyckades, rensar session",
+        metadata: { location: 'signOut-fallback' }
+      });
+      setUser(null);
+      setSession(null);
+      setProfile(null);
+      throw error;
+    }
+  }, []);
+
   // Idle timeout detection - auto logout after 30 minutes of inactivity
   useEffect(() => {
     if (!user) return; // Only run when user is logged in
@@ -223,37 +254,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     console.log("Signin response:", { data, error });
     
     return { error: error as Error | null };
-  }, []);
-
-  const signOut = useCallback(async () => {
-    try {
-      // Sign out from Supabase - this will trigger the auth state listener
-      // which will automatically clear user, session, and profile
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        handleAuthError(error, "Kunde inte logga ut", {
-          location: 'signOut'
-        });
-        throw error;
-      }
-
-      // Note: We don't manually clear state here because the
-      // onAuthStateChange listener will handle it automatically
-      // This prevents race conditions and ensures proper state synchronization
-    } catch (error) {
-      // If signOut fails, manually clear state as fallback
-      handleError(error, {
-        category: ErrorCategory.AUTH,
-        severity: ErrorSeverity.ERROR,
-        userMessage: "Utloggning misslyckades, rensar session",
-        metadata: { location: 'signOut-fallback' }
-      });
-      setUser(null);
-      setSession(null);
-      setProfile(null);
-      throw error;
-    }
   }, []);
 
   const updatePassword = useCallback(async (newPassword: string) => {
