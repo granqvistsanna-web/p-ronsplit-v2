@@ -193,6 +193,12 @@ cp .env.example .env
 # For production, ensure these are set in your deployment platform
 ```
 
+### Database Setup
+Before deploying, ensure the Supabase database is properly configured:
+- See `SUPABASE_DATABASE_SETUP.md` for complete database schema and trigger setup
+- **Critical:** The `handle_new_user()` trigger must be set up to auto-create profiles
+- See `SUPABASE_EDGE_FUNCTION_SETUP.md` for the account deletion Edge Function
+
 ### Deployment
 - Built via Lovable platform
 - Can be deployed via Lovable's sharing/publish feature

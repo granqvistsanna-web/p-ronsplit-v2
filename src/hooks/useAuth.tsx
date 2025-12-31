@@ -1,6 +1,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface UserMetadata {
   name?: string;
@@ -40,7 +41,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [isEmailVerified, setIsEmailVerified] = useState(false);
 
-  const fetchProfile = useCallback(async (sessionUser: User) => {
+  const fetchProfile = useCallback(async (sessionUser: User, retryCount = 0) => {
     try {
       const { data, error } = await supabase
         .from("profiles")
@@ -53,56 +54,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      // If no profile exists yet, create one (allowed by RLS: user inserts own profile)
+      // Profile should always exist (created by database trigger)
+      // If not found, retry a few times to handle edge cases
       if (!data) {
-        // Safely extract display name from user metadata or email
-        const displayName =
-          (sessionUser.user_metadata as UserMetadata)?.name ||
-          (sessionUser.email ? sessionUser.email.split("@")[0] : null) ||
-          "Användare";
+        if (retryCount < 3) {
+          console.log(`Profile not found for user ${sessionUser.id}, retrying... (attempt ${retryCount + 1}/3)`);
 
-        console.log("Creating profile for user:", sessionUser.id, "with name:", displayName);
+          // Exponential backoff: 100ms, 200ms, 400ms
+          await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retryCount)));
 
-        const { data: inserted, error: insertError } = await supabase
-          .from("profiles")
-          .insert({
-            user_id: sessionUser.id,
-            name: displayName,
-            email: sessionUser.email ?? "",
-          })
-          .select("*")
-          .single();
-
-        if (insertError) {
-          console.error("Error creating profile:", insertError);
-
-          // If insert failed due to duplicate, try fetching again
-          if (insertError.code === '23505') { // Unique violation error code
-            console.log("Profile already exists, fetching again...");
-            const { data: existingProfile, error: refetchError } = await supabase
-              .from("profiles")
-              .select("*")
-              .eq("user_id", sessionUser.id)
-              .single();
-
-            if (!refetchError && existingProfile) {
-              setProfile(existingProfile);
-              return;
-            }
-          }
-
-          // If we still can't get/create the profile, this is a critical error
-          console.error("Failed to create or fetch profile after retry");
+          // Retry fetching the profile
+          return fetchProfile(sessionUser, retryCount + 1);
+        } else {
+          console.error("Profile not found after 3 retries. Database trigger may not be set up correctly.");
+          console.error("See SUPABASE_DATABASE_SETUP.md for trigger setup instructions.");
           return;
         }
-
-        if (inserted) {
-          console.log("Profile created successfully:", inserted);
-          setProfile(inserted);
-        } else {
-          console.error("Profile insert succeeded but no data returned");
-        }
-        return;
       }
 
       setProfile(data);
@@ -145,12 +112,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // Handle profile based on session
         if (session?.user) {
-          // Defer profile fetch to avoid blocking
-          setTimeout(() => {
-            if (mounted) {
-              fetchProfile(session.user);
-            }
-          }, 0);
+          // Fetch profile (created automatically by database trigger)
+          fetchProfile(session.user);
         } else {
           // Clear profile on sign out
           setProfile(null);
@@ -168,6 +131,42 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Idle timeout detection - auto logout after 30 minutes of inactivity
+  useEffect(() => {
+    if (!user) return; // Only run when user is logged in
+
+    const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+    let timeoutId: NodeJS.Timeout;
+
+    const resetIdleTimer = () => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(async () => {
+        console.log("User idle timeout - signing out");
+        toast.info("Du har loggats ut på grund av inaktivitet");
+        await signOut();
+      }, IDLE_TIMEOUT);
+    };
+
+    // Activity events to monitor
+    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
+
+    // Add event listeners
+    events.forEach(event => {
+      window.addEventListener(event, resetIdleTimer);
+    });
+
+    // Start the timer
+    resetIdleTimer();
+
+    // Cleanup
+    return () => {
+      clearTimeout(timeoutId);
+      events.forEach(event => {
+        window.removeEventListener(event, resetIdleTimer);
+      });
+    };
+  }, [user, signOut]);
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
@@ -237,7 +236,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       await fetchProfile(user);
     }
-  }, [user]);
+  }, [user, fetchProfile]);
 
   const updateProfile = useCallback(async (name: string) => {
     if (!user) {
