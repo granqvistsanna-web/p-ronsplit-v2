@@ -10,7 +10,6 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { useTheme } from "@/hooks/useTheme";
 import { useMonthSelection } from "@/hooks/useMonthSelection";
-import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { User, Lock, Tag, LogOut, Trash2, ChevronLeft, Users, Plus, Palette, Sun, Moon, Monitor, Edit2, Check, X, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,13 +26,14 @@ import {
 } from "@/components/ui/alert-dialog";
 const Settings = () => {
   const navigate = useNavigate();
-  const { profile, signOut, updatePassword, updateProfile } = useAuth();
+  const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
   const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, createGroup, deleteGroup, selectGroup } = useGroups();
   const { theme, setTheme } = useTheme();
   const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
 
   const [newName, setNewName] = useState("");
   const [isChangingName, setIsChangingName] = useState(false);
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -102,27 +102,23 @@ const Settings = () => {
     setIsDeletingAccount(true);
 
     try {
-      if (profile) {
-        const { error: deleteError } = await supabase
-          .from("profiles")
-          .delete()
-          .eq("user_id", profile.user_id);
+      const { error } = await deleteAccount();
 
-        if (deleteError) {
-          toast.error("Kunde inte radera kontot");
-          setIsDeletingAccount(false);
-          return;
-        }
+      if (error) {
+        toast.error("Kunde inte radera kontot: " + error.message);
+        setIsDeletingAccount(false);
+        setDeleteConfirmEmail("");
+        return;
       }
 
-      await signOut();
-      toast.success("Konto raderat");
+      // Success - user is now signed out
+      toast.success("Ditt konto har raderats permanent");
+      navigate("/auth");
     } catch (error) {
       console.error("Error deleting account:", error);
-      toast.error("Kunde inte radera kontot");
-      navigate("/auth");
-    } finally {
+      toast.error("Ett oväntat fel uppstod");
       setIsDeletingAccount(false);
+      setDeleteConfirmEmail("");
     }
   };
 
@@ -702,19 +698,44 @@ const Settings = () => {
                 </AlertDialogTrigger>
                 <AlertDialogContent className="border border-border mx-4 max-w-md">
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Radera konto?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Detta raderar permanent ditt konto och all data. Denna åtgärd kan inte ångras.
+                    <AlertDialogTitle>Radera konto permanent?</AlertDialogTitle>
+                    <AlertDialogDescription className="space-y-3">
+                      <p>Detta raderar PERMANENT ditt konto och ALL din data:</p>
+                      <ul className="list-disc list-inside space-y-1 text-left text-sm">
+                        <li>Din profil och kontoinformation</li>
+                        <li>Alla utgifter och inkomster du skapat</li>
+                        <li>Ditt gruppmedlemskap</li>
+                        <li>Din inloggning och autentisering</li>
+                      </ul>
+                      <p className="font-semibold text-destructive">Denna åtgärd kan INTE ångras.</p>
                     </AlertDialogDescription>
                   </AlertDialogHeader>
+
+                  <div className="space-y-2 my-4">
+                    <Label htmlFor="deleteConfirm" className="text-sm font-medium">
+                      Skriv din e-postadress för att bekräfta:
+                    </Label>
+                    <Input
+                      id="deleteConfirm"
+                      type="email"
+                      placeholder={profile?.email || "din@email.com"}
+                      value={deleteConfirmEmail}
+                      onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+                      className="font-mono"
+                    />
+                  </div>
+
                   <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                    <AlertDialogCancel className="border-border m-0 w-full sm:w-auto">
+                    <AlertDialogCancel
+                      className="border-border m-0 w-full sm:w-auto"
+                      onClick={() => setDeleteConfirmEmail("")}
+                    >
                       Avbryt
                     </AlertDialogCancel>
                     <AlertDialogAction
                       onClick={handleDeleteAccount}
                       className="bg-destructive text-destructive-foreground hover:bg-destructive/90 m-0 w-full sm:w-auto"
-                      disabled={isDeletingAccount}
+                      disabled={isDeletingAccount || deleteConfirmEmail !== profile?.email}
                     >
                       {isDeletingAccount ? "Raderar..." : "Radera permanent"}
                     </AlertDialogAction>

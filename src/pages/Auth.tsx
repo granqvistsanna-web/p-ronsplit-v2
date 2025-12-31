@@ -84,8 +84,8 @@ const Auth = () => {
             toast.error(error.message);
           }
         } else {
-          toast.success("Konto skapat");
-          navigate("/dashboard");
+          toast.success("Verifieringslänk skickad till din e-post");
+          navigate("/verify-email");
         }
       }
     } finally {

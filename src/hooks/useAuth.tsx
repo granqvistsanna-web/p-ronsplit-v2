@@ -21,6 +21,7 @@ interface AuthContextType {
   session: Session | null;
   profile: Profile | null;
   loading: boolean;
+  isEmailVerified: boolean;
   signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
@@ -37,6 +38,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isEmailVerified, setIsEmailVerified] = useState(false);
 
   const fetchProfile = useCallback(async (sessionUser: User) => {
     try {
@@ -118,6 +120,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       setSession(session);
       setUser(session?.user ?? null);
+      setIsEmailVerified(!!session?.user?.email_confirmed_at);
 
       if (session?.user) {
         fetchProfile(session.user);
@@ -138,6 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         setSession(session);
         setUser(session?.user ?? null);
+        setIsEmailVerified(!!session?.user?.email_confirmed_at);
 
         // Handle profile based on session
         if (session?.user) {
@@ -253,17 +257,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, refreshProfile]);
 
   const deleteAccount = useCallback(async () => {
-    // First sign out, then the account deletion would need a backend function
-    // For now, we'll just sign out - full deletion requires admin API
-    await signOut();
-    return { error: null };
-  }, [signOut]);
+    if (!session?.access_token) {
+      return { error: new Error("Ingen aktiv session") };
+    }
+
+    try {
+      // Call the edge function to delete the account
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error("Error deleting account:", error);
+        return { error: new Error("Kunde inte radera kontot") };
+      }
+
+      console.log("Account deletion response:", data);
+
+      // Sign out the user (this will clear local state)
+      await signOut();
+
+      return { error: null };
+    } catch (error) {
+      console.error("Unexpected error deleting account:", error);
+      return { error: new Error("Ett oväntat fel uppstod") };
+    }
+  }, [session, signOut]);
 
   const value = useMemo(() => ({
     user,
     session,
     profile,
     loading,
+    isEmailVerified,
     signUp,
     signIn,
     signOut,
@@ -271,7 +299,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     updateProfile,
     deleteAccount,
     refreshProfile
-  }), [user, session, profile, loading, signUp, signIn, signOut, updatePassword, updateProfile, deleteAccount, refreshProfile]);
+  }), [user, session, profile, loading, isEmailVerified, signUp, signIn, signOut, updatePassword, updateProfile, deleteAccount, refreshProfile]);
 
   return (
     <AuthContext.Provider value={value}>

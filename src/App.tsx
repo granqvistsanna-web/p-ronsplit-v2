@@ -19,6 +19,7 @@ import Aktivitet from "./pages/Aktivitet";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
+import VerifyEmail from "./pages/VerifyEmail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -72,6 +73,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/" element={<PublicRoute><Landing /></PublicRoute>} />
           <Route path="/auth" element={<PublicRoute><Auth /></PublicRoute>} />
+          <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/analys" element={<ProtectedRoute><Analys /></ProtectedRoute>} />
           <Route path="/aktivitet" element={<ProtectedRoute><Aktivitet /></ProtectedRoute>} />
