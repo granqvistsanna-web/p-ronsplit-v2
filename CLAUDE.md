@@ -177,10 +177,28 @@ The project uses Supabase for authentication and database. Connection details ar
 - Use the centralized utilities in `lib/` for common operations
 
 ## Environment & Deployment
+
+### Environment Variables
+The application requires the following environment variables:
+
+- `VITE_SUPABASE_URL` - Your Supabase project URL
+- `VITE_SUPABASE_ANON_KEY` - Your Supabase anonymous/publishable key
+
+**Setup:**
+```bash
+# Copy the example file
+cp .env.example .env
+
+# The .env file is already configured with the project values
+# For production, ensure these are set in your deployment platform
+```
+
+### Deployment
 - Built via Lovable platform
 - Can be deployed via Lovable's sharing/publish feature
 - Development server runs on Vite (typically port 5173)
 - Production builds optimized with Vite's production settings
+- **Important:** Ensure environment variables are configured in your deployment platform
 
 ---
 
