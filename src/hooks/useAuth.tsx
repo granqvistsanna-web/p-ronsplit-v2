@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext, ReactNode, useCallback,
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { handleAuthError, handleDatabaseError, ErrorSeverity, ErrorCategory, handleError } from "@/lib/errorHandling";
 
 interface UserMetadata {
   name?: string;
@@ -50,7 +51,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (error) {
-        console.error("Error fetching profile:", error);
+        handleDatabaseError(error, "Kunde inte hämta profil", {
+          userId: sessionUser.id,
+          retryCount
+        });
         return;
       }
 
@@ -66,20 +70,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Retry fetching the profile
           return fetchProfile(sessionUser, retryCount + 1);
         } else {
-          console.error("Profile not found after 3 retries. Database trigger may not be set up correctly.");
-          console.error("See SUPABASE_DATABASE_SETUP.md for trigger setup instructions.");
+          handleError(new Error("Profile not found after 3 retries"), {
+            category: ErrorCategory.DATABASE,
+            severity: ErrorSeverity.CRITICAL,
+            userMessage: "Kunde inte ladda profil. Se SUPABASE_DATABASE_SETUP.md för hjälp.",
+            metadata: { userId: sessionUser.id, retries: 3 }
+          });
           return;
         }
       }
 
       setProfile(data);
     } catch (error) {
-      console.error("Unexpected error in fetchProfile:", error);
+      handleDatabaseError(error, "Oväntat fel vid hämtning av profil", {
+        userId: sessionUser.id
+      });
     }
   }, []); // No dependencies needed - uses setProfile which is stable
 
   useEffect(() => {
     let mounted = true;
+
+    // Timeout fallback to ensure loading doesn't stay true forever
+    // If auth initialization takes longer than 5 seconds, force loading to false
+    const loadingTimeout = setTimeout(() => {
+      if (mounted) {
+        console.warn("Auth initialization timeout - setting loading to false");
+        setLoading(false);
+      }
+    }, 5000);
 
     // Initialize session state
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -94,10 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       setLoading(false);
+      clearTimeout(loadingTimeout);
     }).catch((error) => {
-      console.error("Error initializing auth session:", error);
+      handleAuthError(error, "Kunde inte initiera sessionen", {
+        location: 'auth-initialization'
+      });
       if (mounted) {
         setLoading(false);
+        clearTimeout(loadingTimeout);
       }
     });
 
@@ -122,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Only set loading to false on initial load
         if (event === 'INITIAL_SESSION') {
           setLoading(false);
+          clearTimeout(loadingTimeout);
         }
       }
     );
@@ -129,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
       subscription.unsubscribe();
+      clearTimeout(loadingTimeout);
     };
   }, []);
 
@@ -207,7 +232,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase.auth.signOut();
 
       if (error) {
-        console.error("Error signing out:", error);
+        handleAuthError(error, "Kunde inte logga ut", {
+          location: 'signOut'
+        });
         throw error;
       }
 
@@ -216,7 +243,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // This prevents race conditions and ensures proper state synchronization
     } catch (error) {
       // If signOut fails, manually clear state as fallback
-      console.error("Sign out failed, clearing state manually:", error);
+      handleError(error, {
+        category: ErrorCategory.AUTH,
+        severity: ErrorSeverity.ERROR,
+        userMessage: "Utloggning misslyckades, rensar session",
+        metadata: { location: 'signOut-fallback' }
+      });
       setUser(null);
       setSession(null);
       setProfile(null);
@@ -257,7 +289,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const deleteAccount = useCallback(async () => {
     if (!session?.access_token) {
-      return { error: new Error("Ingen aktiv session") };
+      const error = new Error("Ingen aktiv session");
+      handleAuthError(error, "Ingen aktiv session", {
+        location: 'deleteAccount'
+      });
+      return { error };
     }
 
     try {
@@ -269,7 +305,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) {
-        console.error("Error deleting account:", error);
+        handleAuthError(error, "Kunde inte radera kontot", {
+          location: 'deleteAccount-invoke'
+        });
         return { error: new Error("Kunde inte radera kontot") };
       }
 
@@ -280,7 +318,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       return { error: null };
     } catch (error) {
-      console.error("Unexpected error deleting account:", error);
+      handleError(error, {
+        category: ErrorCategory.AUTH,
+        severity: ErrorSeverity.ERROR,
+        userMessage: "Ett oväntat fel uppstod vid kontoradering",
+        metadata: { location: 'deleteAccount-catch' }
+      });
       return { error: new Error("Ett oväntat fel uppstod") };
     }
   }, [session, signOut]);
