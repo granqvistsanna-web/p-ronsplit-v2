@@ -70,23 +70,23 @@ CREATE TRIGGER on_auth_user_created
 DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
 CREATE POLICY "Users can read own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 
 DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid()::uuid = user_id);
 
 DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id)
+  WITH CHECK (auth.uid()::uuid = user_id);
 
 DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
 CREATE POLICY "Users can delete own profile"
   ON public.profiles FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 
 -- 7. Skapa profiler för befintliga användare (om det finns några)
 INSERT INTO public.profiles (user_id, name, email)
