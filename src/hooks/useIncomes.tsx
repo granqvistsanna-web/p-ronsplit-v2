@@ -87,6 +87,33 @@ export function useIncomes(groupId?: string) {
     }
   }, [user, groupId]);
 
+  const fetchAllIncomes = useCallback(async (): Promise<Income[]> => {
+    if (!user) {
+      return [];
+    }
+
+    try {
+      // Fetch ALL incomes from the table without any group filtering
+      const { data, error } = await (supabase.from("incomes" as any) as any)
+        .select("*")
+        .order("date", { ascending: false });
+
+      if (error) throw error;
+
+      // Cast the database response to our Income type
+      const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
+        ...row,
+        type: row.type as IncomeType,
+        repeat: row.repeat as IncomeRepeat,
+      }));
+
+      return typedIncomes;
+    } catch (error) {
+      console.error("Error fetching all incomes:", error);
+      return [];
+    }
+  }, [user]);
+
   useEffect(() => {
     fetchIncomes();
   }, [fetchIncomes]);
@@ -235,5 +262,6 @@ export function useIncomes(groupId?: string) {
     updateIncome,
     deleteIncome,
     refetch: fetchIncomes,
+    fetchAllIncomes,
   };
 }
