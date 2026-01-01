@@ -401,8 +401,9 @@ export function useGroups() {
       return groupData;
     } catch (error) {
       console.error("Error creating group:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
+      const maybeMessage = (error as any)?.message;
+      const errorMessage = typeof maybeMessage === "string" && maybeMessage.trim().length > 0
+        ? maybeMessage
         : "Kunde inte skapa grupp";
       toast.error(errorMessage);
       return null;
