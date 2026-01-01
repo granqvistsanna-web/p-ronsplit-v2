@@ -1,6 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { handleAuthError, handleDatabaseError, ErrorSeverity, ErrorCategory, handleError } from "@/lib/errorHandling";
 
@@ -89,6 +89,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []); // No dependencies needed - uses setProfile which is stable
 
   useEffect(() => {
+    if (!isSupabaseConfigured) {
+      console.error("Supabase env vars missing: VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY");
+      toast.error("Supabase är inte konfigurerat. Lägg till VITE_SUPABASE_URL och VITE_SUPABASE_ANON_KEY.");
+      setLoading(false);
+      return;
+    }
+
     let mounted = true;
 
     // Timeout fallback to ensure loading doesn't stay true forever
@@ -158,6 +165,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    if (!isSupabaseConfigured) {
+      toast.error("Supabase är inte konfigurerat.");
+      return;
+    }
+
     try {
       // Sign out from Supabase - this will trigger the auth state listener
       // which will automatically clear user, session, and profile
@@ -225,6 +237,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, signOut]);
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error("Supabase är inte konfigurerat") };
+    }
+
     const redirectUrl = `${window.location.origin}/`;
 
     console.log("Attempting signup with email:", email, "redirect:", redirectUrl);
@@ -244,6 +260,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signIn = useCallback(async (email: string, password: string) => {
+    if (!isSupabaseConfigured) {
+      return { error: new Error("Supabase är inte konfigurerat") };
+    }
+
     console.log("Attempting signin with email:", email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
