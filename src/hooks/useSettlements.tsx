@@ -27,7 +27,9 @@ export function useSettlements(groupId?: string) {
     }
 
     try {
-      let query = supabase.from("settlements").select("*");
+      let query = supabase
+        .from("settlements")
+        .select("id,group_id,from_user,to_user,amount,date,month,created_at");
 
       if (groupId) {
         query = query.eq("group_id", groupId);

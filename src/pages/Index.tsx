@@ -179,6 +179,17 @@ const Index = () => {
     }
   }, [household?.id, addSettlement]);
 
+  // Memoized edit handlers for list items
+  const handleEditExpenseClick = useCallback((expense: Expense) => {
+    setEditingExpense(expense);
+    setIsEditExpenseModalOpen(true);
+  }, []);
+
+  const handleEditIncomeClick = useCallback((income: Income) => {
+    setEditingIncome(income);
+    setIsEditIncomeModalOpen(true);
+  }, []);
+
   // Loading state
   if (loading) {
     return (
@@ -356,11 +367,7 @@ const Index = () => {
                             key={`expense-${expense.id}`}
                             className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
                             style={{ animationDelay: `${idx * 50}ms` }}
-                            onClick={() => {
-                              if (!canEdit) return;
-                              setEditingExpense(expense);
-                              setIsEditExpenseModalOpen(true);
-                            }}
+                            onClick={canEdit ? () => handleEditExpenseClick(expense) : undefined}
                           >
                             <div className="flex items-center gap-3">
                               <div className="p-1.5 rounded-md bg-expense-bg shrink-0">
@@ -391,11 +398,7 @@ const Index = () => {
                             key={`income-${income.id}`}
                             className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
                             style={{ animationDelay: `${idx * 50}ms` }}
-                            onClick={() => {
-                              if (!canEdit) return;
-                              setEditingIncome(income);
-                              setIsEditIncomeModalOpen(true);
-                            }}
+                            onClick={canEdit ? () => handleEditIncomeClick(income) : undefined}
                           >
                             <div className="flex items-center gap-3">
                               <div className="p-1.5 rounded-md bg-income-bg shrink-0">

@@ -119,7 +119,7 @@ export function useGroups() {
       // Fetch all groups the user is a member of
       const { data: groupsData, error: groupsError } = await supabase
         .from("groups")
-        .select("*")
+        .select("id,name,is_temporary,created_by,created_at,invite_code")
         .in("id", groupIds)
         .order("created_at", { ascending: false });
 

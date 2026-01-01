@@ -49,7 +49,9 @@ export function useExpenses(groupId?: string) {
     };
 
     try {
-      let query = supabase.from("expenses").select("*");
+      let query = supabase
+        .from("expenses")
+        .select("id,group_id,amount,paid_by,category,description,date,created_at,splits,repeat");
 
       if (groupId) {
         query = query.eq("group_id", groupId);

@@ -60,7 +60,8 @@ export function useIncomes(groupId?: string) {
 
     try {
       // Use type assertion since types may not be regenerated yet
-      let query = (supabase.from("incomes" as any) as any).select("*");
+      let query = (supabase.from("incomes" as any) as any)
+        .select("id,group_id,amount,recipient,type,note,date,repeat,included_in_split,created_at,updated_at");
 
       if (groupId) {
         query = query.eq("group_id", groupId);
