@@ -98,26 +98,26 @@ These policies ensure users can only access their own profile data.
 CREATE POLICY "Users can read own profile"
   ON public.profiles
   FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 
 -- Policy: Users can insert their own profile (fallback, trigger handles this)
 CREATE POLICY "Users can insert own profile"
   ON public.profiles
   FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid()::uuid = user_id);
 
 -- Policy: Users can update their own profile
 CREATE POLICY "Users can update own profile"
   ON public.profiles
   FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id)
+  WITH CHECK (auth.uid()::uuid = user_id);
 
 -- Policy: Users can delete their own profile (for account deletion)
 CREATE POLICY "Users can delete own profile"
   ON public.profiles
   FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 ```
 
 ---
@@ -177,22 +177,26 @@ CREATE TRIGGER on_auth_user_created
   EXECUTE FUNCTION public.handle_new_user();
 
 -- 6. Create RLS policies
+DROP POLICY IF EXISTS "Users can read own profile" ON public.profiles;
 CREATE POLICY "Users can read own profile"
   ON public.profiles FOR SELECT
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 
+DROP POLICY IF EXISTS "Users can insert own profile" ON public.profiles;
 CREATE POLICY "Users can insert own profile"
   ON public.profiles FOR INSERT
-  WITH CHECK (auth.uid() = user_id);
+  WITH CHECK (auth.uid()::uuid = user_id);
 
+DROP POLICY IF EXISTS "Users can update own profile" ON public.profiles;
 CREATE POLICY "Users can update own profile"
   ON public.profiles FOR UPDATE
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id)
+  WITH CHECK (auth.uid()::uuid = user_id);
 
+DROP POLICY IF EXISTS "Users can delete own profile" ON public.profiles;
 CREATE POLICY "Users can delete own profile"
   ON public.profiles FOR DELETE
-  USING (auth.uid() = user_id);
+  USING (auth.uid()::uuid = user_id);
 
 -- 7. Backfill existing users (if any)
 INSERT INTO public.profiles (user_id, name, email)
