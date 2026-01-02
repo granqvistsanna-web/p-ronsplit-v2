@@ -449,9 +449,11 @@ export default function Aktivitet() {
             <div className="rounded-full bg-muted p-5 mb-4">
               <Plus className="h-12 w-12 text-muted-foreground/40" />
             </div>
-            <p className="text-base font-medium text-foreground mb-1">Inga aktiviteter</p>
+            <p className="text-base font-medium text-foreground mb-1">
+              {searchQuery ? 'Inga resultat hittades' : 'Inga aktiviteter'}
+            </p>
             <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
-              {searchQuery ? 'Inga resultat matchade din sökning' : 'Börja genom att lägga till din första utgift eller inkomst'}
+              {searchQuery ? 'Prova att söka med andra ord eller ta bort några filter för att se fler resultat' : 'Börja genom att lägga till din första utgift eller inkomst'}
             </p>
             {!searchQuery && (
               <Button

@@ -52,7 +52,7 @@ const Settings = () => {
     e.preventDefault();
 
     if (newName.trim().length < 2) {
-      toast.error("Namn måste vara minst 2 tecken");
+      toast.error("Namnet måste vara minst 2 tecken långt");
       return;
     }
 
@@ -61,7 +61,7 @@ const Settings = () => {
     try {
       const { error } = await updateProfile(newName.trim());
       if (error) {
-        toast.error("Kunde inte uppdatera namn");
+        toast.error("Kunde inte uppdatera namnet. Försök igen eller kontakta support om problemet kvarstår.");
       } else {
         toast.success("Namn uppdaterat");
         setNewName("");
@@ -75,12 +75,12 @@ const Settings = () => {
     e.preventDefault();
 
     if (newPassword.length < 6) {
-      toast.error("Lösenord måste vara minst 6 tecken");
+      toast.error("Lösenordet måste vara minst 6 tecken långt");
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast.error("Lösenorden matchar inte");
+      toast.error("Lösenorden matchar inte. Kontrollera att båda fälten är identiska.");
       return;
     }
 
@@ -89,7 +89,7 @@ const Settings = () => {
     try {
       const { error } = await updatePassword(newPassword);
       if (error) {
-        toast.error("Kunde inte byta lösenord");
+        toast.error("Kunde inte uppdatera lösenordet. Försök igen eller kontakta support om problemet kvarstår.");
       } else {
         toast.success("Lösenord uppdaterat");
         setNewPassword("");
@@ -143,7 +143,7 @@ const Settings = () => {
 
   const handleSaveHouseholdName = async () => {
     if (editingHouseholdName.trim().length < 2) {
-      toast.error("Hushållsnamn måste vara minst 2 tecken");
+      toast.error("Gruppnamnet måste vara minst 2 tecken långt");
       return;
     }
 
@@ -164,7 +164,7 @@ const Settings = () => {
 
   const handleCreateGroup = async () => {
     if (newGroupName.trim().length < 2) {
-      toast.error("Gruppnamn måste vara minst 2 tecken");
+      toast.error("Gruppnamnet måste vara minst 2 tecken långt");
       return;
     }
 
@@ -596,7 +596,7 @@ const Settings = () => {
                     <Input
                       id="newName"
                       type="text"
-                      placeholder={profile?.name || "Ditt namn"}
+                      placeholder="Förnamn Efternamn"
                       value={newName}
                       onChange={(e) => setNewName(e.target.value)}
                       className="max-w-sm"

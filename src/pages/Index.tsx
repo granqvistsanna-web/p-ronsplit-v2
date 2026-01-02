@@ -438,8 +438,8 @@ const Index = () => {
                 <div className="rounded-full bg-muted p-5 mb-4">
                   <Plus className="h-12 w-12 text-muted-foreground/40" />
                 </div>
-                <p className="text-base font-medium text-foreground mb-1">Inga aktiviteter ännu</p>
-                <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">Lägg till din första utgift eller inkomst för att komma igång</p>
+                <p className="text-base font-medium text-foreground mb-1">Redo att börja?</p>
+                <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">Lägg till din första utgift eller inkomst för att börja dela kostnader</p>
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
                   className="gap-2"
