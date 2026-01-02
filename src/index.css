@@ -24,7 +24,7 @@
 
     /* Muted - subdued text and backgrounds */
     --muted: 40 4% 94%;
-    --muted-foreground: 0 0% 45%;
+    --muted-foreground: 0 0% 40%;
 
     /* Accent - subtle warm highlights */
     --accent: 40 6% 94%;
@@ -59,13 +59,13 @@
 
     /* Notion-inspired pastel icon colors - light mode */
     /* Adjusted for contrast on #f7f6f3 / #ebeae6 backgrounds */
-    --icon-blue: 214 84% 56%;
+    --icon-blue: 214 84% 50%;
     --icon-blue-bg: 214 100% 92%;
-    --icon-purple: 262 68% 56%;
+    --icon-purple: 262 68% 50%;
     --icon-purple-bg: 262 100% 92%;
-    --icon-pink: 330 68% 56%;
+    --icon-pink: 330 68% 50%;
     --icon-pink-bg: 330 100% 92%;
-    --icon-mint: 152 55% 42%;
+    --icon-mint: 152 55% 38%;
     --icon-mint-bg: 152 76% 88%;
 
     /* Semantic income/expense colors */
@@ -108,7 +108,7 @@
     --secondary-foreground: 0 0% 90%;
 
     --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 55%;
+    --muted-foreground: 0 0% 60%;
 
     --accent: 210 30% 15%;
     --accent-foreground: 0 0% 90%;
@@ -284,12 +284,16 @@
 
   /* Interactive list item hover with subtle shift */
   .list-hover {
-    @apply transition-base;
+    transition: all 0.15s cubic-bezier(0.4, 0.0, 0.2, 1);
   }
 
   .list-hover:hover {
     background-color: hsl(var(--secondary));
-    transform: translateX(2px);
+    transform: translateX(3px);
+  }
+
+  .list-hover:active {
+    transform: translateX(3px) scale(0.99);
   }
 
   /* Hover lift effect for cards */
@@ -549,6 +553,22 @@
       transform: scale(0.95);
     }
     to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  /* Modal entrance animation with spring */
+  .animate-modal-in {
+    animation: modal-in 0.2s cubic-bezier(0.4, 0.0, 0.2, 1) forwards;
+  }
+
+  @keyframes modal-in {
+    0% {
+      opacity: 0;
+      transform: scale(0.96);
+    }
+    100% {
       opacity: 1;
       transform: scale(1);
     }

@@ -255,7 +255,7 @@ const Index = () => {
         </div>
 
         {/* Hero Summary Card */}
-        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '20ms' }}>
+        <Card className="mb-8 animate-fade-in" style={{ animationDelay: '20ms' }}>
           <CardContent className="p-5 sm:p-6">
             {/* Month selector - integrated */}
             <div className="mb-4">
@@ -315,7 +315,7 @@ const Index = () => {
         </Card>
 
         {/* Member summary */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '60ms' }}>
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: '60ms' }}>
           <MemberSummaryCard
             expenses={filteredExpenses}
             incomes={filteredIncomes}
@@ -324,7 +324,7 @@ const Index = () => {
         </div>
 
         {/* Balance section */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '80ms' }}>
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: '80ms' }}>
           <BalanceCard
             expenses={filteredExpenses}
             incomes={filteredIncomes}
@@ -338,7 +338,7 @@ const Index = () => {
         </div>
 
         {/* Latest activities */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
+        <div className="mb-8 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-label-mono">
               Senaste aktiviteter

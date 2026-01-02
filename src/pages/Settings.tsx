@@ -10,6 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { useTheme } from "@/hooks/useTheme";
 import { useMonthSelection } from "@/hooks/useMonthSelection";
+import { useSidebar } from "@/hooks/useSidebar";
 import { toast } from "sonner";
 import { User, Lock, Tag, LogOut, Trash2, ChevronLeft, Users, Plus, Palette, Sun, Moon, Monitor, Edit2, Check, X, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -30,6 +31,7 @@ const Settings = () => {
   const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, createGroup, deleteGroup, selectGroup } = useGroups();
   const { theme, setTheme } = useTheme();
   const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
+  const { sidebarWidth } = useSidebar();
 
   const [newName, setNewName] = useState("");
   const [isChangingName, setIsChangingName] = useState(false);
@@ -178,10 +180,10 @@ const Settings = () => {
   };
 
   return (
-    <div className="pt-14 lg:pt-0 lg:pl-64">
+    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-3xl py-8 sm:py-12 px-4 sm:px-6 pb-6 lg:pb-8 mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Inställningar</h1>
+          <h1 className="text-2xl font-bold text-foreground">Inställningar</h1>
         </div>
 
         <div className="space-y-6">
@@ -385,7 +387,7 @@ const Settings = () => {
                                   onClick={handleSaveHouseholdName}
                                   className="h-8 w-8 p-0"
                                 >
-                                  <Check size={14} className="text-green-600" />
+                                  <Check size={14} className="text-green-500 dark:text-green-400" />
                                 </Button>
                                 <Button
                                   variant="ghost"
@@ -393,7 +395,7 @@ const Settings = () => {
                                   onClick={handleCancelEditHouseholdName}
                                   className="h-8 w-8 p-0"
                                 >
-                                  <X size={14} className="text-red-600" />
+                                  <X size={14} className="text-destructive" />
                                 </Button>
                               </div>
                             )}
@@ -423,13 +425,17 @@ const Settings = () => {
                   </div>
 
                   {allGroups.length === 0 && !isCreatingGroup && (
-                    <div className="text-center py-8">
-                      <p className="text-sm text-muted-foreground">Inga grupper ännu</p>
+                    <div className="text-center py-12">
+                      <Users className="h-12 w-12 mx-auto mb-4 text-muted-foreground/40" />
+                      <p className="text-sm font-medium text-foreground mb-1">Inga grupper ännu</p>
+                      <p className="text-xs text-muted-foreground mb-4">
+                        Skapa en grupp för att börja dela utgifter
+                      </p>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={() => setIsCreatingGroup(true)}
-                        className="mt-3 gap-2"
+                        className="gap-2"
                       >
                         <Plus size={14} />
                         Skapa din första grupp
@@ -441,6 +447,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* Appearance */}
           {/* Theme Card */}
           <Card>
             <CardHeader>
@@ -459,7 +466,9 @@ const Settings = () => {
                     onClick={() => setTheme("light")}
                     className={cn(
                       "flex-col h-auto py-4 gap-2 transition-all",
-                      theme === "light" && "ring-2 ring-primary ring-offset-2"
+                      theme === "light"
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "opacity-70 hover:opacity-100"
                     )}
                   >
                     <Sun className="h-5 w-5" />
@@ -470,7 +479,9 @@ const Settings = () => {
                     onClick={() => setTheme("dark")}
                     className={cn(
                       "flex-col h-auto py-4 gap-2 transition-all",
-                      theme === "dark" && "ring-2 ring-primary ring-offset-2"
+                      theme === "dark"
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "opacity-70 hover:opacity-100"
                     )}
                   >
                     <Moon className="h-5 w-5" />
@@ -481,7 +492,9 @@ const Settings = () => {
                     onClick={() => setTheme("system")}
                     className={cn(
                       "flex-col h-auto py-4 gap-2 transition-all",
-                      theme === "system" && "ring-2 ring-primary ring-offset-2"
+                      theme === "system"
+                        ? "ring-2 ring-primary ring-offset-2"
+                        : "opacity-70 hover:opacity-100"
                     )}
                   >
                     <Monitor className="h-5 w-5" />
@@ -542,6 +555,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* Personal Settings */}
           {/* Profile Card */}
           <Card>
             <CardHeader>
@@ -553,8 +567,8 @@ const Settings = () => {
             </CardHeader>
             <CardContent className="space-y-6">
               {profile && (
-                <div className="flex items-center gap-4">
-                  <div className="h-14 w-14 sm:h-16 sm:w-16 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-xl sm:text-2xl font-semibold text-primary">
+                <div className="flex items-center gap-3">
+                  <div className="h-16 w-16 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-semibold text-primary">
                     {profile.name?.[0]?.toUpperCase() || "?"}
                   </div>
                   <div className="min-w-0 flex-1">
@@ -631,6 +645,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* App Settings */}
           {/* Categories Card */}
           <Card>
             <CardHeader>
@@ -655,6 +670,7 @@ const Settings = () => {
             </CardContent>
           </Card>
 
+          {/* Account Management */}
           {/* Account Actions */}
           <Card>
             <CardHeader>

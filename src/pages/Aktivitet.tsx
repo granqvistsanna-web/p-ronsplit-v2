@@ -328,7 +328,7 @@ export default function Aktivitet() {
         </div>
 
         {/* Search and filters - sticky on mobile */}
-        <div className="mb-6 animate-fade-in bg-card rounded-lg p-3 sm:p-4 sticky top-14 lg:top-0 z-10 shadow-sm" style={{ animationDelay: '20ms' }}>
+        <div className="mb-6 animate-fade-in bg-card rounded-lg p-4 sm:p-5 sticky top-14 lg:top-0 z-10 shadow-sm" style={{ animationDelay: '20ms' }}>
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="flex-1 relative">
