@@ -6,6 +6,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { GroupSelector } from "@/components/GroupSelector";
 import { useSavingsProjects, ProjectWithStats, SavingsContribution } from "@/hooks/useSavingsProjects";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebar } from "@/hooks/useSidebar";
 import { PiggyBank, Plus, Home } from "lucide-react";
 import { AddProjectModal } from "@/components/AddProjectModal";
 import { AddContributionModal } from "@/components/AddContributionModal";
@@ -15,6 +16,7 @@ import { SavingsProjectCard } from "@/components/SavingsProjectCard";
 const Sparande = () => {
   const { user } = useAuth();
   const { household, allGroups, loading: householdLoading, selectGroup } = useGroups();
+  const { sidebarWidth } = useSidebar();
 
   const {
     projects,
@@ -97,7 +99,7 @@ const Sparande = () => {
 
   if (loading) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="mb-6 animate-fade-in">
             <div className="flex items-center justify-between gap-2">
@@ -123,15 +125,15 @@ const Sparande = () => {
 
   if (!household) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <Card className="border-dashed border-2 bg-muted/20">
             <CardContent className="flex flex-col items-center justify-center py-16 px-6">
-              <div className="rounded-full bg-muted p-5 mb-5">
-                <Home size={28} className="text-muted-foreground" />
+              <div className="rounded-full bg-muted p-5 mb-4">
+                <Home className="h-12 w-12 text-muted-foreground/40" />
               </div>
-              <p className="font-medium text-foreground text-lg mb-2">Inget hushåll valt</p>
-              <p className="text-caption text-center mb-6 max-w-xs">
+              <p className="text-base font-medium text-foreground mb-1">Inget hushåll valt</p>
+              <p className="text-sm text-muted-foreground text-center max-w-xs">
                 Välj ett hushåll för att se dina sparprojekt
               </p>
             </CardContent>
@@ -142,7 +144,7 @@ const Sparande = () => {
   }
 
   return (
-    <div className="pt-14 lg:pt-0 lg:pl-64">
+    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
@@ -159,13 +161,13 @@ const Sparande = () => {
         {/* Content */}
         {projects.length === 0 ? (
           // Empty State
-          <Card className="border-dashed border-2 bg-muted/20 animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <Card className="border-dashed border-2 bg-muted/20 animate-fade-in" style={{ animationDelay: '40ms' }}>
             <CardContent className="flex flex-col items-center justify-center py-16 px-6">
-              <div className="rounded-full bg-muted p-5 mb-5">
-                <PiggyBank size={28} className="text-muted-foreground" />
+              <div className="rounded-full bg-muted p-5 mb-4">
+                <PiggyBank className="h-12 w-12 text-muted-foreground/40" />
               </div>
-              <p className="font-medium text-foreground text-lg mb-2">Inga sparprojekt ännu</p>
-              <p className="text-caption text-center mb-6 max-w-xs">
+              <p className="text-base font-medium text-foreground mb-1">Inga sparprojekt ännu</p>
+              <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
                 Skapa ett sparprojekt som "Barnsparande" eller "Semesterkassa" och börja spara tillsammans
               </p>
               <Button onClick={() => setIsAddProjectModalOpen(true)} className="gap-2">
@@ -176,7 +178,7 @@ const Sparande = () => {
           </Card>
         ) : (
           // Projects Grid
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in" style={{ animationDelay: '40ms' }}>
             {projects.map((project, index) => (
               <SavingsProjectCard
                 key={project.id}
@@ -186,7 +188,7 @@ const Sparande = () => {
                 onAddContribution={() => handleOpenAddContribution(project)}
                 onDeleteContribution={deleteContribution}
                 onUpdateContribution={updateContribution}
-                style={{ animationDelay: `${150 + index * 50}ms` }}
+                style={{ animationDelay: `${60 + index * 20}ms` }}
               />
             ))}
           </div>

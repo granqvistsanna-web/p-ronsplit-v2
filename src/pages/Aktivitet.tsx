@@ -19,6 +19,7 @@ import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
 import { EditSettlementModal } from "@/components/EditSettlementModal";
 import { useAuth } from "@/hooks/useAuth";
+import { useSidebar } from "@/hooks/useSidebar";
 import { Search, ArrowUpDown, Plus, FileText } from "lucide-react";
 import {
   Select,
@@ -39,6 +40,7 @@ const MONTHS = [
 export default function Aktivitet() {
   const { user } = useAuth();
   const { household, loading: householdLoading } = useGroups();
+  const { sidebarWidth } = useSidebar();
   const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses(household?.id);
   const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, refetch: refetchIncomes } = useIncomes(household?.id);
   const { settlements, loading: settlementsLoading, addSettlement, updateSettlement, deleteSettlement, refetch: refetchSettlements } = useSettlements(household?.id);
@@ -276,7 +278,7 @@ export default function Aktivitet() {
 
   if (loading) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="h-8 w-32 rounded-md skeleton-shimmer mb-6" />
           <div className="h-24 rounded-lg skeleton-shimmer mb-6" />
@@ -295,13 +297,16 @@ export default function Aktivitet() {
 
   if (!household) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <FileText size={28} className="text-muted-foreground" />
+            <div className="rounded-full bg-muted p-5 mb-4">
+              <FileText className="h-12 w-12 text-muted-foreground/40" />
             </div>
-            <p className="text-caption">Inget hushåll hittades.</p>
+            <p className="text-base font-medium text-foreground mb-1">Inget hushåll valt</p>
+            <p className="text-sm text-muted-foreground text-center max-w-xs">
+              Välj ett hushåll för att se dina aktiviteter
+            </p>
           </div>
         </main>
       </div>
@@ -309,7 +314,7 @@ export default function Aktivitet() {
   }
 
   return (
-    <div className="pt-14 lg:pt-0 lg:pl-64">
+    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
@@ -323,7 +328,7 @@ export default function Aktivitet() {
         </div>
 
         {/* Search and filters - sticky on mobile */}
-        <div className="mb-6 animate-fade-in bg-card rounded-lg p-3 sm:p-4 sticky top-14 lg:top-0 z-10 shadow-sm" style={{ animationDelay: '50ms' }}>
+        <div className="mb-6 animate-fade-in bg-card rounded-lg p-3 sm:p-4 sticky top-14 lg:top-0 z-10 shadow-sm" style={{ animationDelay: '20ms' }}>
           <div className="flex flex-col sm:flex-row gap-3">
             {/* Search */}
             <div className="flex-1 relative">
@@ -375,7 +380,7 @@ export default function Aktivitet() {
                 <div 
                   key={monthKey} 
                   className="animate-fade-in"
-                  style={{ animationDelay: `${100 + groupIdx * 50}ms` }}
+                  style={{ animationDelay: `${40 + groupIdx * 20}ms` }}
                 >
                   {/* Month header */}
                   <div className="flex items-center justify-between mb-1">
@@ -440,12 +445,12 @@ export default function Aktivitet() {
             })}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-16 px-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-            <div className="rounded-full bg-card p-5 mb-5">
-              <Plus size={28} className="text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-16 px-6 animate-fade-in" style={{ animationDelay: '40ms' }}>
+            <div className="rounded-full bg-muted p-5 mb-4">
+              <Plus className="h-12 w-12 text-muted-foreground/40" />
             </div>
-            <p className="font-medium text-foreground text-lg mb-2">Inga aktiviteter</p>
-            <p className="text-caption text-center mb-6 max-w-xs">
+            <p className="text-base font-medium text-foreground mb-1">Inga aktiviteter</p>
+            <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
               {searchQuery ? 'Inga resultat matchade din sökning' : 'Börja genom att lägga till din första utgift eller inkomst'}
             </p>
             {!searchQuery && (

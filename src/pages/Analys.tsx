@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
+import { useSidebar } from "@/hooks/useSidebar";
 import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import {
   Select,
@@ -22,8 +23,9 @@ export default function Analys() {
   const { household, loading: householdLoading } = useGroups();
   const { expenses, loading: expensesLoading } = useExpenses(household?.id);
   const { incomes, loading: incomesLoading } = useIncomes(household?.id);
+  const { sidebarWidth } = useSidebar();
 
-  const currentDate = new Date();
+  const currentDate = useMemo(() => new Date(), []);
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
@@ -73,7 +75,7 @@ export default function Analys() {
         expenses: data.expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [filteredData.filteredExpenses]);
+  }, [filteredData]);
 
   // Group by month for trend (last 6 months including current)
   const monthlyTrend = useMemo(() => {
@@ -121,7 +123,7 @@ export default function Analys() {
   const goToCurrentMonth = useCallback(() => {
     setSelectedYear(currentDate.getFullYear());
     setSelectedMonth(currentDate.getMonth() + 1);
-  }, []);
+  }, [currentDate]);
 
   const goToPreviousMonth = useCallback(() => {
     setSelectedMonth(prevMonth => {
@@ -208,7 +210,7 @@ export default function Analys() {
     }
     
     return options;
-  }, []); // Empty deps - only depends on currentDate which is stable
+  }, [currentDate]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -224,7 +226,7 @@ export default function Analys() {
 
   if (loading) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="mb-6">
             <div className="h-8 w-32 rounded-md skeleton-shimmer mb-2" />
@@ -245,7 +247,7 @@ export default function Analys() {
 
   if (!household) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
             <div className="rounded-full bg-muted p-4 mb-4">
@@ -264,7 +266,7 @@ export default function Analys() {
   );
 
   return (
-    <div className="pt-14 lg:pt-0 lg:pl-64">
+    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
@@ -275,7 +277,7 @@ export default function Analys() {
         <div 
           ref={filterRef}
           className="mb-6 animate-fade-in" 
-          style={{ animationDelay: '50ms' }}
+          style={{ animationDelay: '20ms' }}
           role="group"
           aria-label="Tidsfilter för analys"
         >
@@ -383,7 +385,7 @@ export default function Analys() {
         {/* Summary Metrics - Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Income */}
-          <Card className="animate-fade-in" style={{ animationDelay: '100ms' }}>
+          <Card className="animate-fade-in" style={{ animationDelay: '40ms' }}>
             <CardContent className="p-5">
               <div className="space-y-1">
                 <p className="text-label-mono">
@@ -397,7 +399,7 @@ export default function Analys() {
           </Card>
 
           {/* Expenses */}
-          <Card className="animate-fade-in" style={{ animationDelay: '150ms' }}>
+          <Card className="animate-fade-in" style={{ animationDelay: '60ms' }}>
             <CardContent className="p-5">
               <div className="space-y-1">
                 <p className="text-label-mono">
@@ -411,7 +413,7 @@ export default function Analys() {
           </Card>
 
           {/* Balance */}
-          <Card className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+          <Card className="animate-fade-in" style={{ animationDelay: '80ms' }}>
             <CardContent className="p-5">
               <div className="space-y-1">
                 <p className="text-label-mono">
@@ -426,7 +428,7 @@ export default function Analys() {
         </div>
 
         {/* Trend Visualization - 6 Month View */}
-        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '250ms' }}>
+        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-semibold">Utveckling</CardTitle>
             <p className="text-caption mt-1">Senaste 6 månaderna</p>
@@ -443,7 +445,7 @@ export default function Analys() {
                     <div 
                       key={item.month} 
                       className="space-y-2 animate-fade-in"
-                      style={{ animationDelay: `${300 + idx * 50}ms` }}
+                      style={{ animationDelay: `${120 + idx * 20}ms` }}
                     >
                       <div className="flex items-baseline justify-between">
                         <span className={`text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
@@ -509,7 +511,7 @@ export default function Analys() {
         </Card>
 
         {/* Category Breakdown */}
-        <Card className="animate-fade-in" style={{ animationDelay: '300ms' }}>
+        <Card className="animate-fade-in" style={{ animationDelay: '120ms' }}>
           <CardHeader className="pb-4">
             <CardTitle className="text-base font-semibold">Utgifter per kategori</CardTitle>
             <p className="text-caption mt-1">
@@ -530,7 +532,7 @@ export default function Analys() {
                     <div
                       key={item.category}
                       className="space-y-2 animate-fade-in"
-                      style={{ animationDelay: `${350 + idx * 30}ms` }}
+                      style={{ animationDelay: `${140 + idx * 12}ms` }}
                     >
                       <div
                         className="flex items-baseline justify-between cursor-pointer hover:opacity-80 transition-opacity"

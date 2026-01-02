@@ -1,8 +1,14 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart3, List, Settings, Menu, X, PiggyBank } from "lucide-react";
+import { Home, BarChart3, List, Settings, Menu, X, PiggyBank, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import logo from "@/assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
@@ -19,6 +25,17 @@ export function SideNav() {
   const location = useLocation();
   const { profile } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem("sidebar-collapsed");
+    return saved === "true";
+  });
+
+  // Persist collapsed state
+  useEffect(() => {
+    localStorage.setItem("sidebar-collapsed", String(isCollapsed));
+    // Dispatch event for pages to adjust their layout
+    window.dispatchEvent(new CustomEvent("sidebar-toggle", { detail: { isCollapsed } }));
+  }, [isCollapsed]);
 
   return (
     <>
@@ -116,47 +133,100 @@ export function SideNav() {
       </AnimatePresence>
 
       {/* Desktop sidebar */}
-      <aside className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col border-r border-sidebar-border bg-sidebar">
+      <aside
+        className={cn(
+          "hidden lg:fixed lg:inset-y-0 lg:flex lg:flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out z-40",
+          isCollapsed ? "lg:w-20" : "lg:w-64"
+        )}
+      >
         <div className="flex flex-col flex-1 min-h-0">
           {/* Logo */}
-          <div className="flex items-center h-20 px-4 py-2 border-b border-sidebar-border/50">
+          <div className={cn(
+            "flex items-center h-20 py-2 border-b border-sidebar-border/50 transition-all duration-300",
+            isCollapsed ? "px-2 justify-center" : "px-4"
+          )}>
             <Link to="/dashboard" className="flex items-center hover:opacity-70 transition-opacity">
-              <img src={logo} alt="Päronsplit" className="h-14 w-auto object-contain" />
+              {isCollapsed ? (
+                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <span className="text-xl font-bold text-primary">P</span>
+                </div>
+              ) : (
+                <img src={logo} alt="Päronsplit" className="h-14 w-auto object-contain" />
+              )}
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 px-2 py-4 space-y-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location.pathname === item.to;
+          <TooltipProvider delayDuration={0}>
+            <nav className="flex-1 px-2 py-4 space-y-1">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = location.pathname === item.to;
 
-              return (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={cn(
-                    "group flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-md transition-all relative",
-                    isActive
-                      ? "bg-sidebar-accent text-sidebar-primary"
-                      : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-primary"
-                  )}
-                >
-                  {isActive && (
-                    <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
-                  )}
-                  <Icon
-                    size={18} 
+                const navLink = (
+                  <Link
+                    key={item.to}
+                    to={item.to}
                     className={cn(
-                      "shrink-0 transition-transform",
-                      !isActive && "group-hover:translate-x-0.5"
-                    )} 
-                  />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+                      "group flex items-center gap-3 text-sm font-medium rounded-md transition-all relative",
+                      isCollapsed ? "justify-center px-3 py-3" : "px-3 py-2.5",
+                      isActive
+                        ? "bg-sidebar-accent text-sidebar-primary"
+                        : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-primary"
+                    )}
+                  >
+                    {isActive && (
+                      <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                    )}
+                    <Icon
+                      size={20}
+                      className={cn(
+                        "shrink-0 transition-transform",
+                        !isActive && "group-hover:translate-x-0.5"
+                      )}
+                    />
+                    {!isCollapsed && <span>{item.label}</span>}
+                  </Link>
+                );
+
+                return isCollapsed ? (
+                  <Tooltip key={item.to}>
+                    <TooltipTrigger asChild>
+                      {navLink}
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {item.label}
+                    </TooltipContent>
+                  </Tooltip>
+                ) : navLink;
+              })}
+            </nav>
+          </TooltipProvider>
+
+          {/* Collapse toggle button */}
+          <div className={cn(
+            "p-2 border-t border-sidebar-border/50",
+            isCollapsed && "flex justify-center"
+          )}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className={cn(
+                "w-full transition-all",
+                isCollapsed ? "w-auto px-3" : "justify-start gap-3"
+              )}
+            >
+              {isCollapsed ? (
+                <ChevronRight size={18} />
+              ) : (
+                <>
+                  <ChevronLeft size={18} />
+                  <span className="text-xs">Dölj meny</span>
+                </>
+              )}
+            </Button>
+          </div>
         </div>
       </aside>
     </>

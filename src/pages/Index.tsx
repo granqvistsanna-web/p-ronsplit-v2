@@ -20,6 +20,7 @@ import { useSettlements } from "@/hooks/useSettlements";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthSelection } from "@/hooks/useMonthSelection";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
+import { useSidebar } from "@/hooks/useSidebar";
 import {
   ArrowDownLeft,
   ArrowUpRight,
@@ -34,6 +35,7 @@ const Index = () => {
   const { user } = useAuth();
   const { household, allGroups, loading: householdLoading, selectGroup } = useGroups();
   const { selectedYear, selectedMonth } = useMonthSelection();
+  const { sidebarWidth } = useSidebar();
 
   const {
     expenses,
@@ -190,7 +192,7 @@ const Index = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="mb-6">
             <div className="h-8 w-32 rounded-md skeleton-shimmer mb-2" />
@@ -215,14 +217,14 @@ const Index = () => {
   // No household state
   if (!household) {
     return (
-      <div className="pt-14 lg:pt-0 lg:pl-64">
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
-            <div className="rounded-full bg-muted p-4 mb-4">
-              <Home size={28} className="text-muted-foreground animate-pulse-soft" />
+            <div className="rounded-full bg-muted p-5 mb-4">
+              <Home className="h-12 w-12 text-muted-foreground/40 animate-pulse-soft" />
             </div>
-            <h1 className="text-2xl font-semibold text-foreground mb-2">Välkommen!</h1>
-            <p className="text-caption text-center max-w-sm">
+            <h1 className="text-xl font-medium text-foreground mb-1">Välkommen!</h1>
+            <p className="text-sm text-muted-foreground text-center max-w-sm">
               Ditt hushåll skapas automatiskt. Vänta ett ögonblick...
             </p>
           </div>
@@ -232,7 +234,7 @@ const Index = () => {
   }
 
   return (
-    <div className="pt-14 lg:pt-0 lg:pl-64">
+    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
@@ -253,7 +255,7 @@ const Index = () => {
         </div>
 
         {/* Hero Summary Card */}
-        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '50ms' }}>
+        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '20ms' }}>
           <CardContent className="p-5 sm:p-6">
             {/* Month selector - integrated */}
             <div className="mb-4">
@@ -313,7 +315,7 @@ const Index = () => {
         </Card>
 
         {/* Member summary */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '150ms' }}>
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '60ms' }}>
           <MemberSummaryCard
             expenses={filteredExpenses}
             incomes={filteredIncomes}
@@ -322,7 +324,7 @@ const Index = () => {
         </div>
 
         {/* Balance section */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '200ms' }}>
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '80ms' }}>
           <BalanceCard
             expenses={filteredExpenses}
             incomes={filteredIncomes}
@@ -336,7 +338,7 @@ const Index = () => {
         </div>
 
         {/* Latest activities */}
-        <div className="mb-6 animate-fade-in" style={{ animationDelay: '250ms' }}>
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-label-mono">
               Senaste aktiviteter
@@ -363,7 +365,7 @@ const Index = () => {
                           <div
                             key={`expense-${expense.id}`}
                             className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
-                            style={{ animationDelay: `${idx * 50}ms` }}
+                            style={{ animationDelay: `${idx * 20}ms` }}
                             onClick={() => {
                               if (!canEdit) return;
                               setEditingExpense(expense);
@@ -398,7 +400,7 @@ const Index = () => {
                           <div
                             key={`income-${income.id}`}
                             className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
-                            style={{ animationDelay: `${idx * 50}ms` }}
+                            style={{ animationDelay: `${idx * 20}ms` }}
                             onClick={() => {
                               if (!canEdit) return;
                               setEditingIncome(income);
@@ -433,11 +435,11 @@ const Index = () => {
           ) : (
             <Card className="border-dashed border-2 bg-muted/20">
               <CardContent className="flex flex-col items-center justify-center py-16 px-6">
-                <div className="rounded-full bg-muted p-5 mb-5">
-                  <Plus size={28} className="text-muted-foreground" />
+                <div className="rounded-full bg-muted p-5 mb-4">
+                  <Plus className="h-12 w-12 text-muted-foreground/40" />
                 </div>
-                <p className="font-medium text-foreground text-lg mb-2">Inga aktiviteter ännu</p>
-                <p className="text-caption text-center mb-6 max-w-xs">Lägg till din första utgift eller inkomst för att komma igång</p>
+                <p className="text-base font-medium text-foreground mb-1">Inga aktiviteter ännu</p>
+                <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">Lägg till din första utgift eller inkomst för att komma igång</p>
                 <Button
                   onClick={() => setIsAddModalOpen(true)}
                   className="gap-2"
