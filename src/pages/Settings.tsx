@@ -186,9 +186,11 @@ const Settings = () => {
           <h1 className="text-2xl font-bold text-foreground">Inställningar</h1>
         </div>
 
-        <div className="space-y-6">
-          {/* Groups Card */}
-          <Card>
+        <div className="space-y-8">
+          {/* SECTION 1: Grupper */}
+          <section>
+            <h2 className="text-sm font-medium mb-4 uppercase tracking-wider text-muted-foreground">Grupper</h2>
+            <Card>
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -446,9 +448,12 @@ const Settings = () => {
               )}
             </CardContent>
           </Card>
+          </section>
 
-          {/* Appearance */}
-          {/* Theme Card */}
+          {/* SECTION 2: Utseende */}
+          <section>
+            <h2 className="text-sm font-medium mb-4 uppercase tracking-wider text-muted-foreground">Utseende</h2>
+            <div className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -554,9 +559,13 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+            </div>
+          </section>
 
-          {/* Personal Settings */}
-          {/* Profile Card */}
+          {/* SECTION 3: Konto */}
+          <section>
+            <h2 className="text-sm font-medium mb-4 uppercase tracking-wider text-muted-foreground">Konto</h2>
+            <div className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -669,9 +678,13 @@ const Settings = () => {
               </div>
             </CardContent>
           </Card>
+            </div>
+          </section>
 
-          {/* Account Management */}
-          {/* Account Actions */}
+          {/* SECTION 4: Åtgärder */}
+          <section>
+            <h2 className="text-sm font-medium mb-4 uppercase tracking-wider text-muted-foreground">Åtgärder</h2>
+            <div className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
@@ -760,9 +773,11 @@ const Settings = () => {
               </AlertDialog>
             </CardContent>
           </Card>
+            </div>
+          </section>
 
-          {/* About */}
-          <div className="text-center py-6">
+          {/* Footer */}
+          <div className="text-center py-6 border-t border-border/40">
             <p className="text-sm text-muted-foreground">
               Päronsplit · v1.0
             </p>
