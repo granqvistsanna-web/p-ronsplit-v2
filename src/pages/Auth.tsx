@@ -6,6 +6,9 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { z } from "zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, Loader2, ArrowLeft } from "lucide-react";
+import { PasswordStrengthIndicator } from "@/components/PasswordStrengthIndicator";
 import logo from "@/assets/logo.png";
 
 const emailSchema = z.string().email("Ogiltig e-postadress");
@@ -27,8 +30,8 @@ interface RateLimitState {
 
 const RATE_LIMIT_KEY = "auth_rate_limit";
 const MAX_ATTEMPTS = 5;
-const INITIAL_DELAY = 1000; // 1 second
-const MAX_DELAY = 60000; // 1 minute
+const INITIAL_DELAY = 1000;
+const MAX_DELAY = 60000;
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -42,8 +45,8 @@ const Auth = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean; name?: boolean }>({});
 
-  // Check rate limit status on mount and periodically
   useEffect(() => {
     const checkRateLimit = () => {
       const now = Date.now();
@@ -55,7 +58,6 @@ const Auth = () => {
         if (state.blockedUntil && state.blockedUntil > now) {
           setRateLimitedUntil(state.blockedUntil);
         } else if (state.blockedUntil && state.blockedUntil <= now) {
-          // Block period expired, reset
           localStorage.removeItem(RATE_LIMIT_KEY);
           setRateLimitedUntil(null);
         }
@@ -70,7 +72,6 @@ const Auth = () => {
 
   useEffect(() => {
     if (user && !loading) {
-      // Clear rate limiting on successful auth
       localStorage.removeItem(RATE_LIMIT_KEY);
       setRateLimitedUntil(null);
       navigate("/dashboard");
@@ -91,7 +92,6 @@ const Auth = () => {
     const newAttempts = state.attempts + 1;
 
     if (newAttempts >= MAX_ATTEMPTS) {
-      // Calculate exponential backoff delay
       const delayMultiplier = Math.pow(2, newAttempts - MAX_ATTEMPTS);
       const delay = Math.min(INITIAL_DELAY * delayMultiplier, MAX_DELAY);
       const blockedUntil = now + delay;
@@ -155,10 +155,44 @@ const Auth = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const validateField = (field: "email" | "password" | "name") => {
+    if (!touched[field]) return;
+    
+    const newErrors = { ...errors };
+    
+    if (field === "email") {
+      const emailResult = emailSchema.safeParse(email);
+      if (!emailResult.success) {
+        newErrors.email = emailResult.error.errors[0].message;
+      } else {
+        delete newErrors.email;
+      }
+    }
+    
+    if (field === "password") {
+      const passwordResult = passwordSchema.safeParse(password);
+      if (!passwordResult.success) {
+        newErrors.password = passwordResult.error.errors[0].message;
+      } else {
+        delete newErrors.password;
+      }
+    }
+    
+    if (field === "name" && mode === "signup") {
+      const nameResult = nameSchema.safeParse(name);
+      if (!nameResult.success) {
+        newErrors.name = nameResult.error.errors[0].message;
+      } else {
+        delete newErrors.name;
+      }
+    }
+    
+    setErrors(newErrors);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Check rate limiting first
     if (isRateLimited()) {
       return;
     }
@@ -171,20 +205,14 @@ const Auth = () => {
       if (mode === "login") {
         const { error } = await signIn(email, password);
         if (error) {
-          // Record failed login attempt for rate limiting
           recordFailedAttempt();
-
-          // Generic error message to prevent email enumeration
           toast.error("Inloggningen misslyckades. Kontrollera dina uppgifter och försök igen.");
         } else {
-          // Success - rate limit cleared in useEffect
           navigate("/dashboard");
         }
       } else {
         const { error } = await signUp(email, password, name);
         if (error) {
-          // Generic error message to prevent email enumeration
-          // Don't reveal whether email is already registered
           toast.error("Registreringen misslyckades. Försök igen eller kontakta support.");
         } else {
           toast.success("Verifieringslänk skickad till din e-post");
@@ -198,82 +226,72 @@ const Auth = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Laddar...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Laddar...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background flex">
-      {/* Left side - Branding (hidden on mobile) */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 items-center justify-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjA1IiBzdHJva2Utd2lkdGg9IjEiLz48L3BhdHRlcm4+PC9kZWZzPjxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9InVybCgjZ3JpZCkiLz48L3N2Zz4=')] opacity-40"></div>
-        <div className="relative z-10 max-w-md text-white">
-          <div className="mb-8">
-            <img src={logo} alt="Päronsplit" className="h-24 mb-6" />
-            <h1 className="text-4xl font-bold mb-4 tracking-tight">Päronsplit</h1>
-            <p className="text-lg text-white/90 leading-relaxed">
-              Dela utgifter rättvist och enkelt med vänner, familj och partners
-            </p>
-          </div>
-          <div className="space-y-4 text-white/80">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mt-0.5">
-                <span className="text-sm">✓</span>
-              </div>
-              <div>
-                <p className="font-medium text-white">Flexibel fördelning</p>
-                <p className="text-sm text-white/70">Anpassa hur utgifter delas mellan gruppmedlemmar</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mt-0.5">
-                <span className="text-sm">✓</span>
-              </div>
-              <div>
-                <p className="font-medium text-white">Automatisk balansering</p>
-                <p className="text-sm text-white/70">Se direkt vem som är skyldig vem pengar</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-8 h-8 bg-white/20 rounded-lg flex items-center justify-center mt-0.5">
-                <span className="text-sm">✓</span>
-              </div>
-              <div>
-                <p className="font-medium text-white">Importera från bank</p>
-                <p className="text-sm text-white/70">Ladda upp CSV/Excel-filer för snabb registrering</p>
-              </div>
-            </div>
-          </div>
+    <div className="min-h-screen bg-background">
+      {/* Minimal navigation */}
+      <nav className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-10">
+        <div className="container max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-foreground hover:opacity-70 transition-opacity"
+            aria-label="Tillbaka till startsidan"
+          >
+            <img src={logo} alt="Päronsplit" className="h-8 sm:h-10" />
+          </button>
         </div>
-      </div>
+      </nav>
 
-      {/* Right side - Auth form */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          {/* Mobile logo */}
-          <div className="lg:hidden text-center mb-8">
-            <img src={logo} alt="Päronsplit" className="h-20 mx-auto mb-3" />
+      {/* Auth form - centered */}
+      <div className="flex items-center justify-center px-4 py-12 sm:py-16 min-h-[calc(100vh-73px)]">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          className="w-full max-w-[400px]"
+        >
+          {/* Alternative: Minimal back link */}
+          <button
+            onClick={() => navigate("/")}
+            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8 sm:mb-12 -mt-4"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Tillbaka
+          </button>
+
+          {/* Heading */}
+          <div className="mb-10 sm:mb-12">
+            <h2 className="text-heading text-2xl sm:text-3xl mb-2">
+              {mode === "login" ? "Logga in" : "Skapa konto"}
+            </h2>
+            {mode === "signup" && (
+              <p className="text-sm text-muted-foreground">
+                Börja dela utgifter rättvist
+              </p>
+            )}
           </div>
 
-          {/* Auth card */}
-          <div className="bg-background/80 backdrop-blur-sm border border-border rounded-2xl shadow-lg p-8">
-            <div className="mb-8">
-              <h2 className="text-2xl font-semibold text-foreground">
-                {mode === "login" ? "Logga in" : "Skapa konto"}
-              </h2>
-              <p className="text-muted-foreground mt-2">
-                {mode === "login"
-                  ? "Välkommen tillbaka till Päronsplit"
-                  : "Börja dela utgifter rättvist idag"}
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <AnimatePresence mode="wait">
               {mode === "signup" && (
-                <div className="space-y-2">
-                  <Label htmlFor="name" className="text-sm font-medium text-foreground">
+                <motion.div
+                  key="name-field"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className="space-y-2 overflow-hidden"
+                >
+                  <Label htmlFor="name" className="text-sm text-foreground">
                     Namn
                   </Label>
                   <Input
@@ -281,95 +299,143 @@ const Auth = () => {
                     type="text"
                     placeholder="Ditt namn"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      setTouched({ ...touched, name: true });
+                    }}
+                    onBlur={() => {
+                      setTouched({ ...touched, name: true });
+                      validateField("name");
+                    }}
                     autoComplete="name"
-                    className="h-11"
+                    className={`h-12 text-base ${
+                      touched.name && errors.name
+                        ? "border-destructive"
+                        : ""
+                    }`}
                   />
-                  {errors.name && (
+                  {errors.name && touched.name && (
                     <p className="text-xs text-destructive mt-1">{errors.name}</p>
                   )}
-                </div>
+                </motion.div>
               )}
+            </AnimatePresence>
 
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">
-                  E-postadress
-                </Label>
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm text-foreground">
+                E-postadress
+              </Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="erik@example.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  setTouched({ ...touched, email: true });
+                }}
+                onBlur={() => {
+                  setTouched({ ...touched, email: true });
+                  validateField("email");
+                }}
+                autoComplete="email"
+                className={`h-12 text-base ${
+                  touched.email && errors.email
+                    ? "border-destructive"
+                    : ""
+                }`}
+              />
+              {errors.email && touched.email && (
+                <p className="text-xs text-destructive mt-1">{errors.email}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm text-foreground">
+                Lösenord
+              </Label>
+              <div className="relative">
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="erik@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  className="h-11"
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder={mode === "login" ? "Ditt lösenord" : "Minst 8 tecken"}
+                  value={password}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    setTouched({ ...touched, password: true });
+                  }}
+                  onBlur={() => {
+                    setTouched({ ...touched, password: true });
+                    validateField("password");
+                  }}
+                  autoComplete={mode === "login" ? "current-password" : "new-password"}
+                  className={`h-12 text-base pr-12 ${
+                    touched.password && errors.password
+                      ? "border-destructive"
+                      : ""
+                  }`}
                 />
-                {errors.email && (
-                  <p className="text-xs text-destructive mt-1">{errors.email}</p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                  Lösenord
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Minst 8 tecken (stor/liten bokstav + siffra)"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete={mode === "login" ? "current-password" : "new-password"}
-                    className="h-11 pr-20"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {showPassword ? "Dölj" : "Visa"}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-destructive mt-1">{errors.password}</p>
-                )}
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-11 text-base font-medium mt-6"
-                disabled={isSubmitting || (rateLimitedUntil !== null && rateLimitedUntil > Date.now())}
-              >
-                {isSubmitting
-                  ? (mode === "login" ? "Loggar in..." : "Skapar konto...")
-                  : rateLimitedUntil && rateLimitedUntil > Date.now()
-                  ? `Vänta ${Math.ceil((rateLimitedUntil - Date.now()) / 1000)}s`
-                  : (mode === "login" ? "Logga in" : "Skapa konto")}
-              </Button>
-            </form>
-
-            <div className="mt-6 pt-6 border-t border-border">
-              <p className="text-sm text-center text-muted-foreground">
-                {mode === "login" ? "Inget konto?" : "Har du redan ett konto?"}
-                {" "}
                 <button
                   type="button"
-                  onClick={() => {
-                    setMode(mode === "login" ? "signup" : "login");
-                    setErrors({});
-                    setEmail("");
-                    setPassword("");
-                    setName("");
-                  }}
-                  className="text-primary font-medium hover:underline"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors p-2 -mr-2"
+                  aria-label={showPassword ? "Dölj lösenord" : "Visa lösenord"}
                 >
-                  {mode === "login" ? "Skapa ett gratis konto" : "Logga in här"}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                 </button>
-              </p>
+              </div>
+              {mode === "signup" && (
+                <PasswordStrengthIndicator password={password} show={!!password} />
+              )}
+              {errors.password && touched.password && (
+                <p className="text-xs text-destructive mt-1">{errors.password}</p>
+              )}
             </div>
+
+            <Button
+              type="submit"
+              className="w-full h-12 text-base font-normal mt-8"
+              disabled={isSubmitting || (rateLimitedUntil !== null && rateLimitedUntil > Date.now())}
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {mode === "login" ? "Loggar in..." : "Skapar konto..."}
+                </>
+              ) : rateLimitedUntil && rateLimitedUntil > Date.now() ? (
+                `Vänta ${Math.ceil((rateLimitedUntil - Date.now()) / 1000)}s`
+              ) : (
+                mode === "login" ? "Logga in" : "Skapa konto"
+              )}
+            </Button>
+          </form>
+
+          {/* Mode toggle - minimal, secondary */}
+          <div className="mt-8 pt-8 border-t border-border">
+            <p className="text-sm text-center text-muted-foreground">
+              {mode === "login" ? "Inget konto?" : "Har du redan ett konto?"}
+              {" "}
+              <button
+                type="button"
+                onClick={() => {
+                  setMode(mode === "login" ? "signup" : "login");
+                  setErrors({});
+                  setTouched({});
+                  setEmail("");
+                  setPassword("");
+                  setName("");
+                }}
+                className="text-foreground font-normal hover:underline"
+              >
+                {mode === "login" ? "Skapa konto" : "Logga in"}
+              </button>
+            </p>
           </div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
