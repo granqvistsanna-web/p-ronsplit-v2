@@ -220,6 +220,7 @@ export function AddContributionModal({
                   size="icon"
                   onClick={handleClose}
                   className="h-8 w-8"
+                  aria-label="Stäng dialog"
                 >
                   <X size={18} />
                 </Button>

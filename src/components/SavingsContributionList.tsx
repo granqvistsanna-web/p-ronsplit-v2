@@ -116,6 +116,7 @@ export function SavingsContributionList({
                 size="sm"
                 onClick={() => onDelete(contribution.id)}
                 className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                aria-label="Ta bort insättning"
               >
                 <Trash2 size={14} />
               </Button>
