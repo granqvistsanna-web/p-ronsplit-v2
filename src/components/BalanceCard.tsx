@@ -80,7 +80,9 @@ export function BalanceCard({
 
   const handleConfirmSettle = async () => {
     if (!negativeUser || !positiveUser) return;
-    await onSettle(negativeUser.user_id, positiveUser.user_id, Math.round(oweAmount));
+    // Don't round when saving - preserve full precision for financial accuracy
+    // Rounding is only for display purposes
+    await onSettle(negativeUser.user_id, positiveUser.user_id, oweAmount);
     setIsSettleModalOpen(false);
   };
 
@@ -217,11 +219,13 @@ export function BalanceCard({
                       ))}
 
                       {/* Target explanation */}
-                      <div className="pt-2 border-t border-border/40">
-                        <p className="text-xs text-muted-foreground">
-                          Mål: Båda ska ha samma nettoresultat ({Math.round(breakdown[0]?.targetNet || 0).toLocaleString("sv-SE")} kr)
-                        </p>
-                      </div>
+                      {breakdown.length > 0 && (
+                        <div className="pt-2 border-t border-border/40">
+                          <p className="text-xs text-muted-foreground">
+                            Mål: Båda ska ha samma nettoresultat ({Math.round(breakdown[0].targetNet).toLocaleString("sv-SE")} kr)
+                          </p>
+                        </div>
+                      )}
                     </>
                   ) : (
                     <div className="text-center py-4">
@@ -333,6 +337,7 @@ export function BalanceCard({
           fromUser={negativeUser}
           toUser={positiveUser}
           amount={oweAmount}
+          isSettling={isSettling}
         />
       )}
     </div>

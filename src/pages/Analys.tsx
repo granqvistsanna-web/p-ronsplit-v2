@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
-import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight } from "lucide-react";
+import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -26,6 +27,7 @@ export default function Analys() {
   const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
   const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const filterRef = useRef<HTMLDivElement>(null);
 
   const loading = householdLoading || expensesLoading || incomesLoading;
 
@@ -112,7 +114,101 @@ export default function Analys() {
     return months;
   }, [expenses, incomes, selectedYear, selectedMonth]);
 
-  const yearOptions = Array.from({ length: 3 }, (_, i) => currentDate.getFullYear() - i);
+  const yearOptions = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
+
+
+  // Navigation functions - memoized to prevent unnecessary re-renders
+  const goToCurrentMonth = useCallback(() => {
+    setSelectedYear(currentDate.getFullYear());
+    setSelectedMonth(currentDate.getMonth() + 1);
+  }, []);
+
+  const goToPreviousMonth = useCallback(() => {
+    setSelectedMonth(prevMonth => {
+      if (prevMonth === 1) {
+        setSelectedYear(prevYear => prevYear - 1);
+        return 12;
+      }
+      return prevMonth - 1;
+    });
+  }, []);
+
+  const goToNextMonth = useCallback(() => {
+    setSelectedMonth(prevMonth => {
+      if (prevMonth === 12) {
+        setSelectedYear(prevYear => prevYear + 1);
+        return 1;
+      }
+      return prevMonth + 1;
+    });
+  }, []);
+
+  const isCurrentMonth = selectedYear === currentDate.getFullYear() && 
+                        selectedMonth === currentDate.getMonth() + 1;
+
+  const handleMonthYearChange = (value: string) => {
+    const [year, month] = value.split('-').map(Number);
+    setSelectedYear(year);
+    setSelectedMonth(month);
+  };
+
+  const currentMonthYearValue = `${selectedYear}-${selectedMonth}`;
+
+  // Keyboard navigation for time filter
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle if not typing in an input/textarea
+      if (
+        event.target instanceof HTMLInputElement ||
+        event.target instanceof HTMLTextAreaElement ||
+        (event.target as HTMLElement)?.isContentEditable
+      ) {
+        return;
+      }
+
+      // Arrow keys for month navigation (Cmd/Ctrl + Arrow)
+      if (event.key === "ArrowLeft" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        goToPreviousMonth();
+      } else if (event.key === "ArrowRight" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        if (!isCurrentMonth) {
+          goToNextMonth();
+        }
+      } else if (event.key === "Home" && (event.metaKey || event.ctrlKey)) {
+        event.preventDefault();
+        goToCurrentMonth();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [goToPreviousMonth, goToNextMonth, goToCurrentMonth, isCurrentMonth]);
+
+  // Optimize monthYearOptions with better memoization
+  const monthYearOptions = useMemo(() => {
+    const options: Array<{ value: string; label: string; month: number; year: number }> = [];
+    const startYear = currentDate.getFullYear();
+    const currentMonth = currentDate.getMonth() + 1;
+    
+    // Generate options: current year + previous 2 years, all months
+    for (let year = startYear; year >= startYear - 2; year--) {
+      for (let month = 12; month >= 1; month--) {
+        // Only show past and current months (not future)
+        const isFuture = year > startYear || (year === startYear && month > currentMonth);
+        if (!isFuture) {
+          options.push({
+            value: `${year}-${month}`,
+            label: `${MONTHS[month - 1]} ${year}`,
+            month,
+            year
+          });
+        }
+      }
+    }
+    
+    return options;
+  }, []); // Empty deps - only depends on currentDate which is stable
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -172,57 +268,117 @@ export default function Analys() {
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
-          <h1 className="text-heading text-2xl mb-1">Analys</h1>
-          <p className="text-caption">Ekonomisk översikt och utveckling</p>
+          <h1 className="text-heading text-2xl">Analys</h1>
         </div>
 
-        {/* Time Filter - Persistent Month Selection */}
-        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '50ms' }}>
-          <CardContent className="p-5">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-label-mono">
-                  Månad
-                </label>
-                <Select
-                  value={selectedMonth.toString()}
-                  onValueChange={(v) => setSelectedMonth(Number(v))}
+        {/* Time Filter - Expert UX Optimized */}
+        <div 
+          ref={filterRef}
+          className="mb-6 animate-fade-in" 
+          style={{ animationDelay: '50ms' }}
+          role="group"
+          aria-label="Tidsfilter för analys"
+        >
+          <div className="flex items-center gap-2 sm:gap-3 flex-nowrap">
+            {/* Previous month button - optimized */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToPreviousMonth}
+              className="h-9 w-9 p-0 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-accent hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-offset-1"
+              aria-label="Föregående månad"
+              title="Föregående månad (⌘←)"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+
+            {/* Combined Month/Year Selector - optimized */}
+            <div className="flex-1 min-w-0">
+              <Select
+                value={currentMonthYearValue}
+                onValueChange={handleMonthYearChange}
+              >
+                <SelectTrigger 
+                  className="h-9 w-full text-sm font-medium [touch-action:manipulation] transition-all duration-150 hover:border-foreground/20 hover:bg-accent/50 focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
+                  aria-label="Välj månad och år"
                 >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MONTHS.map((month, idx) => (
-                      <SelectItem key={idx + 1} value={(idx + 1).toString()}>
-                        {month}
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
+                    <SelectValue className="font-medium truncate">
+                      {MONTHS[selectedMonth - 1]} {selectedYear}
+                    </SelectValue>
+                  </div>
+                </SelectTrigger>
+                <SelectContent className="max-h-[300px]">
+                  {monthYearOptions.map((option) => {
+                    const isCurrent = option.year === currentDate.getFullYear() && 
+                                     option.month === currentDate.getMonth() + 1;
+                    const isSelected = option.value === currentMonthYearValue;
+                    return (
+                      <SelectItem 
+                        key={option.value} 
+                        value={option.value}
+                        className={`transition-colors cursor-pointer ${
+                          isCurrent ? "font-medium" : ""
+                        } ${
+                          isSelected ? "bg-accent" : "hover:bg-accent/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full gap-2">
+                          <span>{option.label}</span>
+                          {isCurrent && (
+                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
+                              Nuvarande
+                            </span>
+                          )}
+                        </div>
                       </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <label className="text-label-mono">
-                  År
-                </label>
-                <Select
-                  value={selectedYear.toString()}
-                  onValueChange={(v) => setSelectedYear(Number(v))}
-                >
-                  <SelectTrigger className="h-9 text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map(year => (
-                      <SelectItem key={year} value={year.toString()}>
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Next month button - optimized */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={goToNextMonth}
+              className="h-9 w-9 p-0 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-accent hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-offset-1"
+              aria-label="Nästa månad"
+              title={isCurrentMonth ? "Redan på nuvarande månad" : "Nästa månad (⌘→)"}
+              disabled={isCurrentMonth}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+
+            {/* Quick action: Current month - only when needed */}
+            {!isCurrentMonth && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={goToCurrentMonth}
+                className="h-9 text-xs px-2.5 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-primary/10 hover:text-primary active:scale-95 rounded-md font-medium focus-visible:ring-2 focus-visible:ring-offset-1"
+                title="Gå till nuvarande månad (⌘Home)"
+                aria-label="Gå till nuvarande månad"
+              >
+                <span className="flex items-center gap-1.5 whitespace-nowrap">
+                  <Calendar className="h-3 w-3" />
+                  <span className="hidden sm:inline">Nuvarande</span>
+                  <span className="sm:hidden">Nu</span>
+                </span>
+              </Button>
+            )}
+          </div>
+          
+          {/* Keyboard shortcut hint - subtle, only on desktop */}
+          <p className="text-xs text-muted-foreground mt-2 hidden lg:block">
+            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono ml-1">←</kbd>
+            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono ml-1">→</kbd>
+            {" "}för att navigera
+          </p>
+        </div>
 
         {/* Summary Metrics - Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -291,7 +447,16 @@ export default function Analys() {
                     >
                       <div className="flex items-baseline justify-between">
                         <span className={`text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {MONTHS[parseInt(item.month.split('-')[1]) - 1]} {item.month.split('-')[0]}
+                          {(() => {
+                            const monthParts = item.month.split('-');
+                            if (monthParts.length === 2) {
+                              const monthIndex = parseInt(monthParts[1]) - 1;
+                              if (monthIndex >= 0 && monthIndex < MONTHS.length) {
+                                return `${MONTHS[monthIndex]} ${monthParts[0]}`;
+                              }
+                            }
+                            return item.month; // Fallback to raw value if parsing fails
+                          })()}
                         </span>
                         <div className="flex gap-4 text-xs text-numeric">
                           <span className="text-income">

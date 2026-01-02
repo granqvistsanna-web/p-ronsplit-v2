@@ -14,18 +14,19 @@ export function useAllUsers() {
   const { data: users = [], isLoading: loading } = useQuery({
     queryKey: ['allUsers'],
     queryFn: async () => {
-      // Use the get_all_users RPC function
-      const { data, error } = await supabase.rpc("get_all_users") as {
-        data: PublicUser[] | null;
-        error: Error | null
-      };
+      // Use direct query instead of RPC for better reliability
+      // Query public_profiles view which has proper RLS
+      const { data, error } = await supabase
+        .from("public_profiles")
+        .select("id, user_id, name")
+        .order("name", { ascending: true });
 
       if (error) {
         console.error("Error fetching all users:", error);
         throw error;
       }
 
-      return data || [];
+      return (data || []) as PublicUser[];
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 minutes - users don't change frequently

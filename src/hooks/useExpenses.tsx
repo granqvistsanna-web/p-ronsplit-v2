@@ -197,17 +197,30 @@ export function useExpenses(groupId?: string) {
     }
 
     try {
-      // First, verify the user owns this expense
+      // First, verify the expense exists and user has permission
       const expense = expenses.find(e => e.id === expenseId);
       if (!expense) {
         toast.error("Utgiften hittades inte");
         return;
       }
 
+      // Security check: Verify user created this expense or it belongs to current group
+      if (expense.paid_by !== user.id) {
+        toast.error("Du har inte behörighet att uppdatera denna utgift");
+        return;
+      }
+
+      // Additional check: Verify expense belongs to current group if groupId is set
+      if (groupId && expense.group_id !== groupId) {
+        toast.error("Utgiften tillhör inte det valda hushållet");
+        return;
+      }
+
       const { error } = await supabase
         .from("expenses")
         .update(updates)
-        .eq("id", expenseId);
+        .eq("id", expenseId)
+        .eq("paid_by", user.id); // Server-side check: only update if user is creator
 
       if (error) throw error;
 
@@ -233,11 +246,24 @@ export function useExpenses(groupId?: string) {
         return;
       }
 
-      // Delete from database - any group member can delete expenses
+      // Security check: Verify user created this expense or it belongs to current group
+      if (expenseToDelete.paid_by !== user.id) {
+        toast.error("Du har inte behörighet att ta bort denna utgift");
+        return;
+      }
+
+      // Additional check: Verify expense belongs to current group if groupId is set
+      if (groupId && expenseToDelete.group_id !== groupId) {
+        toast.error("Utgiften tillhör inte det valda hushållet");
+        return;
+      }
+
+      // Delete from database - only if user is creator
       const { error } = await supabase
         .from("expenses")
         .delete()
-        .eq("id", expenseId);
+        .eq("id", expenseId)
+        .eq("paid_by", user.id); // Server-side check: only delete if user is creator
 
       if (error) throw error;
 

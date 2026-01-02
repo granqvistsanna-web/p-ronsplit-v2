@@ -151,16 +151,29 @@ export function useIncomes(groupId?: string) {
     }
 
     try {
-      // First, verify the user owns this income
+      // First, verify the income exists and user has permission
       const income = incomes.find(i => i.id === incomeId);
       if (!income) {
         toast.error("Inkomsten hittades inte");
         return;
       }
 
+      // Security check: Verify user is the recipient of this income
+      if (income.recipient !== user.id) {
+        toast.error("Du har inte behörighet att uppdatera denna inkomst");
+        return;
+      }
+
+      // Additional check: Verify income belongs to current group if groupId is set
+      if (groupId && income.group_id !== groupId) {
+        toast.error("Inkomsten tillhör inte det valda hushållet");
+        return;
+      }
+
       const { error } = await (supabase.from("incomes" as any) as any)
         .update(updates)
-        .eq("id", incomeId);
+        .eq("id", incomeId)
+        .eq("recipient", user.id); // Server-side check: only update if user is recipient
 
       if (error) throw error;
 
@@ -173,6 +186,11 @@ export function useIncomes(groupId?: string) {
   };
 
   const deleteIncome = async (incomeId: string) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return;
+    }
+
     try {
       // Find the income to delete (for potential undo)
       const incomeToDelete = incomes.find((i) => i.id === incomeId);
@@ -181,10 +199,23 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      // Delete from database
+      // Security check: Verify user is the recipient of this income
+      if (incomeToDelete.recipient !== user.id) {
+        toast.error("Du har inte behörighet att ta bort denna inkomst");
+        return;
+      }
+
+      // Additional check: Verify income belongs to current group if groupId is set
+      if (groupId && incomeToDelete.group_id !== groupId) {
+        toast.error("Inkomsten tillhör inte det valda hushållet");
+        return;
+      }
+
+      // Delete from database - only if user is recipient
       const { error } = await (supabase.from("incomes" as any) as any)
         .delete()
-        .eq("id", incomeId);
+        .eq("id", incomeId)
+        .eq("recipient", user.id); // Server-side check: only delete if user is recipient
 
       if (error) throw error;
 

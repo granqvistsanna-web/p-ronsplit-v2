@@ -9,6 +9,7 @@ interface SettlementModalProps {
   fromUser: GroupMember;
   toUser: GroupMember;
   amount: number;
+  isSettling?: boolean;
 }
 
 export function SettlementModal({
@@ -18,6 +19,7 @@ export function SettlementModal({
   fromUser,
   toUser,
   amount,
+  isSettling = false,
 }: SettlementModalProps) {
   return (
     <AnimatePresence>
@@ -61,11 +63,20 @@ export function SettlementModal({
               </div>
 
               <div className="flex gap-3">
-                <Button variant="ghost" className="flex-1" onClick={onClose}>
+                <Button 
+                  variant="ghost" 
+                  className="flex-1" 
+                  onClick={onClose}
+                  disabled={isSettling}
+                >
                   Avbryt
                 </Button>
-                <Button className="flex-1" onClick={onConfirm}>
-                  Bekräfta
+                <Button 
+                  className="flex-1" 
+                  onClick={onConfirm}
+                  disabled={isSettling}
+                >
+                  {isSettling ? "Registrerar..." : "Bekräfta"}
                 </Button>
               </div>
             </div>

@@ -255,7 +255,6 @@ const Auth = () => {
           {/* Mobile logo */}
           <div className="lg:hidden text-center mb-8">
             <img src={logo} alt="Päronsplit" className="h-20 mx-auto mb-3" />
-            <h1 className="text-2xl font-bold text-foreground tracking-tight">Päronsplit</h1>
           </div>
 
           {/* Auth card */}

@@ -89,8 +89,8 @@ export function useSettlements(groupId?: string) {
       return data;
     } catch (error) {
       console.error("Error adding settlement:", error);
-      toast.error("Kunde inte registrera avräkning");
-      return null;
+      // Don't show toast here - let the caller handle error feedback
+      throw error;
     }
   };
 

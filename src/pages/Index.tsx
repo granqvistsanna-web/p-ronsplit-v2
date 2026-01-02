@@ -167,13 +167,21 @@ const Index = () => {
     if (!household?.id) return;
     setIsSettling(true);
     try {
-      await addSettlement({
+      const result = await addSettlement({
         group_id: household.id,
         from_user: fromUser,
         to_user: toUser,
         amount,
         date,
       });
+      if (result) {
+        toast.success("Avräkning registrerad!");
+      } else {
+        toast.error("Kunde inte registrera avräkning");
+      }
+    } catch (error) {
+      console.error("Settlement failed:", error);
+      toast.error("Kunde inte registrera avräkning");
     } finally {
       setIsSettling(false);
     }

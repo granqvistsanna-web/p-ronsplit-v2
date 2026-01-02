@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo, useRef } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -201,6 +201,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   // Idle timeout detection - auto logout after 30 minutes of inactivity
+  // Use ref to store latest signOut to avoid stale closure
+  const signOutRef = useRef(signOut);
+  useEffect(() => {
+    signOutRef.current = signOut;
+  }, [signOut]);
+
   useEffect(() => {
     if (!user) return; // Only run when user is logged in
 
@@ -212,7 +218,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       timeoutId = setTimeout(async () => {
         console.log("User idle timeout - signing out");
         toast.info("Du har loggats ut på grund av inaktivitet");
-        await signOut();
+        // Use ref to get latest signOut function, avoiding stale closure
+        await signOutRef.current();
       }, IDLE_TIMEOUT);
     };
 
@@ -234,13 +241,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.removeEventListener(event, resetIdleTimer);
       });
     };
-  }, [user, signOut]);
+  }, [user]); // signOut removed from deps since we use ref
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     if (!isSupabaseConfigured) {
       return { error: new Error("Supabase är inte konfigurerat") };
     }
 
+    // Use the current origin for redirect (works for both localhost and production)
     const redirectUrl = `${window.location.origin}/`;
 
     console.log("Attempting signup with email:", email, "redirect:", redirectUrl);
@@ -254,7 +262,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    console.log("Signup response:", { data, error });
+    console.log("Signup response:", { 
+      data: data ? { user: data.user?.id, session: !!data.session } : null, 
+      error: error ? { message: error.message, status: error.status } : null 
+    });
+    
+    // If there's an error, provide more helpful feedback
+    if (error) {
+      console.error("Signup error details:", error);
+      // Check if it's a redirect URL issue
+      if (error.message?.includes("redirect") || error.message?.includes("url")) {
+        console.warn("⚠️ Redirect URL might not be configured in Supabase. Add this URL to allowed redirect URLs:", redirectUrl);
+      }
+    }
     
     return { error: error as Error | null };
   }, []);
