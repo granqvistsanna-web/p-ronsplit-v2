@@ -49,14 +49,14 @@ export const ExpenseItem = memo(function ExpenseItem({ expense, members, onEdit,
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[15px] font-medium text-foreground truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {expense.description || "Utgift"}
             </p>
             {expense.repeat && expense.repeat !== "none" && (
-              <Repeat size={12} className="text-primary shrink-0" strokeWidth={2.5} />
+              <Repeat size={16} className="text-primary shrink-0" strokeWidth={2.5} />
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground mt-0.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span>{payer?.name || "Okänd"}</span>
             <span className="opacity-40">•</span>
             <span>{formattedDate}</span>
@@ -70,7 +70,7 @@ export const ExpenseItem = memo(function ExpenseItem({ expense, members, onEdit,
         </div>
 
         {/* Amount */}
-        <span className="text-[15px] font-semibold text-expense tabular-nums shrink-0">
+        <span className="text-sm font-semibold text-expense tabular-nums shrink-0">
           -{safeAmount.toLocaleString("sv-SE")} kr
         </span>
       </motion.button>

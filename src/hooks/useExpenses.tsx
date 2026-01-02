@@ -59,7 +59,7 @@ export function useExpenses(groupId?: string) {
 
       if (error) throw error;
 
-      const normalized = (data ?? []).map((row: any) => ({
+      const normalized = (data ?? []).map((row: Record<string, unknown>) => ({
         ...row,
         splits: parseSplits(row.splits),
       })) as Expense[];

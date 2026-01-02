@@ -460,7 +460,7 @@ export default function Aktivitet() {
                 onClick={() => setIsAddModalOpen(true)}
                 className="gap-2"
               >
-                <Plus size={18} />
+                <Plus size={20} />
                 Lägg till transaktion
               </Button>
             )}

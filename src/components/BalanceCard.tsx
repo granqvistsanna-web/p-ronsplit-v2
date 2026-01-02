@@ -112,8 +112,7 @@ export function BalanceCard({
           <CardContent className="p-4 sm:p-5">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-full bg-income-bg">
-                <Check size={18} className="text-income sm:hidden" />
-                <Check size={20} className="text-income hidden sm:block" />
+                <Check size={20} className="text-income" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground text-sm sm:text-base">Ni är jämna!</p>
@@ -308,7 +307,7 @@ export function BalanceCard({
 
             {/* Quick settle button */}
             <Button
-              className="w-full mt-1 sm:mt-2"
+              className="w-full mt-4"
               onClick={() => setIsSettleModalOpen(true)}
               disabled={isSettling}
             >

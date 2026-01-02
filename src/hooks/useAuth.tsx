@@ -62,8 +62,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If not found, retry a few times to handle edge cases
       if (!data) {
         if (retryCount < 3) {
-          console.log(`Profile not found for user ${sessionUser.id}, retrying... (attempt ${retryCount + 1}/3)`);
-
           // Exponential backoff: 100ms, 200ms, 400ms
           await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, retryCount)));
 
@@ -162,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       clearTimeout(loadingTimeout);
     };
-  }, []);
+  }, [fetchProfile]);
 
   const signOut = useCallback(async () => {
     if (!isSupabaseConfigured) {
@@ -213,10 +211,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
     let timeoutId: NodeJS.Timeout;
 
-    const resetIdleTimer = () => {
+      const resetIdleTimer = () => {
       clearTimeout(timeoutId);
       timeoutId = setTimeout(async () => {
-        console.log("User idle timeout - signing out");
         toast.info("Du har loggats ut på grund av inaktivitet");
         // Use ref to get latest signOut function, avoiding stale closure
         await signOutRef.current();
@@ -250,8 +247,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Use the current origin for redirect (works for both localhost and production)
     const redirectUrl = `${window.location.origin}/`;
-
-    console.log("Attempting signup with email:", email, "redirect:", redirectUrl);
     
     const { data, error } = await supabase.auth.signUp({
       email,
@@ -260,11 +255,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         emailRedirectTo: redirectUrl,
         data: { name }
       }
-    });
-
-    console.log("Signup response:", { 
-      data: data ? { user: data.user?.id, session: !!data.session } : null, 
-      error: error ? { message: error.message, status: error.status } : null 
     });
     
     // If there's an error, provide more helpful feedback
@@ -283,15 +273,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!isSupabaseConfigured) {
       return { error: new Error("Supabase är inte konfigurerat") };
     }
-
-    console.log("Attempting signin with email:", email);
     
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
-
-    console.log("Signin response:", { data, error });
     
     return { error: error as Error | null };
   }, []);
@@ -350,8 +336,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
         return { error: new Error("Kunde inte radera kontot") };
       }
-
-      console.log("Account deletion response:", data);
 
       // Sign out the user (this will clear local state)
       await signOut();

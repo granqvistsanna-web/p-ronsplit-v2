@@ -45,11 +45,11 @@ export function SavingsProjectCard({
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-base text-foreground mb-1 truncate">
+            <h3 className="font-semibold text-base text-foreground mb-2 truncate">
               {project.name}
             </h3>
             {project.description && (
-              <p className="text-caption text-sm line-clamp-2">{project.description}</p>
+              <p className="text-caption line-clamp-2">{project.description}</p>
             )}
           </div>
           <Badge variant={isCompleted ? "default" : "secondary"} className="shrink-0">
@@ -69,7 +69,7 @@ export function SavingsProjectCard({
               {cappedPercentage.toFixed(0)}%
             </span>
           </div>
-          <div className="h-2.5 rounded-full overflow-hidden bg-muted">
+          <div className="h-2 rounded-lg overflow-hidden bg-muted">
             <div
               className={`h-full transition-all duration-500 ease-out ${
                 isCompleted ? "bg-foreground" : "bg-savings"
@@ -85,7 +85,7 @@ export function SavingsProjectCard({
         </div>
 
         {/* Stats Row */}
-        <div className="flex items-center justify-between text-sm pt-2 border-t">
+        <div className="flex items-center justify-between text-sm pt-4 border-t">
           <div className="flex items-center gap-4">
             <span className="text-caption">
               {project.contribution_count} {project.contribution_count === 1 ? "insättning" : "insättningar"}
@@ -99,11 +99,11 @@ export function SavingsProjectCard({
         </div>
 
         {/* Action Buttons */}
-        <div className="flex items-center gap-2 pt-2">
+        <div className="flex items-center gap-2 pt-4">
           <Button
             size="sm"
             onClick={onAddContribution}
-            className="gap-1.5 flex-1"
+            className="gap-2 flex-1"
           >
             <Plus size={16} />
             Insättning
@@ -112,7 +112,7 @@ export function SavingsProjectCard({
             size="sm"
             variant="secondary"
             onClick={onEdit}
-            className="gap-1.5 flex-1"
+            className="gap-2 flex-1"
           >
             <Edit size={16} />
             Redigera
@@ -122,7 +122,7 @@ export function SavingsProjectCard({
               size="sm"
               variant="ghost"
               onClick={() => setIsExpanded(!isExpanded)}
-              className="gap-1"
+              className="gap-2"
             >
               {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
             </Button>

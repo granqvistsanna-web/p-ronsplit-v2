@@ -118,7 +118,7 @@ export function SavingsContributionList({
                 className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                 aria-label="Ta bort insättning"
               >
-                <Trash2 size={14} />
+                <Trash2 size={16} />
               </Button>
             )}
           </div>

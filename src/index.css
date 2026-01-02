@@ -183,7 +183,7 @@
   body {
     @apply bg-background text-foreground;
     font-weight: 400;
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px - base type scale */
     line-height: 1.6;
     letter-spacing: -0.006em;
     -webkit-tap-highlight-color: transparent;
@@ -204,28 +204,33 @@
     color: hsl(var(--foreground));
   }
 
+  /* Standardized type scale - 3 clear levels */
   h1 {
-    font-size: 1.875rem;
+    font-size: 1.875rem; /* 30px - display */
     font-weight: 600;
     letter-spacing: -0.03em;
+    line-height: 1.2;
   }
 
   h2 {
-    font-size: 1.375rem;
+    font-size: 1.5rem; /* 24px - heading */
     font-weight: 600;
     letter-spacing: -0.025em;
+    line-height: 1.2;
   }
 
   h3 {
-    font-size: 1.0625rem;
+    font-size: 1.25rem; /* 20px - heading small */
     font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: 1.3;
   }
 
   h4 {
-    font-size: 0.9375rem;
+    font-size: 1rem; /* 16px - emphasis */
     font-weight: 600;
     letter-spacing: -0.015em;
+    line-height: 1.4;
   }
 
   /* Subtle paragraph spacing */
@@ -362,29 +367,30 @@
     letter-spacing: 0.06em;
   }
 
+  /* Standardized type scale utilities */
   .text-body {
-    font-size: 14px;
+    font-size: 0.875rem; /* 14px - base */
     line-height: 1.6;
     letter-spacing: -0.006em;
     color: hsl(var(--foreground));
   }
 
   .text-body-sm {
-    font-size: 13px;
+    font-size: 0.75rem; /* 12px - small */
     line-height: 1.5;
-    letter-spacing: -0.003em;
+    letter-spacing: 0em;
     color: hsl(var(--foreground));
   }
 
   .text-caption {
-    font-size: 0.8125rem;
+    font-size: 0.75rem; /* 12px - standardized */
     line-height: 1.4;
     letter-spacing: 0em;
     color: hsl(var(--muted-foreground));
   }
 
   .text-label {
-    font-size: 0.75rem;
+    font-size: 0.75rem; /* 12px - standardized */
     font-weight: 500;
     letter-spacing: 0em;
     color: hsl(var(--muted-foreground));
@@ -396,34 +402,33 @@
      - Tabular-nums for alignment
      ============================================== */
 
-  /* Large display amounts - hero numbers */
+  /* Standardized number typography - 3 levels */
   .text-number-display {
     @apply tabular-nums font-sans;
-    font-size: 1.75rem;
+    font-size: 1.875rem; /* 30px - display */
     font-weight: 600;
     letter-spacing: -0.03em;
     line-height: 1.1;
   }
 
-  /* Medium numbers - card headers, summaries */
   .text-number-lg {
     @apply tabular-nums font-sans;
-    font-size: 1.25rem;
+    font-size: 1.25rem; /* 20px - large */
     font-weight: 600;
     letter-spacing: -0.02em;
+    line-height: 1.3;
   }
 
-  /* Standard inline amounts - lists, rows */
   .text-number {
     @apply tabular-nums font-sans;
+    font-size: 0.875rem; /* 14px - base */
     font-weight: 500;
     letter-spacing: -0.01em;
   }
 
-  /* Small amounts - detail rows, breakdowns */
   .text-number-sm {
     @apply tabular-nums font-sans;
-    font-size: 0.8125rem;
+    font-size: 0.75rem; /* 12px - small */
     font-weight: 500;
     letter-spacing: 0em;
   }

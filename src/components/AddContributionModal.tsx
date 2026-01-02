@@ -18,6 +18,11 @@ interface AddContributionModalProps {
   projectName: string;
 }
 
+interface UserProfileData {
+  user_id: string;
+  name: string | null;
+}
+
 export function AddContributionModal({
   isOpen,
   onClose,
@@ -82,7 +87,7 @@ export function AddContributionModal({
           return;
         }
 
-        const memberList = (usersData || []).map((u: any) => ({
+        const memberList = (usersData || []).map((u: UserProfileData) => ({
           user_id: u.user_id,
           name: u.name || "Okänd",
         }));
@@ -90,7 +95,7 @@ export function AddContributionModal({
         return;
       }
 
-      const memberList = (profilesData || []).map((p: any) => ({
+      const memberList = (profilesData || []).map((p: UserProfileData) => ({
         user_id: p.user_id,
         name: p.name || "Okänd",
       }));
@@ -222,7 +227,7 @@ export function AddContributionModal({
                   className="h-8 w-8"
                   aria-label="Stäng dialog"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </Button>
               </div>
 

@@ -18,6 +18,31 @@ export default {
         sans: ["Geist Sans", "system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
         mono: ["Geist Mono", "ui-monospace", "SFMono-Regular", "Menlo", "Monaco", "monospace"],
       },
+      spacing: {
+        // 8px base rhythm: 8, 16, 24, 40px
+        '0.5': '0.125rem', // 2px (minimal)
+        '1': '0.25rem',    // 4px
+        '2': '0.5rem',     // 8px - base unit
+        '3': '0.75rem',    // 12px
+        '4': '1rem',       // 16px
+        '5': '1.25rem',    // 20px
+        '6': '1.5rem',     // 24px
+        '8': '2rem',       // 32px
+        '10': '2.5rem',    // 40px
+        '12': '3rem',      // 48px
+        '16': '4rem',      // 64px
+      },
+      fontSize: {
+        // Standardized type scale - 3 clear levels
+        'xs': ['0.75rem', { lineHeight: '1.5', letterSpacing: '0' }],      // 12px - captions, labels
+        'sm': ['0.875rem', { lineHeight: '1.5', letterSpacing: '-0.003em' }], // 14px - body small
+        'base': ['0.875rem', { lineHeight: '1.6', letterSpacing: '-0.006em' }], // 14px - body (base)
+        'md': ['1rem', { lineHeight: '1.5', letterSpacing: '-0.01em' }],   // 16px - emphasis
+        'lg': ['1.125rem', { lineHeight: '1.4', letterSpacing: '-0.015em' }], // 18px - subheading
+        'xl': ['1.25rem', { lineHeight: '1.3', letterSpacing: '-0.02em' }], // 20px - heading small
+        '2xl': ['1.5rem', { lineHeight: '1.2', letterSpacing: '-0.025em' }], // 24px - heading
+        '3xl': ['1.875rem', { lineHeight: '1.2', letterSpacing: '-0.03em' }], // 30px - display
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -104,9 +129,12 @@ export default {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        // Standardized border radius family - only 3 levels
+        none: "0",
+        sm: "0.25rem",   // 4px - small elements
+        md: "0.375rem",  // 6px - default (matches --radius)
+        lg: "0.5rem",    // 8px - large elements
+        full: "9999px",  // full - circles, pills
       },
       transitionTimingFunction: {
         'spring': 'cubic-bezier(0.4, 0.0, 0.2, 1)',

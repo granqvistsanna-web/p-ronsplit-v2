@@ -130,10 +130,10 @@ const Sparande = () => {
           <Card className="border-dashed border-2 bg-muted/20">
             <CardContent className="flex flex-col items-center justify-center py-16 px-6">
               <div className="rounded-full bg-muted p-5 mb-4">
-                <Home className="h-12 w-12 text-muted-foreground/40" />
+                <Home size={24} className="text-muted-foreground/40" />
               </div>
-              <p className="text-base font-medium text-foreground mb-1">Inget hushåll valt</p>
-              <p className="text-sm text-muted-foreground text-center max-w-xs">
+              <p className="text-base font-medium text-foreground mb-2">Inget hushåll valt</p>
+              <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
                 Välj ett hushåll för att se dina sparprojekt
               </p>
             </CardContent>
@@ -164,14 +164,14 @@ const Sparande = () => {
           <Card className="border-dashed border-2 bg-muted/20 animate-fade-in" style={{ animationDelay: '40ms' }}>
             <CardContent className="flex flex-col items-center justify-center py-16 px-6">
               <div className="rounded-full bg-muted p-5 mb-4">
-                <PiggyBank className="h-12 w-12 text-muted-foreground/40" />
+                <PiggyBank size={24} className="text-muted-foreground/40" />
               </div>
-              <p className="text-base font-medium text-foreground mb-1">Inga sparprojekt ännu</p>
+              <p className="text-base font-medium text-foreground mb-2">Inga sparprojekt ännu</p>
               <p className="text-sm text-muted-foreground text-center mb-6 max-w-xs">
                 Skapa ett sparprojekt som "Barnsparande" eller "Semesterkassa" och börja spara tillsammans
               </p>
               <Button onClick={() => setIsAddProjectModalOpen(true)} className="gap-2">
-                <Plus size={18} />
+                <Plus size={20} />
                 Skapa sparprojekt
               </Button>
             </CardContent>

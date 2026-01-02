@@ -54,32 +54,32 @@ export const IncomeItem = memo(function IncomeItem({
         {/* Content */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <p className="text-[15px] font-medium text-foreground truncate">
+            <p className="text-sm font-medium text-foreground truncate">
               {getIncomeTypeLabel(income.type)}
             </p>
             {!income.included_in_split && (
-              <span className="text-[11px] px-1.5 py-0.5 bg-muted rounded text-muted-foreground shrink-0">
+              <span className="text-xs px-2 py-0.5 bg-muted rounded-sm text-muted-foreground shrink-0">
                 Ej delad
               </span>
             )}
             {income.repeat && income.repeat !== "none" && (
-              <Repeat size={12} className="text-primary shrink-0" strokeWidth={2.5} />
+              <Repeat size={16} className="text-primary shrink-0" strokeWidth={2.5} />
             )}
           </div>
-          <div className="flex items-center gap-1.5 text-[13px] text-muted-foreground mt-0.5">
+          <div className="flex items-center gap-2 text-xs text-muted-foreground mt-1">
             <span>{recipient?.name || "Okänd"}</span>
             <span className="opacity-40">•</span>
             <span>{formattedDate}</span>
           </div>
           {income.note && (
-            <p className="text-[13px] text-muted-foreground/60 mt-0.5 truncate">
+            <p className="text-xs text-muted-foreground/60 mt-1 truncate">
               {income.note}
             </p>
           )}
         </div>
 
         {/* Amount */}
-        <span className="text-[15px] font-semibold text-income tabular-nums shrink-0">
+        <span className="text-sm font-semibold text-income tabular-nums shrink-0">
           +{amountKr.toLocaleString("sv-SE", { minimumFractionDigits: 0 })} kr
         </span>
       </motion.button>

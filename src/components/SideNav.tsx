@@ -54,7 +54,7 @@ export function SideNav() {
             className="h-10 w-10"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
           >
-            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
             <span className="sr-only">Meny</span>
           </Button>
         </div>
@@ -218,10 +218,10 @@ export function SideNav() {
               )}
             >
               {isCollapsed ? (
-                <ChevronRight size={18} />
+                <ChevronRight size={20} />
               ) : (
                 <>
-                  <ChevronLeft size={18} />
+                  <ChevronLeft size={20} />
                   <span className="text-xs">Dölj meny</span>
                 </>
               )}

@@ -342,8 +342,6 @@ export function useGroups() {
       return null;
     }
 
-    console.log("Creating group with name:", name, "for user:", user.id);
-
     try {
       // Create the group - let the database generate invite_code via default
       const { data: groupData, error: groupError } = await supabase
@@ -367,8 +365,6 @@ export function useGroups() {
         throw groupError;
       }
 
-      console.log("Group created:", groupData);
-
       // Add user as member
       const { error: memberError } = await supabase
         .from("group_members")
@@ -381,8 +377,6 @@ export function useGroups() {
         console.error("Member insert error:", memberError);
         throw memberError;
       }
-
-      console.log("Member added to group");
 
       await fetchGroups();
       
@@ -401,7 +395,7 @@ export function useGroups() {
       return groupData;
     } catch (error) {
       console.error("Error creating group:", error);
-      const maybeMessage = (error as any)?.message;
+      const maybeMessage = (error as Error)?.message;
       const errorMessage = typeof maybeMessage === "string" && maybeMessage.trim().length > 0
         ? maybeMessage
         : "Kunde inte skapa grupp";

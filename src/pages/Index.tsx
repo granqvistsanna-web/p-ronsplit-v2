@@ -348,7 +348,7 @@ const Index = () => {
               className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
             >
               Se alla
-              <ArrowRight size={14} />
+              <ArrowRight size={16} />
             </button>
           </div>
 
@@ -444,7 +444,7 @@ const Index = () => {
                   onClick={() => setIsAddModalOpen(true)}
                   className="gap-2"
                 >
-                  <Plus size={18} />
+                  <Plus size={20} />
                   Lägg till transaktion
                 </Button>
               </CardContent>

@@ -251,7 +251,7 @@ export default function Analys() {
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
           <div className="flex flex-col items-center justify-center py-20 animate-fade-in">
             <div className="rounded-full bg-muted p-4 mb-4">
-              <BarChart3 size={28} className="text-muted-foreground" />
+              <BarChart3 size={24} className="text-muted-foreground" />
             </div>
             <p className="text-caption">Inget hushåll hittades.</p>
           </div>

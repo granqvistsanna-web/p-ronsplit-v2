@@ -120,7 +120,7 @@ export function EditProjectModal({
                   className="h-8 w-8"
                   aria-label="Stäng dialog"
                 >
-                  <X size={18} />
+                  <X size={20} />
                 </Button>
               </div>
 
