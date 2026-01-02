@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { handleDatabaseError } from "@/lib/errorHandling";
 
 interface AddContributionModalProps {
   isOpen: boolean;
@@ -47,7 +48,10 @@ export function AddContributionModal({
         .eq("group_id", groupId);
 
       if (membersError) {
-        console.error("Error fetching members:", membersError);
+        handleDatabaseError(membersError, "Kunde inte hämta gruppmedlemmar", {
+          operation: "fetchGroupMembers",
+          groupId,
+        });
         return;
       }
 
@@ -64,7 +68,6 @@ export function AddContributionModal({
         .in("user_id", userIds);
 
       if (profilesError) {
-        console.error("Error fetching profiles:", profilesError);
         // Fallback to users table if public_profiles doesn't exist
         const { data: usersData, error: usersError } = await supabase
           .from("users")
@@ -72,7 +75,10 @@ export function AddContributionModal({
           .in("user_id", userIds);
 
         if (usersError) {
-          console.error("Error fetching users:", usersError);
+          handleDatabaseError(usersError, "Kunde inte hämta användarinformation", {
+            operation: "fetchUsers",
+            userIds,
+          });
           return;
         }
 

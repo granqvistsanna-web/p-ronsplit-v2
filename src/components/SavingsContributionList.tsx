@@ -4,6 +4,7 @@ import { SavingsContribution } from "@/hooks/useSavingsProjects";
 import { useAuth } from "@/hooks/useAuth";
 import { PiggyBank, Trash2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { handleDatabaseError } from "@/lib/errorHandling";
 
 interface Member {
   user_id: string;
@@ -36,7 +37,10 @@ export function SavingsContributionList({
         .in("user_id", userIds);
 
       if (error) {
-        console.error("Error fetching members:", error);
+        handleDatabaseError(error, "Kunde inte hämta användarinformation", {
+          operation: "fetchMembersForContributions",
+          userIds,
+        });
         return;
       }
 
