@@ -118,6 +118,7 @@ export function EditProjectModal({
                   size="icon"
                   onClick={onClose}
                   className="h-8 w-8"
+                  aria-label="Stäng dialog"
                 >
                   <X size={18} />
                 </Button>
