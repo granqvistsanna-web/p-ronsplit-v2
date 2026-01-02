@@ -1,0 +1,397 @@
+import { useState, useEffect, useCallback } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "./useAuth";
+import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandling";
+
+export interface SavingsProject {
+  id: string;
+  group_id: string;
+  name: string;
+  description: string | null;
+  target_amount: number;
+  created_by: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SavingsContribution {
+  id: string;
+  project_id: string;
+  user_id: string;
+  amount: number;
+  date: string;
+  note: string | null;
+  created_at: string;
+}
+
+export interface ProjectWithStats extends SavingsProject {
+  current_amount: number;
+  contribution_count: number;
+  last_contribution_date: string | null;
+}
+
+export function useSavingsProjects(groupId?: string) {
+  const { user } = useAuth();
+  const [projects, setProjects] = useState<ProjectWithStats[]>([]);
+  const [contributions, setContributions] = useState<SavingsContribution[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchProjects = useCallback(async () => {
+    if (!user) {
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
+
+    try {
+      let query = supabase.from("savings_projects").select("*");
+
+      if (groupId) {
+        query = query.eq("group_id", groupId);
+      }
+
+      const { data: projectsData, error: projectsError } = await query.order("created_at", {
+        ascending: false,
+      });
+
+      if (projectsError) throw projectsError;
+
+      // Fetch all contributions for these projects
+      const projectIds = projectsData?.map(p => p.id) || [];
+      let contributionsData: SavingsContribution[] = [];
+
+      if (projectIds.length > 0) {
+        const { data: contribData, error: contribError } = await supabase
+          .from("savings_contributions")
+          .select("*")
+          .in("project_id", projectIds)
+          .order("date", { ascending: false });
+
+        if (contribError) throw contribError;
+        contributionsData = contribData || [];
+      }
+
+      // Calculate stats for each project
+      const projectsWithStats: ProjectWithStats[] = (projectsData || []).map(project => {
+        const projectContributions = contributionsData.filter(c => c.project_id === project.id);
+        const current_amount = projectContributions.reduce((sum, c) => sum + Number(c.amount), 0);
+        const contribution_count = projectContributions.length;
+        const last_contribution_date =
+          projectContributions.length > 0 ? projectContributions[0].date : null;
+
+        return {
+          ...project,
+          current_amount,
+          contribution_count,
+          last_contribution_date,
+        };
+      });
+
+      setProjects(projectsWithStats);
+      setContributions(contributionsData);
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte hämta sparprojekt", {
+        operation: "fetchProjects",
+        groupId,
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [user, groupId]);
+
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
+
+  const addProject = async (project: {
+    group_id: string;
+    name: string;
+    description?: string;
+    target_amount: number;
+  }) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("savings_projects")
+        .insert({
+          group_id: project.group_id,
+          name: project.name,
+          description: project.description || null,
+          target_amount: project.target_amount,
+          created_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast.success("Sparprojekt skapat!");
+      return data;
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte skapa sparprojekt", {
+        operation: "addProject",
+        projectName: project.name,
+      });
+      return null;
+    }
+  };
+
+  const updateProject = async (
+    projectId: string,
+    updates: Partial<Pick<SavingsProject, "name" | "description" | "target_amount">>
+  ) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return;
+    }
+
+    try {
+      const project = projects.find(p => p.id === projectId);
+      if (!project) {
+        toast.error("Projektet hittades inte");
+        return;
+      }
+
+      // Verify project belongs to current group if groupId is set
+      if (groupId && project.group_id !== groupId) {
+        toast.error("Projektet tillhör inte det valda hushållet");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("savings_projects")
+        .update({ ...updates, updated_at: new Date().toISOString() })
+        .eq("id", projectId);
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast.success("Projekt uppdaterat!");
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte uppdatera projekt", {
+        operation: "updateProject",
+        projectId,
+      });
+    }
+  };
+
+  const deleteProject = async (projectId: string) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return;
+    }
+
+    try {
+      const projectToDelete = projects.find(p => p.id === projectId);
+      if (!projectToDelete) {
+        toast.error("Projektet hittades inte");
+        return;
+      }
+
+      // Security check: Verify user created this project
+      if (projectToDelete.created_by !== user.id) {
+        toast.error("Du har inte behörighet att ta bort detta projekt");
+        return;
+      }
+
+      // Verify project belongs to current group if groupId is set
+      if (groupId && projectToDelete.group_id !== groupId) {
+        toast.error("Projektet tillhör inte det valda hushållet");
+        return;
+      }
+
+      // Delete from database - contributions will cascade delete
+      const { error } = await supabase
+        .from("savings_projects")
+        .delete()
+        .eq("id", projectId)
+        .eq("created_by", user.id); // Server-side check
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast.success("Projekt borttaget!");
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte ta bort projekt", {
+        operation: "deleteProject",
+        projectId,
+      });
+    }
+  };
+
+  const addContribution = async (contribution: {
+    project_id: string;
+    user_id: string;
+    amount: number;
+    date: string;
+    note?: string;
+  }) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return null;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("savings_contributions")
+        .insert({
+          project_id: contribution.project_id,
+          user_id: contribution.user_id,
+          amount: contribution.amount,
+          date: contribution.date,
+          note: contribution.note || null,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast.success("Insättning tillagd!");
+      return data;
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte lägga till insättning", {
+        operation: "addContribution",
+        projectId: contribution.project_id,
+      });
+      return null;
+    }
+  };
+
+  const updateContribution = async (
+    contributionId: string,
+    updates: Partial<Pick<SavingsContribution, "amount" | "date" | "note">>
+  ) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return;
+    }
+
+    try {
+      const contribution = contributions.find(c => c.id === contributionId);
+      if (!contribution) {
+        toast.error("Insättningen hittades inte");
+        return;
+      }
+
+      // Security check: Verify user created this contribution
+      if (contribution.user_id !== user.id) {
+        toast.error("Du har inte behörighet att uppdatera denna insättning");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("savings_contributions")
+        .update(updates)
+        .eq("id", contributionId)
+        .eq("user_id", user.id); // Server-side check
+
+      if (error) throw error;
+
+      await fetchProjects();
+      toast.success("Insättning uppdaterad!");
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte uppdatera insättning", {
+        operation: "updateContribution",
+        contributionId,
+      });
+    }
+  };
+
+  const deleteContribution = async (contributionId: string) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return;
+    }
+
+    try {
+      const contributionToDelete = contributions.find(c => c.id === contributionId);
+      if (!contributionToDelete) {
+        toast.error("Insättningen hittades inte");
+        return;
+      }
+
+      // Security check: Verify user created this contribution
+      if (contributionToDelete.user_id !== user.id) {
+        toast.error("Du har inte behörighet att ta bort denna insättning");
+        return;
+      }
+
+      // Delete from database
+      const { error } = await supabase
+        .from("savings_contributions")
+        .delete()
+        .eq("id", contributionId)
+        .eq("user_id", user.id); // Server-side check
+
+      if (error) throw error;
+
+      await fetchProjects();
+
+      // Show toast with undo action
+      toast.success("Insättning borttagen!", {
+        duration: 5000,
+        action: {
+          label: "Ångra",
+          onClick: async () => {
+            try {
+              // Restore the contribution
+              const { error: restoreError } = await supabase
+                .from("savings_contributions")
+                .insert({
+                  id: contributionToDelete.id,
+                  project_id: contributionToDelete.project_id,
+                  user_id: contributionToDelete.user_id,
+                  amount: contributionToDelete.amount,
+                  date: contributionToDelete.date,
+                  note: contributionToDelete.note,
+                });
+
+              if (restoreError) throw restoreError;
+
+              await fetchProjects();
+              toast.success("Insättning återställd!");
+            } catch (restoreError) {
+              handleDatabaseError(restoreError, "Kunde inte återställa insättning", {
+                operation: "restoreContribution",
+                contributionId: contributionToDelete.id,
+              });
+            }
+          },
+        },
+      });
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte ta bort insättning", {
+        operation: "deleteContribution",
+        contributionId,
+      });
+    }
+  };
+
+  const getContributionsForProject = useCallback(
+    (projectId: string) => {
+      return contributions.filter(c => c.project_id === projectId);
+    },
+    [contributions]
+  );
+
+  return {
+    projects,
+    contributions,
+    loading,
+    addProject,
+    updateProject,
+    deleteProject,
+    addContribution,
+    updateContribution,
+    deleteContribution,
+    getContributionsForProject,
+    refetch: fetchProjects,
+  };
+}

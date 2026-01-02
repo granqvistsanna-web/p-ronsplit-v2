@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart3, List, Settings, Menu, X } from "lucide-react";
+import { Home, BarChart3, List, Settings, Menu, X, PiggyBank } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 const navItems = [
   { to: "/dashboard", label: "Hem", icon: Home },
   { to: "/analys", label: "Analys", icon: BarChart3 },
+  { to: "/sparande", label: "Sparande", icon: PiggyBank },
   { to: "/aktivitet", label: "Aktivitet", icon: List },
   { to: "/installningar", label: "Inställningar", icon: Settings },
 ];

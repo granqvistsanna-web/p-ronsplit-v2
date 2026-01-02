@@ -15,7 +15,7 @@ import { SideNav } from "@/components/SideNav";
 import Index from "./pages/Index";
 import Analys from "./pages/Analys";
 import Aktivitet from "./pages/Aktivitet";
-
+import Sparande from "./pages/Sparande";
 import Settings from "./pages/Settings";
 import Auth from "./pages/Auth";
 import Landing from "./pages/Landing";
@@ -76,8 +76,8 @@ const AppContent = () => {
           <Route path="/verify-email" element={<VerifyEmail />} />
           <Route path="/dashboard" element={<ProtectedRoute><Index /></ProtectedRoute>} />
           <Route path="/analys" element={<ProtectedRoute><Analys /></ProtectedRoute>} />
+          <Route path="/sparande" element={<ProtectedRoute><Sparande /></ProtectedRoute>} />
           <Route path="/aktivitet" element={<ProtectedRoute><Aktivitet /></ProtectedRoute>} />
-          
           <Route path="/installningar" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
