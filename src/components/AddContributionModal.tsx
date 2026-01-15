@@ -73,30 +73,15 @@ export function AddContributionModal({
         .in("user_id", userIds);
 
       if (profilesError) {
-        // Fallback to users table if public_profiles doesn't exist
-        const { data: usersData, error: usersError } = await supabase
-          .from("users")
-          .select("user_id, name")
-          .in("user_id", userIds);
-
-        if (usersError) {
-          handleDatabaseError(usersError, "Kunde inte hämta användarinformation", {
-            operation: "fetchUsers",
-            userIds,
-          });
-          return;
-        }
-
-        const memberList = (usersData || []).map((u: UserProfileData) => ({
-          user_id: u.user_id,
-          name: u.name || "Okänd",
-        }));
-        setMembers(memberList);
+        handleDatabaseError(profilesError, "Kunde inte hämta användarinformation", {
+          operation: "fetchProfiles",
+          userIds,
+        });
         return;
       }
 
-      const memberList = (profilesData || []).map((p: UserProfileData) => ({
-        user_id: p.user_id,
+      const memberList = (profilesData || []).map((p: { user_id: string | null; name: string | null }) => ({
+        user_id: p.user_id || "",
         name: p.name || "Okänd",
       }));
 

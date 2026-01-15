@@ -258,10 +258,12 @@ export function useGroups() {
     }
 
     try {
-      const { error } = await supabase.rpc("remove_group_member", {
-        group_id_param: household.id,
-        user_id_param: userId,
-      }) as { data: boolean | null; error: Error | null };
+      // Delete the group member directly instead of using RPC
+      const { error } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("group_id", household.id)
+        .eq("user_id", userId);
 
       if (error) {
         console.error("Error removing member:", error);
@@ -286,9 +288,13 @@ export function useGroups() {
     }
 
     try {
-      const { data: newCode, error } = await supabase.rpc("regenerate_invite_code", {
-        group_id_param: household.id,
-      }) as { data: string | null; error: Error | null };
+      // Generate a new invite code directly
+      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      
+      const { error } = await supabase
+        .from("groups")
+        .update({ invite_code: newCode })
+        .eq("id", household.id);
 
       if (error) {
         console.error("Error regenerating invite code:", error);
