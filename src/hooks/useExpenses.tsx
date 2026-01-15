@@ -93,17 +93,8 @@ export function useExpenses(groupId?: string) {
     }
 
     try {
-      // Build insert payload - only include splits if it has a value
-      const insertData: {
-        group_id: string;
-        amount: number;
-        paid_by: string;
-        category: string;
-        description: string;
-        date: string;
-        splits?: ExpenseSplit | null;
-        repeat: ExpenseRepeat;
-      } = {
+      // Build insert payload - serialize splits to JSON string for database
+      const insertData: Record<string, unknown> = {
         group_id: expense.group_id,
         amount: expense.amount,
         paid_by: user.id, // Always use current user
@@ -113,14 +104,14 @@ export function useExpenses(groupId?: string) {
         repeat: expense.repeat || "none",
       };
 
-      // Only add splits if it's not null/undefined
+      // Only add splits if it's not null/undefined - serialize as JSON string
       if (expense.splits) {
-        insertData.splits = expense.splits;
+        insertData.splits = JSON.stringify(expense.splits);
       }
 
       const { data, error } = await supabase
         .from("expenses")
-        .insert(insertData)
+        .insert(insertData as any)
         .select()
         .single();
 
@@ -164,15 +155,21 @@ export function useExpenses(groupId?: string) {
     }
 
     try {
-      // Batch insert all expenses in a single query
+      // Batch insert all expenses in a single query - serialize splits as JSON
+      const insertData = expenses.map(expense => ({
+        group_id: expense.group_id,
+        amount: expense.amount,
+        category: expense.category,
+        description: expense.description,
+        date: expense.date,
+        repeat: expense.repeat || "none",
+        paid_by: user.id, // Always use current user
+        splits: expense.splits ? JSON.stringify(expense.splits) : null,
+      }));
+
       const { data, error } = await supabase
         .from("expenses")
-        .insert(
-          expenses.map(expense => ({
-            ...expense,
-            paid_by: user.id, // Always use current user
-          }))
-        )
+        .insert(insertData as any)
         .select();
 
       if (error) throw error;
@@ -216,9 +213,15 @@ export function useExpenses(groupId?: string) {
         return;
       }
 
+      // Serialize splits if present
+      const dbUpdates: Record<string, unknown> = { ...updates };
+      if (updates.splits !== undefined) {
+        dbUpdates.splits = updates.splits ? JSON.stringify(updates.splits) : null;
+      }
+
       const { error } = await supabase
         .from("expenses")
-        .update(updates)
+        .update(dbUpdates as any)
         .eq("id", expenseId)
         .eq("paid_by", user.id); // Server-side check: only update if user is creator
 
@@ -290,8 +293,8 @@ export function useExpenses(groupId?: string) {
                   category: expenseToDelete.category,
                   description: expenseToDelete.description,
                   date: expenseToDelete.date,
-                  splits: expenseToDelete.splits,
-                });
+                  splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
+                } as any);
 
               if (restoreError) throw restoreError;
 

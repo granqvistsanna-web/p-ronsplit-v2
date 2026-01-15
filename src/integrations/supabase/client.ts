@@ -5,6 +5,9 @@ import type { Database } from './types';
 const SUPABASE_URL = "https://qswvgfslsginwpqkbbki.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFzd3ZnZnNsc2dpbndwcWtiYmtpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjcxMTI3MjYsImV4cCI6MjA4MjY4ODcyNn0.mdtsEWeE3FijKiZDaGqpsm5vFvV77FtxSMNCqQLVpsA";
 
+// Check if Supabase is configured
+export const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_PUBLISHABLE_KEY);
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

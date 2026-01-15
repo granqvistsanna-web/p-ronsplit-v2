@@ -32,7 +32,7 @@ export function SavingsContributionList({
       if (userIds.length === 0) return;
 
       const { data, error } = await supabase
-        .from("users")
+        .from("public_profiles")
         .select("user_id, name")
         .in("user_id", userIds);
 
@@ -44,7 +44,13 @@ export function SavingsContributionList({
         return;
       }
 
-      setMembers(data || []);
+      // Map the data to Member type
+      const memberList: Member[] = (data || []).map((p: { user_id: string | null; name: string | null }) => ({
+        user_id: p.user_id || "",
+        name: p.name || "Okänd",
+      }));
+
+      setMembers(memberList);
     };
 
     fetchMembers();
