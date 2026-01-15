@@ -60,7 +60,7 @@ export function useIncomes(groupId?: string) {
 
     try {
       // Use type assertion since types may not be regenerated yet
-      let query = (supabase.from("incomes" as unknown) as unknown).select("*");
+      let query = supabase.from("incomes").select("*");
 
       if (groupId) {
         query = query.eq("group_id", groupId);
@@ -98,7 +98,7 @@ export function useIncomes(groupId?: string) {
     }
 
     try {
-      const { data, error } = await (supabase.from("incomes" as unknown) as unknown)
+      const { data, error } = await supabase.from("incomes")
         .insert({
           group_id: income.group_id,
           amount: income.amount,
@@ -170,7 +170,7 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      const { error } = await (supabase.from("incomes" as unknown) as unknown)
+      const { error } = await supabase.from("incomes")
         .update(updates)
         .eq("id", incomeId)
         .eq("recipient", user.id); // Server-side check: only update if user is recipient
@@ -212,7 +212,7 @@ export function useIncomes(groupId?: string) {
       }
 
       // Delete from database - only if user is recipient
-      const { error } = await (supabase.from("incomes" as unknown) as unknown)
+      const { error } = await supabase.from("incomes")
         .delete()
         .eq("id", incomeId)
         .eq("recipient", user.id); // Server-side check: only delete if user is recipient
@@ -229,7 +229,7 @@ export function useIncomes(groupId?: string) {
           onClick: async () => {
             try {
               // Restore the income
-              const { error: restoreError } = await (supabase.from("incomes" as unknown) as unknown)
+              const { error: restoreError } = await supabase.from("incomes")
                 .insert({
                   id: incomeToDelete.id,
                   group_id: incomeToDelete.group_id,
