@@ -26,27 +26,47 @@ const ResetPassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [isReady, setIsReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState<{ password?: boolean; confirmPassword?: boolean }>({});
 
   useEffect(() => {
-    // Check if we have a valid session from the reset link
-    const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+    // Listen for auth state changes - this catches the PASSWORD_RECOVERY event
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth event:", event, "Session:", !!session);
       
-      // The user should have a session after clicking the reset link
-      if (!session) {
-        // Check URL for error
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const errorDescription = hashParams.get("error_description");
-        
-        if (errorDescription) {
-          setError(decodeURIComponent(errorDescription));
-        }
+      if (event === "PASSWORD_RECOVERY") {
+        // User clicked the reset link and Supabase created a session
+        setIsReady(true);
+        setError(null);
+      } else if (event === "SIGNED_IN" && session) {
+        // Also allow if user is signed in (covers edge cases)
+        setIsReady(true);
+        setError(null);
+      }
+    });
+
+    // Check for existing session or URL errors
+    const checkInitialState = async () => {
+      // Check URL for errors first
+      const hashParams = new URLSearchParams(window.location.hash.substring(1));
+      const errorDescription = hashParams.get("error_description");
+      
+      if (errorDescription) {
+        setError(decodeURIComponent(errorDescription));
+        return;
+      }
+
+      // Check if we have a valid session
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        setIsReady(true);
       }
     };
 
-    checkSession();
+    checkInitialState();
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const validate = (): boolean => {
@@ -101,6 +121,18 @@ const ResetPassword = () => {
       setIsSubmitting(false);
     }
   };
+
+  // Show loading state while waiting for auth event
+  if (!isReady && !error) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Verifierar återställningslänk...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (isSuccess) {
     return (
