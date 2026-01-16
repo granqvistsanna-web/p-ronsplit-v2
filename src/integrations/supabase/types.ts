@@ -361,6 +361,10 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      join_group_by_invite_code: {
+        Args: { _invite_code: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
