@@ -488,51 +488,37 @@ export function useGroups() {
     }
 
     try {
-      // Find group by invite code
-      const { data: groupData, error: groupError } = await supabase
-        .from("groups")
-        .select("id, name")
-        .eq("invite_code", code)
-        .single();
+      // Use RPC function that bypasses RLS to find and join the group
+      const { data, error } = await supabase.rpc("join_group_by_invite_code", {
+        _invite_code: code,
+      });
 
-      if (groupError || !groupData) {
-        toast.error("Ingen grupp hittades med den koden");
-        return false;
+      if (error) {
+        console.error("Error calling join_group_by_invite_code:", error);
+        throw error;
       }
 
-      // Check if user is already a member
-      const { data: existingMember } = await supabase
-        .from("group_members")
-        .select("id")
-        .eq("group_id", groupData.id)
-        .eq("user_id", user.id)
-        .single();
+      const result = data as { success: boolean; error?: string; group_id?: string; group_name?: string };
 
-      if (existingMember) {
-        toast.error("Du är redan medlem i den gruppen");
+      if (!result.success) {
+        if (result.error === "Already a member") {
+          toast.error("Du är redan medlem i den gruppen");
+        } else if (result.error === "No group found with that code") {
+          toast.error("Ingen grupp hittades med den koden");
+        } else {
+          toast.error(result.error || "Kunde inte gå med i gruppen");
+        }
         return false;
-      }
-
-      // Add user as member
-      const { error: memberError } = await supabase
-        .from("group_members")
-        .insert({
-          id: crypto.randomUUID(),
-          group_id: groupData.id,
-          user_id: user.id,
-        });
-
-      if (memberError) {
-        console.error("Error joining group:", memberError);
-        throw memberError;
       }
 
       await fetchGroups();
       
       // Select the newly joined group
-      localStorage.setItem(SELECTED_GROUP_KEY, groupData.id);
+      if (result.group_id) {
+        localStorage.setItem(SELECTED_GROUP_KEY, result.group_id);
+      }
       
-      toast.success(`Du gick med i "${groupData.name}"!`);
+      toast.success(`Du gick med i "${result.group_name}"!`);
       return true;
     } catch (error) {
       console.error("Error joining group by code:", error);
