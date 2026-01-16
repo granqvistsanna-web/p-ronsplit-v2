@@ -28,7 +28,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
-  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, createGroup, deleteGroup, selectGroup } = useGroups();
+  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
   const { theme, setTheme } = useTheme();
   const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
   const { sidebarWidth } = useSidebar();
@@ -47,6 +47,8 @@ const Settings = () => {
   const [isAddMembersModalOpen, setIsAddMembersModalOpen] = useState(false);
   const [isCreatingGroup, setIsCreatingGroup] = useState(false);
   const [newGroupName, setNewGroupName] = useState("");
+  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [isJoiningGroup, setIsJoiningGroup] = useState(false);
 
   const handleNameChange = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -179,6 +181,22 @@ const Settings = () => {
     await deleteGroup(groupId);
   };
 
+  const handleJoinByCode = async () => {
+    if (!inviteCodeInput.trim()) {
+      toast.error("Ange en inbjudningskod");
+      return;
+    }
+    setIsJoiningGroup(true);
+    try {
+      const success = await joinGroupByCode(inviteCodeInput);
+      if (success) {
+        setInviteCodeInput("");
+      }
+    } finally {
+      setIsJoiningGroup(false);
+    }
+  };
+
   return (
     <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-3xl py-8 sm:py-12 px-4 sm:px-6 pb-6 lg:pb-8 mx-auto">
@@ -218,6 +236,40 @@ const Settings = () => {
                 </div>
               ) : (
                 <>
+                  {/* Join group by invite code */}
+                  <div className="p-4 rounded-lg border border-border bg-muted/30 space-y-3">
+                    <Label htmlFor="inviteCode" className="text-sm font-medium">
+                      Gå med i grupp via inbjudningskod
+                    </Label>
+                    <div className="flex items-center gap-2">
+                      <Input
+                        id="inviteCode"
+                        value={inviteCodeInput}
+                        onChange={(e) => setInviteCodeInput(e.target.value.toUpperCase())}
+                        placeholder="T.ex. ABC123"
+                        className="flex-1 uppercase tracking-widest font-mono"
+                        maxLength={8}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            handleJoinByCode();
+                          }
+                        }}
+                      />
+                      <Button
+                        variant="default"
+                        size="sm"
+                        onClick={handleJoinByCode}
+                        disabled={isJoiningGroup || !inviteCodeInput.trim()}
+                        className="gap-1"
+                      >
+                        {isJoiningGroup ? "Går med..." : "Gå med"}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Be en gruppmedlem om koden för att gå med i deras grupp
+                    </p>
+                  </div>
+
                   {/* Create new group form */}
                   {isCreatingGroup && (
                     <div className="p-4 rounded-lg border border-primary/30 bg-primary/5 space-y-3">
