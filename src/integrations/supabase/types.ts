@@ -248,6 +248,77 @@ export type Database = {
         }
         Relationships: []
       }
+      savings_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          date: string
+          id: string
+          note: string | null
+          project_id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          date: string
+          id?: string
+          note?: string | null
+          project_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          date?: string
+          id?: string
+          note?: string | null
+          project_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_contributions_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "savings_projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      savings_projects: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          name: string
+          target_amount: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          name: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          name?: string
+          target_amount?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       settlements: {
         Row: {
           amount: number | null
