@@ -32,6 +32,10 @@ export interface Group {
 
 const SELECTED_GROUP_KEY = "selected_group_id";
 
+const generateGroupId = () => crypto.randomUUID();
+const generateInviteCode = () =>
+  Math.random().toString(36).substring(2, 8).toUpperCase();
+
 export function useGroups() {
   const { user } = useAuth();
   const [allGroups, setAllGroups] = useState<Group[]>([]);
@@ -55,12 +59,17 @@ export function useGroups() {
       }
 
       // Create household if it doesn't exist (fallback for existing users)
+      const groupId = generateGroupId();
+      const inviteCode = generateInviteCode();
+
       const { data: groupData, error: groupError } = await supabase
         .from("groups")
         .insert({
+          id: groupId,
           name: "Mitt hushåll",
           is_temporary: false,
           created_by: user.id,
+          invite_code: inviteCode,
         })
         .select()
         .single();
@@ -349,13 +358,17 @@ export function useGroups() {
     }
 
     try {
-      // Create the group - let the database generate invite_code via default
+      const groupId = generateGroupId();
+      const inviteCode = generateInviteCode();
+
       const { data: groupData, error: groupError } = await supabase
         .from("groups")
         .insert({
+          id: groupId,
           name,
           is_temporary: false,
           created_by: user.id,
+          invite_code: inviteCode,
         })
         .select()
         .single();
