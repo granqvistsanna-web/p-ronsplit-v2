@@ -475,6 +475,75 @@ export function useGroups() {
     }
   };
 
+  const joinGroupByCode = async (inviteCode: string) => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return false;
+    }
+
+    const code = inviteCode.trim().toUpperCase();
+    if (!code) {
+      toast.error("Ange en inbjudningskod");
+      return false;
+    }
+
+    try {
+      // Find group by invite code
+      const { data: groupData, error: groupError } = await supabase
+        .from("groups")
+        .select("id, name")
+        .eq("invite_code", code)
+        .single();
+
+      if (groupError || !groupData) {
+        toast.error("Ingen grupp hittades med den koden");
+        return false;
+      }
+
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
+        .from("group_members")
+        .select("id")
+        .eq("group_id", groupData.id)
+        .eq("user_id", user.id)
+        .single();
+
+      if (existingMember) {
+        toast.error("Du är redan medlem i den gruppen");
+        return false;
+      }
+
+      // Add user as member
+      const { error: memberError } = await supabase
+        .from("group_members")
+        .insert({
+          id: crypto.randomUUID(),
+          group_id: groupData.id,
+          user_id: user.id,
+        });
+
+      if (memberError) {
+        console.error("Error joining group:", memberError);
+        throw memberError;
+      }
+
+      await fetchGroups();
+      
+      // Select the newly joined group
+      localStorage.setItem(SELECTED_GROUP_KEY, groupData.id);
+      
+      toast.success(`Du gick med i "${groupData.name}"!`);
+      return true;
+    } catch (error) {
+      console.error("Error joining group by code:", error);
+      const errorMessage = error instanceof Error
+        ? error.message
+        : "Kunde inte gå med i gruppen";
+      toast.error(errorMessage);
+      return false;
+    }
+  };
+
   return {
     household,
     allGroups,
@@ -486,6 +555,7 @@ export function useGroups() {
     updateHouseholdName,
     createGroup,
     deleteGroup,
+    joinGroupByCode,
     refetch: fetchGroups,
   };
 }
