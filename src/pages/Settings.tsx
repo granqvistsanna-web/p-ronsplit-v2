@@ -28,7 +28,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
-  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
+  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
   const { theme, setTheme } = useTheme();
   const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
   const { sidebarWidth } = useSidebar();
@@ -455,22 +455,58 @@ const Settings = () => {
                             )}
 
                             <div className="space-y-2">
-                              {group.members.map((member) => (
-                                <div
-                                  key={member.user_id}
-                                  className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border/30"
-                                >
-                                  <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
-                                    {member.name?.charAt(0).toUpperCase() || "?"}
+                              {group.members.map((member) => {
+                                const isOwner = group.created_by === profile?.user_id;
+                                const isCurrentUser = member.user_id === profile?.user_id;
+                                const canRemove = isOwner && !isCurrentUser;
+
+                                return (
+                                  <div
+                                    key={member.user_id}
+                                    className="flex items-center gap-3 p-2.5 rounded-lg bg-background border border-border/30"
+                                  >
+                                    <div className="h-8 w-8 shrink-0 rounded-full bg-primary/10 flex items-center justify-center text-xs font-semibold text-primary">
+                                      {member.name?.charAt(0).toUpperCase() || "?"}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="text-sm font-medium text-foreground truncate">{member.name}</p>
+                                      <p className="text-xs text-muted-foreground">
+                                        {isCurrentUser ? "Du" : "Medlem"}
+                                      </p>
+                                    </div>
+                                    {canRemove && (
+                                      <AlertDialog>
+                                        <AlertDialogTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-7 w-7 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                                          >
+                                            <X size={14} />
+                                          </Button>
+                                        </AlertDialogTrigger>
+                                        <AlertDialogContent>
+                                          <AlertDialogHeader>
+                                            <AlertDialogTitle>Ta bort medlem</AlertDialogTitle>
+                                            <AlertDialogDescription>
+                                              Är du säker på att du vill ta bort {member.name} från gruppen "{group.name}"?
+                                            </AlertDialogDescription>
+                                          </AlertDialogHeader>
+                                          <AlertDialogFooter>
+                                            <AlertDialogCancel>Avbryt</AlertDialogCancel>
+                                            <AlertDialogAction
+                                              onClick={() => removeMember(member.user_id)}
+                                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                            >
+                                              Ta bort
+                                            </AlertDialogAction>
+                                          </AlertDialogFooter>
+                                        </AlertDialogContent>
+                                      </AlertDialog>
+                                    )}
                                   </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium text-foreground truncate">{member.name}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {member.user_id === profile?.user_id ? "Du" : "Medlem"}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
+                                );
+                              })}
                             </div>
                           </div>
                         )}
