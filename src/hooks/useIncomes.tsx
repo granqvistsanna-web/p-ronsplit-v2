@@ -158,11 +158,8 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user is the recipient of this income
-      if (income.recipient !== user.id) {
-        toast.error("Du har inte behörighet att uppdatera denna inkomst");
-        return;
-      }
+      // No client-side security check needed - RLS handles access control
+      // Any group member can update incomes in their group
 
       // Additional check: Verify income belongs to current group if groupId is set
       if (groupId && income.group_id !== groupId) {
@@ -172,8 +169,7 @@ export function useIncomes(groupId?: string) {
 
       const { error } = await supabase.from("incomes")
         .update(updates)
-        .eq("id", incomeId)
-        .eq("recipient", user.id); // Server-side check: only update if user is recipient
+        .eq("id", incomeId); // RLS handles access control
 
       if (error) throw error;
 
@@ -199,11 +195,8 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user is the recipient of this income
-      if (incomeToDelete.recipient !== user.id) {
-        toast.error("Du har inte behörighet att ta bort denna inkomst");
-        return;
-      }
+      // No client-side security check needed - RLS handles access control
+      // Any group member can delete incomes in their group
 
       // Additional check: Verify income belongs to current group if groupId is set
       if (groupId && incomeToDelete.group_id !== groupId) {
@@ -211,11 +204,10 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      // Delete from database - only if user is recipient
+      // Delete from database - RLS handles access control
       const { error } = await supabase.from("incomes")
         .delete()
-        .eq("id", incomeId)
-        .eq("recipient", user.id); // Server-side check: only delete if user is recipient
+        .eq("id", incomeId); // RLS handles access control
 
       if (error) throw error;
 
