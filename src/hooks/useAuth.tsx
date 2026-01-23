@@ -301,16 +301,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: new Error("Ingen användare är inloggad") };
     }
 
+    // Update profiles table
     const { error } = await supabase
       .from("profiles")
       .update({ name, updated_at: new Date().toISOString() })
       .eq("user_id", user.id);
 
-    if (!error) {
-      await refreshProfile();
+    if (error) {
+      return { error: error as Error | null };
     }
 
-    return { error: error as Error | null };
+    // Also update public_profiles so other group members see the new name
+    const { error: publicProfileError } = await supabase
+      .from("public_profiles")
+      .update({ name, updated_at: new Date().toISOString() })
+      .eq("user_id", user.id);
+
+    // If public_profile doesn't exist, create it
+    if (publicProfileError) {
+      await supabase
+        .from("public_profiles")
+        .insert({
+          id: crypto.randomUUID(),
+          user_id: user.id,
+          name,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        });
+    }
+
+    await refreshProfile();
+    return { error: null };
   }, [user, refreshProfile]);
 
   const deleteAccount = useCallback(async () => {
