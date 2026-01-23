@@ -456,9 +456,8 @@ const Settings = () => {
 
                             <div className="space-y-2">
                               {group.members.map((member) => {
-                                const isOwner = group.created_by === profile?.user_id;
                                 const isCurrentUser = member.user_id === profile?.user_id;
-                                const canRemove = isOwner && !isCurrentUser;
+                                const canRemove = !isCurrentUser;
 
                                 return (
                                   <div
