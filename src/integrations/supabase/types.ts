@@ -103,43 +103,43 @@ export type Database = {
       }
       incomes: {
         Row: {
-          amount: number | null
-          created_at: string | null
-          date: string | null
-          group_id: string | null
-          id: string | null
-          included_in_split: boolean | null
+          amount: number
+          created_at: string
+          date: string
+          group_id: string
+          id: string
+          included_in_split: boolean
           note: string | null
-          recipient: string | null
-          repeat: string | null
-          type: string | null
-          updated_at: string | null
+          recipient: string
+          repeat: string
+          type: string
+          updated_at: string
         }
         Insert: {
-          amount?: number | null
-          created_at?: string | null
-          date?: string | null
-          group_id?: string | null
-          id?: string | null
-          included_in_split?: boolean | null
+          amount: number
+          created_at?: string
+          date: string
+          group_id: string
+          id?: string
+          included_in_split?: boolean
           note?: string | null
-          recipient?: string | null
-          repeat?: string | null
-          type?: string | null
-          updated_at?: string | null
+          recipient: string
+          repeat?: string
+          type?: string
+          updated_at?: string
         }
         Update: {
-          amount?: number | null
-          created_at?: string | null
-          date?: string | null
-          group_id?: string | null
-          id?: string | null
-          included_in_split?: boolean | null
+          amount?: number
+          created_at?: string
+          date?: string
+          group_id?: string
+          id?: string
+          included_in_split?: boolean
           note?: string | null
-          recipient?: string | null
-          repeat?: string | null
-          type?: string | null
-          updated_at?: string | null
+          recipient?: string
+          repeat?: string
+          type?: string
+          updated_at?: string
         }
         Relationships: []
       }
