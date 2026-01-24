@@ -167,9 +167,14 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      const { error } = await supabase.from("incomes")
+      console.log("Updating income:", { incomeId, updates });
+      
+      const { data, error, count } = await supabase.from("incomes")
         .update(updates)
-        .eq("id", incomeId);
+        .eq("id", incomeId)
+        .select();
+
+      console.log("Update result:", { data, error, count });
 
       if (error) throw error;
 
