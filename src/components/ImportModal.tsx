@@ -1,11 +1,12 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Upload, Loader2, ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { Upload, Loader2, ArrowUpRight, ArrowDownLeft, Image, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { parseFile, ParsedTransaction } from "@/lib/fileParser";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface Categorization {
   index: number;
@@ -60,6 +61,52 @@ export function ImportModal({
   const [step, setStep] = useState<ImportStep>("upload");
   const [transactions, setTransactions] = useState<ExtendedTransaction[]>([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [uploadType, setUploadType] = useState<"file" | "image">("file");
+  const imageInputRef = useRef<HTMLInputElement>(null);
+
+  // Process parsed transactions through categorization
+  const categorizeTransactions = useCallback(async (
+    parsed: ParsedTransaction[], 
+    defaultType: TransactionType = "expense"
+  ) => {
+    const extended: ExtendedTransaction[] = parsed.map(t => ({
+      ...t,
+      transactionType: defaultType,
+    }));
+
+    setTransactions(extended);
+    setStep("categorizing");
+
+    // Call AI categorization
+    const { data, error } = await supabase.functions.invoke("categorize-transactions", {
+      body: { 
+        transactions: parsed.map(t => ({
+          date: t.date,
+          description: t.description,
+          amount: t.amount,
+        })),
+        existingRules: [],
+      },
+    });
+
+    if (error) {
+      console.error("Categorization error:", error);
+      setTransactions(extended.map(t => ({ ...t, category: "ovrigt", isShared: true })));
+    } else if (data?.categorizations) {
+      const response = data as CategorizationResponse;
+      const categorized = extended.map((t, i) => {
+        const cat = response.categorizations.find((c) => c.index === i);
+        return {
+          ...t,
+          category: cat?.category || "ovrigt",
+          isShared: cat?.isShared ?? true,
+        };
+      });
+      setTransactions(categorized);
+    }
+
+    setStep("review");
+  }, []);
 
   const handleFileUpload = useCallback(async (file: File) => {
     const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls');
@@ -96,19 +143,87 @@ export function ImportModal({
       }
 
       toast.success(`${parsed.length} transaktioner hittades. Kategoriserar med AI...`);
+      await categorizeTransactions(parsed, "expense");
 
-      // Convert to extended transactions with type detection
-      const extended: ExtendedTransaction[] = parsed.map(t => ({
-        ...t,
-        // Default to expense, user can change
-        transactionType: "expense" as TransactionType,
+    } catch (err) {
+      console.error("File parsing error:", err);
+      toast.error(
+        err?.message ||
+        "Kunde inte läsa filen. Om det är en bank-Excel, prova exportera som CSV eller spara om som .xlsx."
+      );
+    }
+  }, [categorizeTransactions]);
+
+  const handleImageUpload = useCallback(async (file: File) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      toast.error("Endast bilder stöds (PNG, JPG, etc.)");
+      return;
+    }
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Bilden är för stor. Max 10MB.");
+      return;
+    }
+
+    try {
+      setStep("categorizing");
+      toast.info("Analyserar kontoutdrag med AI...");
+
+      // Convert to base64
+      const buffer = await file.arrayBuffer();
+      const base64 = btoa(
+        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
+      );
+
+      // Call the edge function to analyze the image
+      const { data, error } = await supabase.functions.invoke("analyze-bank-image", {
+        body: { 
+          imageBase64: base64,
+          mimeType: file.type,
+        },
+      });
+
+      if (error) {
+        console.error("Image analysis error:", error);
+        toast.error("Kunde inte analysera bilden. Försök igen.");
+        setStep("upload");
+        return;
+      }
+
+      const transactions = data?.transactions || [];
+      
+      if (transactions.length === 0) {
+        toast.error("Inga transaktioner hittades i bilden. Prova en tydligare bild.");
+        setStep("upload");
+        return;
+      }
+
+      toast.success(`${transactions.length} transaktioner hittades!`);
+
+      // Convert to ParsedTransaction format
+      const parsed: ParsedTransaction[] = transactions.map((t: { date: string; description: string; amount: number; type: string }, index: number) => ({
+        id: `img-${Date.now()}-${index}`,
+        date: t.date,
+        description: t.description,
+        amount: Math.abs(t.amount),
+        category: "ovrigt",
+        isShared: true,
+        selected: true,
       }));
 
-      setTransactions(extended);
-      setStep("categorizing");
+      // Create extended transactions with type from AI
+      const extended: ExtendedTransaction[] = parsed.map((p, i) => ({
+        ...p,
+        transactionType: (transactions[i]?.type === "income" ? "income" : "expense") as TransactionType,
+      }));
 
-      // Call AI categorization
-      const { data, error } = await supabase.functions.invoke("categorize-transactions", {
+      // Now categorize them
+      setTransactions(extended);
+      
+      // Call categorization for expense categories
+      const { data: catData, error: catError } = await supabase.functions.invoke("categorize-transactions", {
         body: { 
           transactions: parsed.map(t => ({
             date: t.date,
@@ -119,11 +234,11 @@ export function ImportModal({
         },
       });
 
-      if (error) {
-        console.error("Categorization error:", error);
+      if (catError) {
+        console.error("Categorization error:", catError);
         setTransactions(extended.map(t => ({ ...t, category: "ovrigt", isShared: true })));
-      } else if (data?.categorizations) {
-        const response = data as CategorizationResponse;
+      } else if (catData?.categorizations) {
+        const response = catData as CategorizationResponse;
         const categorized = extended.map((t, i) => {
           const cat = response.categorizations.find((c) => c.index === i);
           return {
@@ -138,13 +253,16 @@ export function ImportModal({
       setStep("review");
 
     } catch (err) {
-      console.error("File parsing error:", err);
-      toast.error(
-        err?.message ||
-        "Kunde inte läsa filen. Om det är en bank-Excel, prova exportera som CSV eller spara om som .xlsx."
-      );
+      console.error("Image upload error:", err);
+      toast.error("Kunde inte bearbeta bilden. Försök igen.");
+      setStep("upload");
     }
   }, []);
+
+  const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleImageUpload(file);
+  }, [handleImageUpload]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -311,40 +429,101 @@ export function ImportModal({
               
               <div className="flex-1 overflow-auto px-4 sm:px-6 py-4 sm:pb-6">
                 {step === "upload" && (
-                  <div
-                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={handleDrop}
-                    className={`
-                      border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all
-                      ${isDragging ? "border-primary bg-primary/5" : "border-border"}
-                    `}
-                  >
-                    <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3 sm:mb-4">
-                      <Upload size={24} className="text-muted-foreground sm:hidden" />
-                      <Upload size={28} className="text-muted-foreground hidden sm:block" />
-                    </div>
-                    <p className="text-base sm:text-lg font-medium text-foreground mb-1 sm:mb-2">
-                      Dra och släpp din fil här
-                    </p>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      CSV eller Excel (.xlsx)
-                    </p>
-                    <input
-                      type="file"
-                      accept=".csv,.xlsx,.xls"
-                      onChange={handleFileSelect}
-                      className="hidden"
-                      id="file-upload"
-                    />
-                    <label htmlFor="file-upload">
-                      <Button variant="outline" className="cursor-pointer" asChild>
-                        <span>Välj fil</span>
-                      </Button>
-                    </label>
-                    <p className="text-xs text-muted-foreground mt-3 sm:mt-4">
-                      Stödjer de flesta svenska bankformat
-                    </p>
+                  <div className="space-y-4">
+                    <Tabs value={uploadType} onValueChange={(v) => setUploadType(v as "file" | "image")} className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="file" className="flex items-center gap-2">
+                          <FileText size={16} />
+                          <span>CSV/Excel</span>
+                        </TabsTrigger>
+                        <TabsTrigger value="image" className="flex items-center gap-2">
+                          <Image size={16} />
+                          <span>Bild</span>
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="file" className="mt-4">
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                          onDragLeave={() => setIsDragging(false)}
+                          onDrop={handleDrop}
+                          className={`
+                            border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all
+                            ${isDragging ? "border-primary bg-primary/5" : "border-border"}
+                          `}
+                        >
+                          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <Upload size={24} className="text-muted-foreground sm:hidden" />
+                            <Upload size={28} className="text-muted-foreground hidden sm:block" />
+                          </div>
+                          <p className="text-base sm:text-lg font-medium text-foreground mb-1 sm:mb-2">
+                            Dra och släpp din fil här
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            CSV eller Excel (.xlsx)
+                          </p>
+                          <input
+                            type="file"
+                            accept=".csv,.xlsx,.xls"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            id="file-upload"
+                          />
+                          <label htmlFor="file-upload">
+                            <Button variant="outline" className="cursor-pointer" asChild>
+                              <span>Välj fil</span>
+                            </Button>
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-3 sm:mt-4">
+                            Stödjer de flesta svenska bankformat
+                          </p>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="image" className="mt-4">
+                        <div
+                          onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                          onDragLeave={() => setIsDragging(false)}
+                          onDrop={(e) => {
+                            e.preventDefault();
+                            setIsDragging(false);
+                            const file = e.dataTransfer.files[0];
+                            if (file) handleImageUpload(file);
+                          }}
+                          className={`
+                            border-2 border-dashed rounded-xl p-8 sm:p-12 text-center transition-all
+                            ${isDragging ? "border-primary bg-primary/5" : "border-border"}
+                          `}
+                        >
+                          <div className="h-12 w-12 sm:h-16 sm:w-16 rounded-full bg-secondary flex items-center justify-center mx-auto mb-3 sm:mb-4">
+                            <Image size={24} className="text-muted-foreground sm:hidden" />
+                            <Image size={28} className="text-muted-foreground hidden sm:block" />
+                          </div>
+                          <p className="text-base sm:text-lg font-medium text-foreground mb-1 sm:mb-2">
+                            Ladda upp en bild på kontoutdrag
+                          </p>
+                          <p className="text-sm text-muted-foreground mb-4">
+                            PNG, JPG eller skärmdump
+                          </p>
+                          <input
+                            ref={imageInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                            id="image-upload"
+                          />
+                          <label htmlFor="image-upload">
+                            <Button variant="outline" className="cursor-pointer" asChild>
+                              <span>Välj bild</span>
+                            </Button>
+                          </label>
+                          <p className="text-xs text-muted-foreground mt-3 sm:mt-4">
+                            AI analyserar bilden och extraherar transaktioner
+                          </p>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </div>
                 )}
 
