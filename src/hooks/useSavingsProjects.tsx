@@ -173,6 +173,12 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
+      // Security check: Verify user created this project
+      if (project.created_by !== user.id) {
+        toast.error("Du har inte behörighet att uppdatera detta projekt");
+        return;
+      }
+
       // Verify project belongs to current group if groupId is set
       if (groupId && project.group_id !== groupId) {
         toast.error("Projektet tillhör inte det valda hushållet");
@@ -182,7 +188,8 @@ export function useSavingsProjects(groupId?: string) {
       const { error } = await (supabase as any)
         .from("savings_projects")
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", projectId);
+        .eq("id", projectId)
+        .eq("created_by", user.id); // Server-side check
 
       if (error) throw error;
 

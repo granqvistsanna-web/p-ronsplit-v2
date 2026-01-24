@@ -169,6 +169,7 @@ export function AddContributionModal({
     });
 
     resetForm();
+    onClose();
   };
 
   const handleClose = () => {

@@ -294,6 +294,7 @@ export function useExpenses(groupId?: string) {
                   description: expenseToDelete.description,
                   date: expenseToDelete.date,
                   splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
+                  repeat: expenseToDelete.repeat || "none",
                 } as any);
 
               if (restoreError) throw restoreError;

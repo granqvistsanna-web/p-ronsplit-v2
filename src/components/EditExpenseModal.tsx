@@ -202,18 +202,9 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Betalades av</Label>
-                    <select
-                      value={paidBy}
-                      onChange={(e) => setPaidBy(e.target.value)}
-                      className="flex h-12 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 appearance-none cursor-pointer"
-                      style={{ fontSize: '16px' }}
-                    >
-                      {members.map((member) => (
-                        <option key={member.user_id} value={member.user_id}>
-                          {member.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="flex h-12 sm:h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base sm:text-sm items-center">
+                      {members.find(m => m.user_id === paidBy)?.name || "Okänd"}
+                    </div>
                   </div>
 
                   <div className="space-y-2">
