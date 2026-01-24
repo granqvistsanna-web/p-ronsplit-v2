@@ -167,11 +167,22 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      const { error } = await supabase.from("incomes")
+      const { data, error } = await supabase.from("incomes")
         .update(updates)
-        .eq("id", incomeId); // RLS handles access control
+        .eq("id", incomeId)
+        .select(); // Return updated rows to verify update worked
 
       if (error) throw error;
+
+      // Check if any rows were actually updated (RLS may silently block)
+      if (!data || data.length === 0) {
+        console.error("Update returned no rows - RLS may have blocked the update", {
+          incomeId,
+          updates,
+        });
+        toast.error("Kunde inte uppdatera inkomst - kontrollera behörigheter");
+        return;
+      }
 
       await fetchIncomes();
       toast.success("Inkomst uppdaterad!");
