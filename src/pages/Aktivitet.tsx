@@ -272,21 +272,8 @@ export default function Aktivitet() {
     await addExpenses(newExpenses);
   }, [addExpenses]);
 
-  const handleImportIncomes = useCallback(async (newIncomes: {
-    group_id: string;
-    amount: number;
-    recipient: string;
-    type: string;
-    note: string;
-    date: string;
-    repeat: string;
-    included_in_split: boolean;
-  }[]) => {
-    await addIncomes(newIncomes.map(income => ({
-      ...income,
-      type: income.type as IncomeType,
-      repeat: income.repeat as IncomeRepeat,
-    })));
+  const handleImportIncomes = useCallback(async (newIncomes: IncomeInput[]) => {
+    await addIncomes(newIncomes);
   }, [addIncomes]);
 
   const handleRefresh = useCallback(async () => {

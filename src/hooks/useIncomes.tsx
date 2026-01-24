@@ -152,6 +152,7 @@ export function useIncomes(groupId?: string) {
     }
 
     try {
+      // Batch insert all incomes in a single query
       const insertData = incomesData.map(income => ({
         group_id: income.group_id,
         amount: income.amount,
@@ -163,11 +164,20 @@ export function useIncomes(groupId?: string) {
         included_in_split: income.included_in_split ?? true,
       }));
 
-      const { data, error } = await supabase.from("incomes")
+      const { data, error } = await supabase
+        .from("incomes")
         .insert(insertData)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase error details:", {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+        });
+        throw error;
+      }
 
       await fetchIncomes();
       toast.success(`${incomesData.length} inkomster tillagda!`);
