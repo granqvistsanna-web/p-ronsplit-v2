@@ -141,6 +141,52 @@ export function useIncomes(groupId?: string) {
     }
   };
 
+  const addIncomes = async (incomesData: IncomeInput[]): Promise<Income[]> => {
+    if (!user) {
+      toast.error("Du måste vara inloggad");
+      return [];
+    }
+
+    if (incomesData.length === 0) {
+      return [];
+    }
+
+    try {
+      const insertData = incomesData.map(income => ({
+        group_id: income.group_id,
+        amount: income.amount,
+        recipient: income.recipient,
+        type: income.type,
+        note: income.note || null,
+        date: income.date,
+        repeat: income.repeat || "none",
+        included_in_split: income.included_in_split ?? true,
+      }));
+
+      const { data, error } = await supabase.from("incomes")
+        .insert(insertData)
+        .select();
+
+      if (error) throw error;
+
+      await fetchIncomes();
+      toast.success(`${incomesData.length} inkomster tillagda!`);
+
+      // Cast to our typed Income interface
+      const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
+        ...row,
+        type: row.type as IncomeType,
+        repeat: row.repeat as IncomeRepeat,
+      }));
+
+      return typedIncomes;
+    } catch (error) {
+      console.error("Error adding incomes:", error);
+      toast.error("Kunde inte lägga till inkomster");
+      return [];
+    }
+  };
+
   const updateIncome = async (
     incomeId: string,
     updates: Partial<Omit<Income, "id" | "created_at" | "updated_at">>
@@ -260,6 +306,7 @@ export function useIncomes(groupId?: string) {
     incomes,
     loading,
     addIncome,
+    addIncomes,
     updateIncome,
     deleteIncome,
     refetch: fetchIncomes,

@@ -15,7 +15,7 @@ import { MemberSummaryCard } from "@/components/MemberSummaryCard";
 import { useGroups } from "@/hooks/useGroups";
 import { GroupSelector } from "@/components/GroupSelector";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
-import { useIncomes, Income, IncomeInput } from "@/hooks/useIncomes";
+import { useIncomes, Income, IncomeInput, IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
 import { useSettlements } from "@/hooks/useSettlements";
 import { useAuth } from "@/hooks/useAuth";
 import { useMonthSelection } from "@/hooks/useMonthSelection";
@@ -50,9 +50,11 @@ const Index = () => {
     incomes,
     loading: incomesLoading,
     addIncome,
+    addIncomes,
     updateIncome,
     deleteIncome,
   } = useIncomes(household?.id);
+
 
   const {
     settlements,
@@ -163,6 +165,23 @@ const Index = () => {
   }[]) => {
     await addExpenses(newExpenses);
   }, [addExpenses]);
+
+  const handleImportIncomes = useCallback(async (newIncomes: {
+    group_id: string;
+    amount: number;
+    recipient: string;
+    type: string;
+    note: string;
+    date: string;
+    repeat: string;
+    included_in_split: boolean;
+  }[]) => {
+    await addIncomes(newIncomes.map(income => ({
+      ...income,
+      type: income.type as IncomeType,
+      repeat: income.repeat as IncomeRepeat,
+    })));
+  }, [addIncomes]);
 
   // Handle settlement
   const handleSettle = useCallback(async (fromUser: string, toUser: string, amount: number, date?: string) => {
@@ -472,6 +491,7 @@ const Index = () => {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportExpenses={handleImportExpenses}
+        onImportIncomes={handleImportIncomes}
         groupId={household.id}
         currentUserId={user?.id || ""}
       />
