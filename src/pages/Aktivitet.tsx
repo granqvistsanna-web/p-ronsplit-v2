@@ -10,7 +10,7 @@ import { SwishModal } from "@/components/SwishModal";
 import { ImportModal } from "@/components/ImportModal";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
-import { useIncomes, Income, IncomeInput } from "@/hooks/useIncomes";
+import { useIncomes, Income, IncomeInput, IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
 import { useSettlements, Settlement } from "@/hooks/useSettlements";
 import { ExpenseItem } from "@/components/ExpenseItem";
 import { IncomeItem } from "@/components/IncomeItem";
@@ -42,7 +42,7 @@ export default function Aktivitet() {
   const { household, loading: householdLoading } = useGroups();
   const { sidebarWidth } = useSidebar();
   const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses(household?.id);
-  const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, refetch: refetchIncomes } = useIncomes(household?.id);
+  const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, addIncomes, refetch: refetchIncomes } = useIncomes(household?.id);
   const { settlements, loading: settlementsLoading, addSettlement, updateSettlement, deleteSettlement, refetch: refetchSettlements } = useSettlements(household?.id);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -272,6 +272,23 @@ export default function Aktivitet() {
     await addExpenses(newExpenses);
   }, [addExpenses]);
 
+  const handleImportIncomes = useCallback(async (newIncomes: {
+    group_id: string;
+    amount: number;
+    recipient: string;
+    type: string;
+    note: string;
+    date: string;
+    repeat: string;
+    included_in_split: boolean;
+  }[]) => {
+    await addIncomes(newIncomes.map(income => ({
+      ...income,
+      type: income.type as IncomeType,
+      repeat: income.repeat as IncomeRepeat,
+    })));
+  }, [addIncomes]);
+
   const handleRefresh = useCallback(async () => {
     await Promise.all([refetchExpenses(), refetchIncomes(), refetchSettlements()]);
   }, [refetchExpenses, refetchIncomes, refetchSettlements]);
@@ -495,6 +512,7 @@ export default function Aktivitet() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onImportExpenses={handleImportExpenses}
+        onImportIncomes={handleImportIncomes}
         groupId={household.id}
         currentUserId={user?.id || ""}
       />
