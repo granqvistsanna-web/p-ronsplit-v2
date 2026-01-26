@@ -145,12 +145,16 @@ export function useExpenses(groupId?: string) {
     splits?: ExpenseSplit | null;
     repeat?: ExpenseRepeat;
   }[]) => {
+    console.log('[addExpenses] Called with', expenses.length, 'expenses:', expenses);
+
     if (!user) {
+      console.log('[addExpenses] No user, aborting');
       toast.error("Du måste vara inloggad");
       return [];
     }
 
     if (expenses.length === 0) {
+      console.log('[addExpenses] Empty expenses array, aborting');
       return [];
     }
 
@@ -167,14 +171,23 @@ export function useExpenses(groupId?: string) {
         splits: expense.splits ? JSON.stringify(expense.splits) : null,
       }));
 
+      console.log('[addExpenses] Insert data prepared:', insertData);
+
       const { data, error } = await supabase
         .from("expenses")
         .insert(insertData as any)
         .select();
 
-      if (error) throw error;
+      if (error) {
+        console.error('[addExpenses] Supabase error:', error);
+        throw error;
+      }
+
+      console.log('[addExpenses] Insert successful, returned data:', data);
 
       await fetchExpenses();
+      console.log('[addExpenses] Refetch complete');
+
       toast.success(`${expenses.length} utgifter tillagda!`);
       return data || [];
     } catch (error) {

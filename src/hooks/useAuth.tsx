@@ -1,4 +1,4 @@
-import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, createContext, useContext, ReactNode, useCallback, useMemo } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase, isSupabaseConfigured } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -198,47 +198,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  // Idle timeout detection - auto logout after 30 minutes of inactivity
-  // Use ref to store latest signOut to avoid stale closure
-  const signOutRef = useRef(signOut);
-  useEffect(() => {
-    signOutRef.current = signOut;
-  }, [signOut]);
-
-  useEffect(() => {
-    if (!user) return; // Only run when user is logged in
-
-    const IDLE_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
-    let timeoutId: NodeJS.Timeout;
-
-      const resetIdleTimer = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(async () => {
-        toast.info("Du har loggats ut på grund av inaktivitet");
-        // Use ref to get latest signOut function, avoiding stale closure
-        await signOutRef.current();
-      }, IDLE_TIMEOUT);
-    };
-
-    // Activity events to monitor
-    const events = ['mousedown', 'keydown', 'touchstart', 'scroll'];
-
-    // Add event listeners
-    events.forEach(event => {
-      window.addEventListener(event, resetIdleTimer);
-    });
-
-    // Start the timer
-    resetIdleTimer();
-
-    // Cleanup
-    return () => {
-      clearTimeout(timeoutId);
-      events.forEach(event => {
-        window.removeEventListener(event, resetIdleTimer);
-      });
-    };
-  }, [user]); // signOut removed from deps since we use ref
 
   const signUp = useCallback(async (email: string, password: string, name: string) => {
     if (!isSupabaseConfigured) {

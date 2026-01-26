@@ -28,7 +28,7 @@ interface ImportModalProps {
     category: string;
     description: string;
     date: string;
-  }[]) => void;
+  }[]) => Promise<void>;
   onImportIncomes?: (incomes: {
     group_id: string;
     amount: number;
@@ -38,7 +38,7 @@ interface ImportModalProps {
     date: string;
     repeat: string;
     included_in_split: boolean;
-  }[]) => void;
+  }[]) => Promise<void>;
   groupId: string;
   currentUserId: string;
 }
@@ -298,9 +298,12 @@ export function ImportModal({
     );
   };
 
-  const handleImport = () => {
+  const handleImport = async () => {
+    console.log('[ImportModal] handleImport called, total transactions:', transactions.length);
+
     // Only import transactions marked as shared
     const toImport = transactions.filter(t => t.isShared);
+    console.log('[ImportModal] Transactions marked as shared:', toImport.length);
 
     if (toImport.length === 0) {
       toast.error("Inga delade transaktioner att importera");
@@ -310,6 +313,7 @@ export function ImportModal({
     // Split into expenses and incomes
     const selectedExpenses = toImport.filter(t => t.transactionType === "expense");
     const selectedIncomes = toImport.filter(t => t.transactionType === "income");
+    console.log('[ImportModal] Split into expenses:', selectedExpenses.length, 'incomes:', selectedIncomes.length);
 
     // Validate and prepare expenses
     const expenses = selectedExpenses
@@ -355,33 +359,42 @@ export function ImportModal({
         included_in_split: t.isShared ?? true,
       }));
 
-    let importedCount = 0;
+    const itemsToImport = expenses.length + incomes.length;
 
-    if (expenses.length > 0) {
-      onImportExpenses(expenses);
-      importedCount += expenses.length;
-    }
-
-    if (incomes.length > 0 && onImportIncomes) {
-      onImportIncomes(incomes);
-      importedCount += incomes.length;
-    }
-
-    if (importedCount === 0) {
+    if (itemsToImport === 0) {
       toast.error("Inga giltiga transaktioner att importera");
       return;
     }
 
-    const skipped = toImport.length - (expenses.length + incomes.length);
-    if (skipped > 0) {
-      toast.warning(`${skipped} ogiltiga transaktioner hoppades över`);
+    console.log('[ImportModal] About to call import callbacks - expenses:', expenses.length, 'incomes:', incomes.length);
+
+    try {
+      if (expenses.length > 0) {
+        console.log('[ImportModal] Calling onImportExpenses with:', expenses);
+        await onImportExpenses(expenses);
+      }
+
+      if (incomes.length > 0 && onImportIncomes) {
+        console.log('[ImportModal] Calling onImportIncomes with:', incomes);
+        await onImportIncomes(incomes);
+      }
+
+      const skipped = toImport.length - itemsToImport;
+      if (skipped > 0) {
+        toast.warning(`${skipped} ogiltiga transaktioner hoppades över`);
+      }
+
+      console.log('[ImportModal] Import complete');
+      // Success toasts are shown by the hooks (addExpenses/addIncomes)
+
+      setStep("upload");
+      setTransactions([]);
+      onClose();
+    } catch (error) {
+      console.error('[ImportModal] Import failed:', error);
+      // Error toasts are shown by the hooks, but add a fallback
+      toast.error("Importen misslyckades. Försök igen.");
     }
-
-    toast.success(`${expenses.length} utgifter och ${incomes.length} inkomster importerade`);
-
-    setStep("upload");
-    setTransactions([]);
-    onClose();
   };
 
   const handleClose = () => {

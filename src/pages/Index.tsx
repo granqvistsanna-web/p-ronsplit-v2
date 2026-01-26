@@ -163,7 +163,9 @@ const Index = () => {
     description: string;
     date: string;
   }[]) => {
+    console.log('[Index handleImportExpenses] Received', newExpenses.length, 'expenses to import');
     await addExpenses(newExpenses);
+    console.log('[Index handleImportExpenses] Import complete');
   }, [addExpenses]);
 
   const handleImportIncomes = useCallback(async (newIncomes: IncomeInput[]) => {
