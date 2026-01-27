@@ -17,38 +17,38 @@ export type Database = {
       expenses: {
         Row: {
           amount: number | null
-          category: string | null
-          created_at: string | null
+          category: string
+          created_at: string
           date: string | null
           description: string | null
           group_id: string | null
-          id: string | null
+          id: string
           paid_by: string | null
-          repeat: string | null
+          repeat: string
           splits: string | null
         }
         Insert: {
           amount?: number | null
-          category?: string | null
-          created_at?: string | null
+          category?: string
+          created_at?: string
           date?: string | null
           description?: string | null
           group_id?: string | null
-          id?: string | null
+          id?: string
           paid_by?: string | null
-          repeat?: string | null
+          repeat?: string
           splits?: string | null
         }
         Update: {
           amount?: number | null
-          category?: string | null
-          created_at?: string | null
+          category?: string
+          created_at?: string
           date?: string | null
           description?: string | null
           group_id?: string | null
-          id?: string | null
+          id?: string
           paid_by?: string | null
-          repeat?: string | null
+          repeat?: string
           splits?: string | null
         }
         Relationships: []
