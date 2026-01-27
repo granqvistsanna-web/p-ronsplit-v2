@@ -7,6 +7,7 @@ import { parseFile, ParsedTransaction } from "@/lib/fileParser";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import type { IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
 
 interface Categorization {
   index: number;
@@ -33,10 +34,10 @@ interface ImportModalProps {
     group_id: string;
     amount: number;
     recipient: string;
-    type: string;
+    type: IncomeType;
     note: string;
     date: string;
-    repeat: string;
+    repeat: IncomeRepeat;
     included_in_split: boolean;
   }[]) => Promise<void>;
   groupId: string;
@@ -352,10 +353,10 @@ export function ImportModal({
         group_id: groupId,
         amount: Math.round(t.amount * 100), // Convert to cents
         recipient: currentUserId,
-        type: "other",
+        type: "other" as IncomeType,
         note: t.description?.trim() || "",
         date: t.date,
-        repeat: "none",
+        repeat: "none" as IncomeRepeat,
         included_in_split: t.isShared ?? true,
       }));
 

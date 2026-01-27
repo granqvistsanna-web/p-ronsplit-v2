@@ -177,6 +177,8 @@ export default function Aktivitet() {
       category: updatedExpense.category,
       description: updatedExpense.description,
       date: updatedExpense.date,
+      splits: updatedExpense.splits ?? null,
+      repeat: updatedExpense.repeat,
     });
     setIsEditExpenseModalOpen(false);
     setEditingExpense(null);
