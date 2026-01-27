@@ -81,31 +81,31 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILT-01 | TBD | Pending |
-| FILT-02 | TBD | Pending |
-| FILT-03 | TBD | Pending |
-| CAT-01 | TBD | Pending |
-| CAT-02 | TBD | Pending |
-| CAT-03 | TBD | Pending |
-| CAT-04 | TBD | Pending |
-| CAT-05 | TBD | Pending |
-| CAT-06 | TBD | Pending |
-| CAT-07 | TBD | Pending |
-| BUD-01 | TBD | Pending |
-| BUD-02 | TBD | Pending |
-| BUD-03 | TBD | Pending |
-| BUD-04 | TBD | Pending |
-| BUD-05 | TBD | Pending |
-| BUD-06 | TBD | Pending |
-| TECH-01 | TBD | Pending |
-| TECH-02 | TBD | Pending |
-| TECH-03 | TBD | Pending |
+| FILT-01 | Phase 1 | Pending |
+| FILT-02 | Phase 1 | Pending |
+| FILT-03 | Phase 1 | Pending |
+| CAT-01 | Phase 3 | Pending |
+| CAT-02 | Phase 3 | Pending |
+| CAT-03 | Phase 4 | Pending |
+| CAT-04 | Phase 4 | Pending |
+| CAT-05 | Phase 4 | Pending |
+| CAT-06 | Phase 3 | Pending |
+| CAT-07 | Phase 4 | Pending |
+| BUD-01 | Phase 5 | Pending |
+| BUD-02 | Phase 6 | Pending |
+| BUD-03 | Phase 6 | Pending |
+| BUD-04 | Phase 6 | Pending |
+| BUD-05 | Phase 6 | Pending |
+| BUD-06 | Phase 6 | Pending |
+| TECH-01 | Phase 6 | Pending |
+| TECH-02 | Phase 2 | Pending |
+| TECH-03 | Phase 4 | Pending |
 
 **Coverage:**
 - v1 requirements: 19 total
-- Mapped to phases: 0
-- Unmapped: 19 ⚠️
+- Mapped to phases: 19
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-27 after initial definition*
+*Last updated: 2026-01-27 after roadmap creation*
