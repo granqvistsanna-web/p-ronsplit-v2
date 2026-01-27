@@ -207,24 +207,20 @@ export function useExpenses(groupId?: string) {
     }
 
     try {
-      // First, verify the expense exists and user has permission
+      // First, verify the expense exists
       const expense = expenses.find(e => e.id === expenseId);
       if (!expense) {
         toast.error("Utgiften hittades inte");
         return;
       }
 
-      // Security check: Verify user created this expense or it belongs to current group
-      if (expense.paid_by !== user.id) {
-        toast.error("Du har inte behörighet att uppdatera denna utgift");
-        return;
-      }
-
-      // Additional check: Verify expense belongs to current group if groupId is set
+      // Verify expense belongs to current group if groupId is set
       if (groupId && expense.group_id !== groupId) {
         toast.error("Utgiften tillhör inte det valda hushållet");
         return;
       }
+
+      // RLS handles access control - any group member can update expenses in their group
 
       // Serialize splits if present
       const dbUpdates: Record<string, unknown> = { ...updates };
@@ -235,8 +231,7 @@ export function useExpenses(groupId?: string) {
       const { error } = await supabase
         .from("expenses")
         .update(dbUpdates as any)
-        .eq("id", expenseId)
-        .eq("paid_by", user.id); // Server-side check: only update if user is creator
+        .eq("id", expenseId); // RLS handles access control
 
       if (error) throw error;
 
