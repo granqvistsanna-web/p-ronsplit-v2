@@ -18,9 +18,10 @@ import { SettlementItem } from "@/components/SettlementItem";
 import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
 import { EditSettlementModal } from "@/components/EditSettlementModal";
+import { RecategorizeModal } from "@/components/RecategorizeModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/useSidebar";
-import { Search, ArrowUpDown, Plus, FileText } from "lucide-react";
+import { Search, ArrowUpDown, Plus, FileText, Sparkles } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -54,6 +55,7 @@ export default function Aktivitet() {
   const [isEditExpenseModalOpen, setIsEditExpenseModalOpen] = useState(false);
   const [isEditIncomeModalOpen, setIsEditIncomeModalOpen] = useState(false);
   const [isEditSettlementModalOpen, setIsEditSettlementModalOpen] = useState(false);
+  const [isRecategorizeModalOpen, setIsRecategorizeModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
@@ -284,6 +286,13 @@ export default function Aktivitet() {
     await Promise.all([refetchExpenses(), refetchIncomes(), refetchSettlements()]);
   }, [refetchExpenses, refetchIncomes, refetchSettlements]);
 
+  // Handle AI recategorization
+  const handleRecategorize = useCallback(async (updates: { id: string; category: string }[]) => {
+    for (const update of updates) {
+      await updateExpense(update.id, { category: update.category });
+    }
+  }, [updateExpense]);
+
   if (loading) {
     return (
       <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
@@ -328,10 +337,24 @@ export default function Aktivitet() {
         <div className="mb-6 animate-fade-in">
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-heading text-2xl">Aktivitet</h1>
-            <HeaderMenu
-              onImportClick={() => setIsImportModalOpen(true)}
-              onSwishClick={() => setIsSwishModalOpen(true)}
-            />
+            <div className="flex items-center gap-2">
+              {expenses.filter(e => e.category === "ovrigt").length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsRecategorizeModalOpen(true)}
+                  className="gap-1.5"
+                >
+                  <Sparkles size={14} />
+                  <span className="hidden sm:inline">AI-kategorisera</span>
+                  <span className="sm:hidden">AI</span>
+                </Button>
+              )}
+              <HeaderMenu
+                onImportClick={() => setIsImportModalOpen(true)}
+                onSwishClick={() => setIsSwishModalOpen(true)}
+              />
+            </div>
           </div>
         </div>
 
@@ -542,6 +565,14 @@ export default function Aktivitet() {
         onDelete={handleDeleteSettlement}
         settlement={editingSettlement}
         members={household.members}
+      />
+
+      {/* Recategorize modal */}
+      <RecategorizeModal
+        isOpen={isRecategorizeModalOpen}
+        onClose={() => setIsRecategorizeModalOpen(false)}
+        expenses={expenses}
+        onApply={handleRecategorize}
       />
     </div>
   );
