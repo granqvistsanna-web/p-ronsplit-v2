@@ -9,6 +9,7 @@ import { AddTransactionModal } from "@/components/AddTransactionModal";
 import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
 import { ImportModal } from "@/components/ImportModal";
+import { RecategorizeModal } from "@/components/RecategorizeModal";
 import { SwishModal } from "@/components/SwishModal";
 import { BalanceCard } from "@/components/BalanceCard";
 import { MemberSummaryCard } from "@/components/MemberSummaryCard";
@@ -27,6 +28,7 @@ import {
   ArrowRight,
   Home,
   Plus,
+  Sparkles,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -66,6 +68,7 @@ const Index = () => {
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isRecategorizeModalOpen, setIsRecategorizeModalOpen] = useState(false);
   const [isSwishModalOpen, setIsSwishModalOpen] = useState(false);
 
   const [isEditExpenseModalOpen, setIsEditExpenseModalOpen] = useState(false);
@@ -171,6 +174,13 @@ const Index = () => {
   const handleImportIncomes = useCallback(async (newIncomes: IncomeInput[]) => {
     await addIncomes(newIncomes);
   }, [addIncomes]);
+
+  // Handle AI recategorization
+  const handleRecategorize = useCallback(async (updates: { id: string; category: string }[]) => {
+    for (const update of updates) {
+      await updateExpense(update.id, { category: update.category });
+    }
+  }, [updateExpense]);
 
   // Handle settlement
   const handleSettle = useCallback(async (fromUser: string, toUser: string, amount: number, date?: string) => {
@@ -351,13 +361,24 @@ const Index = () => {
             <h2 className="text-label-mono">
               Senaste aktiviteter
             </h2>
-            <button
-              onClick={() => navigate("/aktivitet")}
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
-            >
-              Se alla
-              <ArrowRight size={16} />
-            </button>
+            <div className="flex items-center gap-3">
+              {expenses.filter(e => e.category === "ovrigt").length > 0 && (
+                <button
+                  onClick={() => setIsRecategorizeModalOpen(true)}
+                  className="text-sm text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+                >
+                  <Sparkles size={14} />
+                  Kategorisera
+                </button>
+              )}
+              <button
+                onClick={() => navigate("/aktivitet")}
+                className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors"
+              >
+                Se alla
+                <ArrowRight size={16} />
+              </button>
+            </div>
           </div>
 
           {latestActivities.length > 0 ? (
@@ -548,6 +569,14 @@ const Index = () => {
         }}
         income={editingIncome}
         members={household.members}
+      />
+
+      {/* Recategorize modal */}
+      <RecategorizeModal
+        isOpen={isRecategorizeModalOpen}
+        onClose={() => setIsRecategorizeModalOpen(false)}
+        expenses={expenses}
+        onApply={handleRecategorize}
       />
     </div>
   );
