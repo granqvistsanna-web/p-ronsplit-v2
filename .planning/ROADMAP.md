@@ -13,7 +13,7 @@ Transform Päronsplit's basic analytics into a proactive budgeting cockpit. User
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Filter Foundation** - Date range and member filtering with URL state
-- [ ] **Phase 2: Enhanced Data Fetching** - Filter-aware data hooks and queries
+- [x] **Phase 2: Enhanced Data Fetching** - Filter-aware data hooks and queries
 - [ ] **Phase 3: Category Visualization** - Bar charts with top N control
 - [ ] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
 - [ ] **Phase 5: Budget Backend** - Database schema and CRUD operations
@@ -47,10 +47,12 @@ Plans:
   2. Charts update automatically when filters change without page reload
   3. Currency values are stored and calculated as integers (cents) to prevent rounding errors
   4. Loading states display correctly during data refetch on filter change
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
-- [ ] TBD
+- [x] 02-01: Query key factory and filter types (2026-01-28)
+- [x] 02-02: Currency utilities and database migration (2026-01-28)
+- [x] 02-03: React Query hook conversion (2026-01-28)
 
 ### Phase 3: Category Visualization
 **Goal**: Users see spending breakdown by category in interactive bar chart
@@ -120,7 +122,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Filter Foundation | 1/3 | In progress | - |
-| 2. Enhanced Data Fetching | 0/TBD | Not started | - |
+| 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
 | 3. Category Visualization | 0/TBD | Not started | - |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |
 | 5. Budget Backend | 0/TBD | Not started | - |

@@ -35,7 +35,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Technical
 
 - [ ] **TECH-01**: Charts render correctly on mobile with explicit height constraints
-- [ ] **TECH-02**: Currency stored as integers (cents) to prevent rounding errors
+- [x] **TECH-02**: Currency stored as integers (cents) to prevent rounding errors
 - [ ] **TECH-03**: Touch targets are minimum 44px on mobile
 
 ## v2 Requirements
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BUD-05 | Phase 6 | Pending |
 | BUD-06 | Phase 6 | Pending |
 | TECH-01 | Phase 6 | Pending |
-| TECH-02 | Phase 2 | Pending |
+| TECH-02 | Phase 2 | Complete |
 | TECH-03 | Phase 4 | Pending |
 
 **Coverage:**
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-27 after roadmap creation*
+*Last updated: 2026-01-28 after Phase 2 completion*
