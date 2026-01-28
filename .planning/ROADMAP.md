@@ -31,7 +31,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. URL updates when filters change, making filtered views shareable via link copy
   4. Reset link appears when filters deviate from defaults and returns to initial state when clicked
   5. Browser back/forward buttons work correctly with filter changes
-**Plans**: TBD
+**Plans**: 3
 
 Plans:
 - [x] 01-01: useFilterParams hook and date presets (2026-01-28)
@@ -63,10 +63,11 @@ Plans:
   2. Chart shows top 8 categories by default with "Show all" toggle to expand
   3. User can toggle stacked mode to see spending per member within each category
   4. Charts render correctly on mobile devices with explicit height constraints (no invisible charts)
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] TBD
+- [ ] 03-01-PLAN.md - Category aggregation utilities and bar chart component
+- [ ] 03-02-PLAN.md - Stacked mode, controls, and Analys integration
 
 ### Phase 4: Drill-Down Panels
 **Goal**: Users can click categories to see transaction details without losing context
@@ -74,7 +75,7 @@ Plans:
 **Requirements**: CAT-03, CAT-04, CAT-05, CAT-07, TECH-03
 **Success Criteria** (what must be TRUE):
   1. Clicking a category bar opens drill-down panel showing filtered transactions
-  2. On desktop (≥768px), drill-down displays as side panel overlaying main content
+  2. On desktop (>=768px), drill-down displays as side panel overlaying main content
   3. On mobile (<768px), drill-down displays as bottom sheet with swipe-to-dismiss
   4. Panel shows transaction list with dates, amounts, and category name
   5. All touch targets are minimum 44px for mobile accessibility
@@ -117,13 +118,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Filter Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
-| 3. Category Visualization | 0/TBD | Not started | - |
+| 3. Category Visualization | 0/2 | Not started | - |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |
 | 5. Budget Backend | 0/TBD | Not started | - |
 | 6. Budget Tracking UI | 0/TBD | Not started | - |
