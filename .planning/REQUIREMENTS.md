@@ -25,7 +25,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Budgets
 
-- [ ] **BUD-01**: Budgets stored in Supabase table with group-based RLS (all household members can CRUD)
+- [x] **BUD-01**: Budgets stored in Supabase table with group-based RLS (all household members can CRUD)
 - [ ] **BUD-02**: User can set budget amount per category
 - [ ] **BUD-03**: User can enable/disable budget tracking per category
 - [ ] **BUD-04**: User sees progress bar showing budget vs actual spending
@@ -91,7 +91,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAT-05 | Phase 4 | Complete |
 | CAT-06 | Phase 3 | Complete |
 | CAT-07 | Phase 4 | Complete |
-| BUD-01 | Phase 5 | Pending |
+| BUD-01 | Phase 5 | Complete |
 | BUD-02 | Phase 6 | Pending |
 | BUD-03 | Phase 6 | Pending |
 | BUD-04 | Phase 6 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-28 after Phase 4 completion*
+*Last updated: 2026-01-28 after Phase 5 completion*

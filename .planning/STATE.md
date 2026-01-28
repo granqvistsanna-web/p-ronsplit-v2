@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 5 in progress - Budget Backend. useBudgets hook ready.
+**Current focus:** Phase 5 complete - Budget Backend. Ready for Phase 6 - Budget Tracking UI.
 
 ## Current Position
 
 Phase: 5 of 6 (Budget Backend)
-Plan: 2 of 3 in current phase
-Status: In progress
+Plan: 2 of 2 in current phase
+Status: Phase complete
 Last activity: 2026-01-28 — Completed 05-02-PLAN.md (useBudgets React Query hook)
 
-Progress: [██████████████░] 92% (12 of 13 total plans completed)
+Progress: [██████████████] 100% (12 of 12 current plans completed)
 
 ## Performance Metrics
 

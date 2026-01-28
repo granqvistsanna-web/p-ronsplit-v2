@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: Enhanced Data Fetching** - Filter-aware data hooks and queries
 - [x] **Phase 3: Category Visualization** - Bar charts with top N control
 - [x] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
-- [ ] **Phase 5: Budget Backend** - Database schema and CRUD operations
+- [x] **Phase 5: Budget Backend** - Database schema and CRUD operations
 - [ ] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
 
 ## Phase Details
@@ -98,8 +98,8 @@ Plans:
 **Plans**: 2
 
 Plans:
-- [ ] 05-01: Database migration with budgets table and RLS policies
-- [ ] 05-02: useBudgets React Query hook with CRUD operations
+- [x] 05-01: Database migration with budgets table and RLS policies (2026-01-28)
+- [x] 05-02: useBudgets React Query hook with CRUD operations (2026-01-28)
 
 ### Phase 6: Budget Tracking UI
 **Goal**: Users can set budgets and see visual progress with pacing insights
@@ -128,5 +128,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
 | 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
-| 5. Budget Backend | 0/2 | Not started | - |
+| 5. Budget Backend | 2/2 | Complete | 2026-01-28 |
 | 6. Budget Tracking UI | 0/TBD | Not started | - |
