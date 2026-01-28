@@ -7,6 +7,7 @@ import { GroupMember } from "@/hooks/useGroups";
 import { Expense, ExpenseSplit, ExpenseRepeat } from "@/hooks/useExpenses";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { RecurringSection, RepeatInterval } from "@/components/RecurringSection";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { toast } from "sonner";
 
 interface EditExpenseModalProps {
@@ -22,6 +23,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
   const [amount, setAmount] = useState("");
   const [category, setCategory] = useState("");
   const [description, setDescription] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [date, setDate] = useState("");
   const [paidBy, setPaidBy] = useState("");
   const [repeat, setRepeat] = useState<RepeatInterval>("none");
@@ -149,6 +151,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
       repeat: repeat as ExpenseRepeat,
     });
 
+    toast.success("Utgift uppdaterad");
     onClose();
   };
 
@@ -201,13 +204,13 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       required
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
                   <div className="space-y-2">
                     <Label className="text-sm text-muted-foreground">Betalades av</Label>
-                    <div className="flex h-12 sm:h-10 w-full rounded-md border border-input bg-muted px-3 py-2 text-base sm:text-sm items-center">
+                    <div className="flex h-11 w-full rounded-md border border-input bg-muted px-3 py-2 text-sm items-center">
                       {members.find(m => m.user_id === paidBy)?.name || "Okänd"}
                     </div>
                   </div>
@@ -220,7 +223,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                           key={cat.id}
                           type="button"
                           onClick={() => setCategory(cat.id)}
-                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 ${
+                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                             category === cat.id
                               ? "border-foreground bg-secondary"
                               : "border-border hover:border-muted-foreground"
@@ -262,7 +265,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       required
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
@@ -276,7 +279,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
@@ -316,7 +319,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                               placeholder="0.00"
                               value={customSplits[member.user_id] || ""}
                               onChange={(e) => handleSplitChange(member.user_id, e.target.value)}
-                              className="w-28 sm:w-24 h-10 sm:h-9"
+                              className="w-24 h-11"
                             />
                             <span className="text-sm text-muted-foreground">kr</span>
                           </div>
@@ -352,7 +355,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                     type="button"
                     variant="outline"
                     onClick={onClose}
-                    className="flex-1 h-12 sm:h-10"
+                    className="flex-1 h-11"
                   >
                     Avbryt
                   </Button>
@@ -361,12 +364,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                       type="button"
                       variant="outline"
                       className="flex-1 h-12 sm:h-10 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => {
-                        if (expense) {
-                          onDelete(expense.id);
-                          onClose();
-                        }
-                      }}
+                      onClick={() => setShowDeleteConfirm(true)}
                     >
                       Ta bort
                     </Button>
@@ -374,7 +372,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                   <Button
                     type="submit"
                     form="edit-expense-form"
-                    className="flex-1 h-12 sm:h-10"
+                    className="flex-1 h-11"
                   >
                     Spara
                   </Button>
@@ -382,6 +380,18 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
               </div>
             </div>
           </motion.div>
+          <DeleteConfirmationDialog
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={() => {
+              if (expense && onDelete) {
+                onDelete(expense.id);
+                onClose();
+              }
+            }}
+            itemName={description || "denna utgift"}
+            itemType="utgiften"
+          />
         </>
       )}
     </AnimatePresence>

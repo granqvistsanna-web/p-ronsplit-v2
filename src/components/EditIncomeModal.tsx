@@ -9,6 +9,7 @@ import { Income, IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
 import { GroupMember } from "@/hooks/useGroups";
 import { getIncomeTypeIcon, getIncomeTypeLabel } from "@/lib/incomeUtils";
 import { RecurringSection, RepeatInterval } from "@/components/RecurringSection";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { toast } from "sonner";
 
 interface EditIncomeModalProps {
@@ -37,6 +38,7 @@ export function EditIncomeModal({
   const [repeat, setRepeat] = useState<RepeatInterval>("none");
   const [includedInSplit, setIncludedInSplit] = useState(true);
   const [recipient, setRecipient] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (income) {
@@ -81,6 +83,7 @@ export function EditIncomeModal({
       recipient,
     });
 
+    toast.success("Inkomst uppdaterad");
     onClose();
   };
 
@@ -143,7 +146,7 @@ export function EditIncomeModal({
                       value={amount}
                       onChange={(e) => setAmount(e.target.value)}
                       required
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
@@ -152,7 +155,7 @@ export function EditIncomeModal({
                     <select
                       value={recipient}
                       onChange={(e) => setRecipient(e.target.value)}
-                      className="flex h-12 sm:h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base sm:text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 appearance-none cursor-pointer"
+                      className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 appearance-none cursor-pointer"
                       style={{ fontSize: '16px' }}
                     >
                       {members.map((member) => (
@@ -171,7 +174,7 @@ export function EditIncomeModal({
                           key={incomeType}
                           type="button"
                           onClick={() => setType(incomeType)}
-                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 ${
+                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                             type === incomeType
                               ? "border-foreground bg-secondary"
                               : "border-border hover:border-muted-foreground"
@@ -199,7 +202,7 @@ export function EditIncomeModal({
                       value={date}
                       onChange={(e) => setDate(e.target.value)}
                       required
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
@@ -215,7 +218,7 @@ export function EditIncomeModal({
                       placeholder="t.ex. Månadslön december"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
-                      className="h-12 sm:h-10 text-base sm:text-sm"
+                      className="h-11 text-sm"
                     />
                   </div>
 
@@ -250,7 +253,7 @@ export function EditIncomeModal({
                     type="button"
                     variant="outline"
                     onClick={onClose}
-                    className="flex-1 h-12 sm:h-10"
+                    className="flex-1 h-11"
                   >
                     Avbryt
                   </Button>
@@ -259,12 +262,7 @@ export function EditIncomeModal({
                       type="button"
                       variant="outline"
                       className="flex-1 h-12 sm:h-10 text-destructive hover:text-destructive hover:bg-destructive/10"
-                      onClick={() => {
-                        if (income) {
-                          onDelete(income.id);
-                          onClose();
-                        }
-                      }}
+                      onClick={() => setShowDeleteConfirm(true)}
                     >
                       Ta bort
                     </Button>
@@ -272,7 +270,7 @@ export function EditIncomeModal({
                   <Button
                     type="submit"
                     form="edit-income-form"
-                    className="flex-1 h-12 sm:h-10"
+                    className="flex-1 h-11"
                   >
                     Spara
                   </Button>
@@ -280,6 +278,18 @@ export function EditIncomeModal({
               </div>
             </div>
           </motion.div>
+          <DeleteConfirmationDialog
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={() => {
+              if (income && onDelete) {
+                onDelete(income.id);
+                onClose();
+              }
+            }}
+            itemName={note || "denna inkomst"}
+            itemType="inkomsten"
+          />
         </>
       )}
     </AnimatePresence>

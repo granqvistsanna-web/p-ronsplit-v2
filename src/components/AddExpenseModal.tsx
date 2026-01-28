@@ -9,7 +9,7 @@ import { ExpenseSplit } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { DuplicateWarningDialog, PotentialDuplicate } from "./DuplicateWarningDialog";
+import { DuplicateWarningDialog, PotentialDuplicate, NewEntryInfo } from "./DuplicateWarningDialog";
 import { Loader2 } from "lucide-react";
 
 interface AddExpenseModalProps {
@@ -144,7 +144,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
 
   const saveExpense = () => {
     const totalAmount = parseFloat(amount);
-    
+
     let splits: ExpenseSplit | null = null;
     if (useCustomSplit) {
       splits = {};
@@ -163,6 +163,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
       splits,
     });
 
+    toast.success("Utgift tillagd");
     resetForm();
     onClose();
   };
@@ -273,7 +274,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
                           key={cat.id}
                           type="button"
                           onClick={() => setCategory(cat.id)}
-                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 ${
+                          className={`flex items-center gap-2 rounded-md border px-3 py-2 sm:py-1.5 text-sm transition-colors active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
                             category === cat.id
                               ? "border-foreground bg-secondary"
                               : "border-border hover:border-muted-foreground"
@@ -315,6 +316,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                       required
+                      maxLength={200}
                     />
                   </div>
 
@@ -360,7 +362,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
                               placeholder="0.00"
                               value={customSplits[member.user_id] || ""}
                               onChange={(e) => handleSplitChange(member.user_id, e.target.value)}
-                              className="w-28 sm:w-24 h-10 sm:h-9"
+                              className="w-24 h-11"
                             />
                             <span className="text-sm text-muted-foreground shrink-0">kr</span>
                           </div>
@@ -422,6 +424,12 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
         onEdit={handleEditAfterWarning}
         duplicates={potentialDuplicates}
         entryType="expense"
+        newEntry={{
+          amount: parseFloat(amount) || 0,
+          date,
+          description,
+          category,
+        }}
       />
     </>
   );

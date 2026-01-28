@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { GroupMember } from "@/hooks/useGroups";
+import { toast } from "sonner";
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -21,6 +22,11 @@ export function SettlementModal({
   amount,
   isSettling = false,
 }: SettlementModalProps) {
+  const handleConfirm = () => {
+    onConfirm();
+    toast.success("Avräkning registrerad");
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -80,9 +86,9 @@ export function SettlementModal({
                 >
                   Avbryt
                 </Button>
-                <Button 
-                  className="flex-1" 
-                  onClick={onConfirm}
+                <Button
+                  className="flex-1"
+                  onClick={handleConfirm}
                   disabled={isSettling}
                 >
                   {isSettling ? "Registrerar..." : "Bekräfta"}

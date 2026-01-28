@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { ProjectWithStats, SavingsContribution } from "@/hooks/useSavingsProjects";
 import { toast } from "sonner";
 import { X, Trash2 } from "lucide-react";
@@ -28,6 +29,7 @@ export function EditProjectModal({
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [targetAmount, setTargetAmount] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Load project data when modal opens
   useEffect(() => {
@@ -70,19 +72,6 @@ export function EditProjectModal({
       description: description || undefined,
       target_amount: parseFloat(targetAmount),
     });
-  };
-
-  const handleDelete = () => {
-    if (!project) return;
-
-    const confirmMessage =
-      project.contribution_count > 0
-        ? `Är du säker på att du vill ta bort "${project.name}"? Detta kommer också ta bort alla ${project.contribution_count} insättningar.`
-        : `Är du säker på att du vill ta bort "${project.name}"?`;
-
-    if (confirm(confirmMessage)) {
-      onDelete();
-    }
   };
 
   if (!project) return null;
@@ -195,7 +184,7 @@ export function EditProjectModal({
                   <Button
                     type="button"
                     variant="destructive"
-                    onClick={handleDelete}
+                    onClick={() => setShowDeleteConfirm(true)}
                     className="gap-2"
                   >
                     <Trash2 size={16} />
@@ -212,6 +201,14 @@ export function EditProjectModal({
           </div>
         </>
       )}
+
+      <DeleteConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={onDelete}
+        itemName={project?.name || "detta projekt"}
+        itemType="projektet"
+      />
     </AnimatePresence>
   );
 }

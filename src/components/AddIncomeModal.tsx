@@ -116,6 +116,7 @@ export function AddIncomeModal({
     });
 
     if (result) {
+      toast.success("Inkomst tillagd");
       if (saveAndAddAnother) {
         resetForm();
         setTimeout(() => {
@@ -273,6 +274,7 @@ export function AddIncomeModal({
                       placeholder="t.ex. Månadslön december"
                       value={note}
                       onChange={(e) => setNote(e.target.value)}
+                      maxLength={200}
                     />
                   </div>
 

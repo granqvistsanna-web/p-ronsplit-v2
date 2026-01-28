@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, BarChart3, List, Settings, Menu, X, PiggyBank, ChevronLeft, ChevronRight, Repeat } from "lucide-react";
+import { Home, BarChart3, List, Settings, Menu, X, PiggyBank, ChevronLeft, ChevronRight, Repeat, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,6 +10,8 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import { useGroups } from "@/hooks/useGroups";
+import { GroupSelector } from "@/components/GroupSelector";
 import logo from "@/assets/logo.png";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -25,11 +27,14 @@ const navItems = [
 export function SideNav() {
   const location = useLocation();
   const { profile } = useAuth();
+  const { household, allGroups, selectGroup } = useGroups();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(() => {
     const saved = localStorage.getItem("sidebar-collapsed");
     return saved === "true";
   });
+
+  const showGroupSelector = allGroups.length > 1;
 
   // Persist collapsed state
   useEffect(() => {
@@ -48,16 +53,26 @@ export function SideNav() {
             <img src={logo} alt="Päronsplit" className="h-10 w-auto" />
           </Link>
 
-          {/* Hamburger button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-10 w-10"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            <span className="sr-only">Meny</span>
-          </Button>
+          {/* Group selector and hamburger */}
+          <div className="flex items-center gap-2">
+            {showGroupSelector && (
+              <GroupSelector
+                groups={allGroups}
+                selectedGroupId={household?.id}
+                onSelectGroup={selectGroup}
+              />
+            )}
+            {/* Hamburger button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              <span className="sr-only">Meny</span>
+            </Button>
+          </div>
         </div>
       </header>
 
@@ -156,6 +171,40 @@ export function SideNav() {
               )}
             </Link>
           </div>
+
+          {/* Group selector */}
+          {showGroupSelector && (
+            <div className={cn(
+              "border-b border-sidebar-border/50 transition-all duration-300",
+              isCollapsed ? "px-2 py-3 flex justify-center" : "px-3 py-3"
+            )}>
+              {isCollapsed ? (
+                <TooltipProvider delayDuration={0}>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-10 w-10 bg-sidebar-accent/50"
+                        onClick={() => setIsCollapsed(false)}
+                      >
+                        <Users size={20} className="text-sidebar-foreground" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="right" className="font-medium">
+                      {household?.name || "Byt grupp"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              ) : (
+                <GroupSelector
+                  groups={allGroups}
+                  selectedGroupId={household?.id}
+                  onSelectGroup={selectGroup}
+                />
+              )}
+            </div>
+          )}
 
           {/* Navigation */}
           <TooltipProvider delayDuration={0}>

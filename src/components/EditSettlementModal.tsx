@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { GroupMember } from "@/hooks/useGroups";
 import { Settlement } from "@/hooks/useSettlements";
 import { Smartphone, Loader2, Trash2 } from "lucide-react";
@@ -38,6 +39,7 @@ export function EditSettlementModal({
   const [date, setDate] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (settlement) {
@@ -252,7 +254,7 @@ export function EditSettlementModal({
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleDelete}
+                  onClick={() => setShowDeleteConfirm(true)}
                   disabled={isSubmitting || isDeleting}
                   className="text-destructive hover:text-destructive hover:bg-destructive/10"
                 >
@@ -289,6 +291,13 @@ export function EditSettlementModal({
           </motion.div>
         </>
       )}
+      <DeleteConfirmationDialog
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleDelete}
+        itemName={`${fromMember?.name || ''} → ${toMember?.name || ''}`}
+        itemType="avräkningen"
+      />
     </AnimatePresence>
   );
 }
