@@ -22,8 +22,8 @@ const MONTHS = [
 
 export default function Analys() {
   const { household, loading: householdLoading } = useGroups();
-  const { expenses, loading: expensesLoading } = useExpenses(household?.id);
-  const { incomes, loading: incomesLoading } = useIncomes(household?.id);
+  const { expenses, loading: expensesLoading } = useExpenses({ groupId: household?.id || '' });
+  const { incomes, loading: incomesLoading } = useIncomes({ groupId: household?.id || '' });
   const { sidebarWidth } = useSidebar();
 
   const currentDate = useMemo(() => new Date(), []);
