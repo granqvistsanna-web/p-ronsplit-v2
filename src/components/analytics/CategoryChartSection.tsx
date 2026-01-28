@@ -17,10 +17,10 @@ export function CategoryChartSection() {
   const [selectedCategory, setSelectedCategory] = useState<SelectedCategory | null>(null);
 
   const { dateRange, memberIds } = useFilterParams();
-  const { currentGroup } = useGroups();
+  const { household } = useGroups();
   const { user } = useAuth();
   const { expenses, loading } = useExpenses({
-    groupId: currentGroup?.id || '',
+    groupId: household?.id || '',
     dateRange,
     memberIds,
   });
@@ -46,7 +46,7 @@ export function CategoryChartSection() {
   );
 
   const hasMore = categoryData.length > 8;
-  const members = currentGroup?.members || [];
+  const members = household?.members || [];
 
   return (
     <div className="space-y-4">
