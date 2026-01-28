@@ -15,12 +15,12 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Categories Breakdown
 
-- [ ] **CAT-01**: User sees category bar chart showing spending per category
-- [ ] **CAT-02**: Bar chart shows top 8 categories with "Show all" option to expand
+- [x] **CAT-01**: User sees category bar chart showing spending per category
+- [x] **CAT-02**: Bar chart shows top 8 categories with "Show all" option to expand
 - [ ] **CAT-03**: User can click category in chart to open drill-down panel
 - [ ] **CAT-04**: Drill-down shows as side panel on desktop (≥768px)
 - [ ] **CAT-05**: Drill-down shows as bottom sheet on mobile (<768px)
-- [ ] **CAT-06**: User can toggle stacked mode to see spending per member within each category
+- [x] **CAT-06**: User can toggle stacked mode to see spending per member within each category
 - [ ] **CAT-07**: Drill-down panel shows transactions for selected category with amounts and dates
 
 ### Budgets
@@ -84,12 +84,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILT-01 | Phase 1 | Complete |
 | FILT-02 | Phase 1 | Complete |
 | FILT-03 | Phase 1 | Complete |
-| CAT-01 | Phase 3 | Pending |
-| CAT-02 | Phase 3 | Pending |
+| CAT-01 | Phase 3 | Complete |
+| CAT-02 | Phase 3 | Complete |
 | CAT-03 | Phase 4 | Pending |
 | CAT-04 | Phase 4 | Pending |
 | CAT-05 | Phase 4 | Pending |
-| CAT-06 | Phase 3 | Pending |
+| CAT-06 | Phase 3 | Complete |
 | CAT-07 | Phase 4 | Pending |
 | BUD-01 | Phase 5 | Pending |
 | BUD-02 | Phase 6 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-28 after Phase 1 completion*
+*Last updated: 2026-01-28 after Phase 3 completion*

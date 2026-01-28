@@ -5,7 +5,7 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 3 - Category Visualization in progress
+**Current focus:** Phase 3 complete - Ready for Phase 4
 
 ## Current Position
 

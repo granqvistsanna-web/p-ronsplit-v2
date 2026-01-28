@@ -14,7 +14,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Filter Foundation** - Date range and member filtering with URL state
 - [x] **Phase 2: Enhanced Data Fetching** - Filter-aware data hooks and queries
-- [ ] **Phase 3: Category Visualization** - Bar charts with top N control
+- [x] **Phase 3: Category Visualization** - Bar charts with top N control
 - [ ] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
 - [ ] **Phase 5: Budget Backend** - Database schema and CRUD operations
 - [ ] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
@@ -66,8 +66,8 @@ Plans:
 **Plans**: 2
 
 Plans:
-- [ ] 03-01-PLAN.md - Category aggregation utilities and bar chart component
-- [ ] 03-02-PLAN.md - Stacked mode, controls, and Analys integration
+- [x] 03-01: Category aggregation utilities and bar chart component (2026-01-28)
+- [x] 03-02: Stacked mode, controls, and Analys integration (2026-01-28)
 
 ### Phase 4: Drill-Down Panels
 **Goal**: Users can click categories to see transaction details without losing context
@@ -124,7 +124,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 |-------|----------------|--------|-----------|
 | 1. Filter Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
-| 3. Category Visualization | 0/2 | Not started | - |
+| 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |
 | 5. Budget Backend | 0/TBD | Not started | - |
 | 6. Budget Tracking UI | 0/TBD | Not started | - |
