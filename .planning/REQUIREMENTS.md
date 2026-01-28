@@ -17,11 +17,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **CAT-01**: User sees category bar chart showing spending per category
 - [x] **CAT-02**: Bar chart shows top 8 categories with "Show all" option to expand
-- [ ] **CAT-03**: User can click category in chart to open drill-down panel
-- [ ] **CAT-04**: Drill-down shows as side panel on desktop (≥768px)
-- [ ] **CAT-05**: Drill-down shows as bottom sheet on mobile (<768px)
+- [x] **CAT-03**: User can click category in chart to open drill-down panel
+- [x] **CAT-04**: Drill-down shows as side panel on desktop (≥768px)
+- [x] **CAT-05**: Drill-down shows as bottom sheet on mobile (<768px)
 - [x] **CAT-06**: User can toggle stacked mode to see spending per member within each category
-- [ ] **CAT-07**: Drill-down panel shows transactions for selected category with amounts and dates
+- [x] **CAT-07**: Drill-down panel shows transactions for selected category with amounts and dates
 
 ### Budgets
 
@@ -36,7 +36,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [ ] **TECH-01**: Charts render correctly on mobile with explicit height constraints
 - [x] **TECH-02**: Currency stored as integers (cents) to prevent rounding errors
-- [ ] **TECH-03**: Touch targets are minimum 44px on mobile
+- [x] **TECH-03**: Touch targets are minimum 44px on mobile
 
 ## v2 Requirements
 
@@ -86,11 +86,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | FILT-03 | Phase 1 | Complete |
 | CAT-01 | Phase 3 | Complete |
 | CAT-02 | Phase 3 | Complete |
-| CAT-03 | Phase 4 | Pending |
-| CAT-04 | Phase 4 | Pending |
-| CAT-05 | Phase 4 | Pending |
+| CAT-03 | Phase 4 | Complete |
+| CAT-04 | Phase 4 | Complete |
+| CAT-05 | Phase 4 | Complete |
 | CAT-06 | Phase 3 | Complete |
-| CAT-07 | Phase 4 | Pending |
+| CAT-07 | Phase 4 | Complete |
 | BUD-01 | Phase 5 | Pending |
 | BUD-02 | Phase 6 | Pending |
 | BUD-03 | Phase 6 | Pending |
@@ -99,7 +99,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | BUD-06 | Phase 6 | Pending |
 | TECH-01 | Phase 6 | Pending |
 | TECH-02 | Phase 2 | Complete |
-| TECH-03 | Phase 4 | Pending |
+| TECH-03 | Phase 4 | Complete |
 
 **Coverage:**
 - v1 requirements: 19 total
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-28 after Phase 3 completion*
+*Last updated: 2026-01-28 after Phase 4 completion*
