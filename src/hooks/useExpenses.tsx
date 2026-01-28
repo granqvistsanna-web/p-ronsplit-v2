@@ -342,7 +342,10 @@ export function useExpenses(filters: ExpenseFilters) {
               toast.success("Utgift återställd!");
             } catch (restoreError) {
               console.error("Error restoring expense:", restoreError);
-              toast.error("Kunde inte återställa utgift");
+              // Provide more context for debugging while keeping user message simple
+              const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
+              console.error("Restore error details:", errorDetail);
+              toast.error("Kunde inte återställa utgift. Försök igen eller kontakta support.");
             }
           },
         },

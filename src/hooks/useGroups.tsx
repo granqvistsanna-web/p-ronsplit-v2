@@ -130,8 +130,14 @@ export function useGroups() {
     }
 
     try {
-      // Ensure at least one household exists
-      await ensureHouseholdExists();
+      // Ensure at least one household exists and wait for completion
+      const householdId = await ensureHouseholdExists();
+
+      // If household creation failed, still try to fetch existing groups
+      // but log a warning for debugging
+      if (!householdId) {
+        console.warn("ensureHouseholdExists returned null, proceeding with fetch");
+      }
 
       // Fetch all group memberships for user
       const { data: memberships, error: membershipError } = await supabase

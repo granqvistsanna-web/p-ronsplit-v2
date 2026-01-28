@@ -25,6 +25,28 @@ interface IncomeRow {
   updated_at: string;
 }
 
+// Valid enum values for type validation
+const VALID_INCOME_TYPES: IncomeType[] = ["salary", "bonus", "benefit", "fkassa", "bidrag", "other"];
+const VALID_INCOME_REPEATS: IncomeRepeat[] = ["none", "monthly"];
+
+// Type guard functions for safe casting
+function isValidIncomeType(value: string): value is IncomeType {
+  return VALID_INCOME_TYPES.includes(value as IncomeType);
+}
+
+function isValidIncomeRepeat(value: string): value is IncomeRepeat {
+  return VALID_INCOME_REPEATS.includes(value as IncomeRepeat);
+}
+
+// Safe type conversion with fallback
+function toIncomeType(value: string): IncomeType {
+  return isValidIncomeType(value) ? value : "other";
+}
+
+function toIncomeRepeat(value: string): IncomeRepeat {
+  return isValidIncomeRepeat(value) ? value : "none";
+}
+
 export function useIncomes(filters: IncomeFilters) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -62,11 +84,11 @@ export function useIncomes(filters: IncomeFilters) {
         throw error;
       }
 
-      // Cast the database response to our Income type
+      // Cast the database response to our Income type with validation
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
         ...row,
-        type: row.type as IncomeType,
-        repeat: row.repeat as IncomeRepeat,
+        type: toIncomeType(row.type),
+        repeat: toIncomeRepeat(row.repeat),
       }));
 
       return typedIncomes;
@@ -108,12 +130,12 @@ export function useIncomes(filters: IncomeFilters) {
         throw error;
       }
 
-      // Cast to our typed Income interface
+      // Cast to our typed Income interface with validation
       const row = data as IncomeRow;
       const typedIncome: Income = {
         ...row,
-        type: row.type as IncomeType,
-        repeat: row.repeat as IncomeRepeat,
+        type: toIncomeType(row.type),
+        repeat: toIncomeRepeat(row.repeat),
       };
 
       return typedIncome;
@@ -163,11 +185,11 @@ export function useIncomes(filters: IncomeFilters) {
         throw error;
       }
 
-      // Cast to our typed Income interface
+      // Cast to our typed Income interface with validation
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
         ...row,
-        type: row.type as IncomeType,
-        repeat: row.repeat as IncomeRepeat,
+        type: toIncomeType(row.type),
+        repeat: toIncomeRepeat(row.repeat),
       }));
 
       return typedIncomes;
@@ -283,7 +305,10 @@ export function useIncomes(filters: IncomeFilters) {
               toast.success("Inkomst återställd!");
             } catch (restoreError) {
               console.error("Error restoring income:", restoreError);
-              toast.error("Kunde inte återställa inkomst");
+              // Provide more context for debugging while keeping user message simple
+              const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
+              console.error("Restore error details:", errorDetail);
+              toast.error("Kunde inte återställa inkomst. Försök igen eller kontakta support.");
             }
           },
         },

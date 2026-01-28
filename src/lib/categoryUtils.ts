@@ -130,7 +130,8 @@ export function aggregateByCategoryAndMember(
   });
 
   // Convert to StackedCategoryData with all member keys
-  const stackedData: StackedCategoryData[] = [];
+  // Use a separate array for sorting to avoid unsafe type casting
+  const dataWithTotals: Array<{ data: StackedCategoryData; total: number }> = [];
 
   categoryMap.forEach((memberMap, categoryId) => {
     // Find category metadata
@@ -152,16 +153,11 @@ export function aggregateByCategoryAndMember(
       totalAmount += amount;
     });
 
-    // Store total for sorting (use temp property, will be removed)
-    (data as any)._total = totalAmount;
-    stackedData.push(data);
+    dataWithTotals.push({ data, total: totalAmount });
   });
 
-  // Sort by total amount descending
-  stackedData.sort((a, b) => ((b as any)._total || 0) - ((a as any)._total || 0));
-
-  // Remove temporary _total property
-  stackedData.forEach(data => delete (data as any)._total);
-
-  return stackedData;
+  // Sort by total amount descending and extract just the data
+  return dataWithTotals
+    .sort((a, b) => b.total - a.total)
+    .map(item => item.data);
 }

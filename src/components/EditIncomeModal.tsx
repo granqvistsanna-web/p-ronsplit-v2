@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { öreToKr, krToÖre } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,8 +40,8 @@ export function EditIncomeModal({
 
   useEffect(() => {
     if (income) {
-      // Convert cents to kr
-      setAmount((income.amount / 100).toFixed(2));
+      // Convert öre (cents) to kr for display
+      setAmount(öreToKr(income.amount).toFixed(2));
       setType(income.type);
       setNote(income.note || "");
       setDate(income.date);
@@ -66,8 +67,8 @@ export function EditIncomeModal({
       return;
     }
 
-    // Convert to cents
-    const amountCents = Math.round(amountKr * 100);
+    // Convert to öre (cents) for storage
+    const amountCents = krToÖre(amountKr);
 
     onSave({
       ...income,

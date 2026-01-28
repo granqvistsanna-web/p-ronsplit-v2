@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
+import { öreToKr } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -32,8 +33,8 @@ export function DuplicateWarningDialog({
   entryType,
 }: DuplicateWarningDialogProps) {
   const formatAmount = (amount: number, type: "expense" | "income") => {
-    // Income amounts are in cents
-    const amountKr = type === "income" ? amount / 100 : amount;
+    // Income amounts are in öre (cents), expenses are in kr
+    const amountKr = type === "income" ? öreToKr(amount) : amount;
     return amountKr.toLocaleString("sv-SE", { minimumFractionDigits: 2 });
   };
 

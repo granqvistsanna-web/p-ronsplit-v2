@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { öreToKr } from "@/lib/types";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { AddFab } from "@/components/AddFab";
 import { AddTransactionModal } from "@/components/AddTransactionModal";
@@ -90,7 +91,7 @@ const Index = () => {
   // Calculate totals
   const totals = useMemo(() => {
     const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = filteredIncomes.reduce((sum, i) => sum + i.amount / 100, 0);
+    const totalIncomes = filteredIncomes.reduce((sum, i) => sum + öreToKr(i.amount), 0);
     const netto = totalIncomes - totalExpenses;
     return { totalExpenses, totalIncomes, netto };
   }, [filteredExpenses, filteredIncomes]);

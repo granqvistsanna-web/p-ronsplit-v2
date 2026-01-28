@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { öreToKr } from "@/lib/types";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -89,7 +90,7 @@ export default function Aktivitet() {
         type: 'income',
         data: income,
         date: new Date(income.date),
-        amount: income.amount / 100,
+        amount: öreToKr(income.amount),
         description: income.note || 'Inkomst',
       });
     });
