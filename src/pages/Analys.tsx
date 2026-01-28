@@ -1,52 +1,44 @@
-import { useState, useMemo, useEffect, useRef, useCallback } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
 import { useSidebar } from "@/hooks/useSidebar";
-import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, ChevronLeft, Calendar, TrendingUp, TrendingDown, PieChart } from "lucide-react";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useFilterParams } from "@/hooks/useFilterParams";
+import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, TrendingUp, TrendingDown, PieChart } from "lucide-react";
 import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar } from "@/components/analytics";
-
-const MONTHS = [
-  "Januari", "Februari", "Mars", "April", "Maj", "Juni",
-  "Juli", "Augusti", "September", "Oktober", "November", "December"
-];
+import { FilterBar } from "@/components/filters";
+import { format, subMonths } from "date-fns";
+import { sv } from "date-fns/locale";
 
 export default function Analys() {
   const { household, loading: householdLoading } = useGroups();
   const { expenses, loading: expensesLoading } = useExpenses({ groupId: household?.id || '' });
   const { incomes, loading: incomesLoading } = useIncomes({ groupId: household?.id || '' });
   const { sidebarWidth } = useSidebar();
+  const { dateRange, memberIds } = useFilterParams();
 
-  const currentDate = useMemo(() => new Date(), []);
-  const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-  const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const filterRef = useRef<HTMLDivElement>(null);
 
   const loading = householdLoading || expensesLoading || incomesLoading;
 
-  // Filter data by selected month
+  // Filter data by dateRange and memberIds
   const filteredData = useMemo(() => {
     const filteredExpenses = expenses.filter(e => {
-      const date = new Date(e.date);
-      return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+      const expenseDate = new Date(e.date);
+      const matchesDate = expenseDate >= dateRange.start && expenseDate <= dateRange.end;
+      const matchesMember = memberIds.length === 0 || memberIds.includes(e.paid_by);
+      return matchesDate && matchesMember;
     });
     const filteredIncomes = incomes.filter(i => {
-      const date = new Date(i.date);
-      return date.getFullYear() === selectedYear && date.getMonth() + 1 === selectedMonth;
+      const incomeDate = new Date(i.date);
+      const matchesDate = incomeDate >= dateRange.start && incomeDate <= dateRange.end;
+      const matchesMember = memberIds.length === 0 || memberIds.includes(i.recipient);
+      return matchesDate && matchesMember;
     });
 
     return { filteredExpenses, filteredIncomes };
-  }, [expenses, incomes, selectedYear, selectedMonth]);
+  }, [expenses, incomes, dateRange, memberIds]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -56,44 +48,6 @@ export default function Analys() {
 
     return { totalExpenses, totalIncomes, netto };
   }, [filteredData]);
-
-  // Calculate previous month totals for comparison
-  const previousMonthTotals = useMemo(() => {
-    const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
-    const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
-
-    const prevExpenses = expenses.filter(e => {
-      const date = new Date(e.date);
-      return date.getFullYear() === prevYear && date.getMonth() + 1 === prevMonth;
-    });
-    const prevIncomes = incomes.filter(i => {
-      const date = new Date(i.date);
-      return date.getFullYear() === prevYear && date.getMonth() + 1 === prevMonth;
-    });
-
-    const totalExpenses = prevExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = prevIncomes.reduce((sum, i) => sum + i.amount / 100, 0);
-    const netto = totalIncomes - totalExpenses;
-
-    return { totalExpenses, totalIncomes, netto };
-  }, [expenses, incomes, selectedYear, selectedMonth]);
-
-  // Calculate percentage changes
-  const changes = useMemo(() => {
-    const incomeChange = previousMonthTotals.totalIncomes > 0
-      ? ((totals.totalIncomes - previousMonthTotals.totalIncomes) / previousMonthTotals.totalIncomes) * 100
-      : totals.totalIncomes > 0 ? 100 : 0;
-
-    const expenseChange = previousMonthTotals.totalExpenses > 0
-      ? ((totals.totalExpenses - previousMonthTotals.totalExpenses) / previousMonthTotals.totalExpenses) * 100
-      : totals.totalExpenses > 0 ? 100 : 0;
-
-    const nettoChange = previousMonthTotals.netto !== 0
-      ? totals.netto - previousMonthTotals.netto
-      : totals.netto;
-
-    return { incomeChange, expenseChange, nettoChange };
-  }, [totals, previousMonthTotals]);
 
   // Group expenses by category
   const expensesByCategory = useMemo(() => {
@@ -116,13 +70,16 @@ export default function Analys() {
       .sort((a, b) => b.amount - a.amount);
   }, [filteredData]);
 
-  // Group by month for trend (last 6 months including current)
+  // Group by month for trend (last 6 months ending at dateRange.end)
   const monthlyTrend = useMemo(() => {
     // First, group all data in a single pass
     const groups = new Map<string, { expenses: number; incomes: number }>();
 
-    // Single pass through expenses
+    // Single pass through expenses (apply member filter but not date filter for trend)
     expenses.forEach(e => {
+      const matchesMember = memberIds.length === 0 || memberIds.includes(e.paid_by);
+      if (!matchesMember) return;
+
       const expDate = new Date(e.date);
       const monthKey = `${expDate.getFullYear()}-${String(expDate.getMonth() + 1).padStart(2, '0')}`;
       const existing = groups.get(monthKey) || { expenses: 0, incomes: 0 };
@@ -132,6 +89,9 @@ export default function Analys() {
 
     // Single pass through incomes
     incomes.forEach(i => {
+      const matchesMember = memberIds.length === 0 || memberIds.includes(i.recipient);
+      if (!matchesMember) return;
+
       const incDate = new Date(i.date);
       const monthKey = `${incDate.getFullYear()}-${String(incDate.getMonth() + 1).padStart(2, '0')}`;
       const existing = groups.get(monthKey) || { expenses: 0, incomes: 0 };
@@ -139,10 +99,11 @@ export default function Analys() {
       groups.set(monthKey, existing);
     });
 
-    // Extract last 6 months
+    // Extract last 6 months ending at dateRange.end
     const months: Array<{ month: string; expenses: number; incomes: number }> = [];
+    const endDate = dateRange.end;
     for (let i = 5; i >= 0; i--) {
-      const date = new Date(selectedYear, selectedMonth - 1 - i, 1);
+      const date = subMonths(endDate, i);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const data = groups.get(monthKey) || { expenses: 0, incomes: 0 };
       months.push({
@@ -153,103 +114,23 @@ export default function Analys() {
     }
 
     return months;
-  }, [expenses, incomes, selectedYear, selectedMonth]);
+  }, [expenses, incomes, dateRange, memberIds]);
 
-  const yearOptions = Array.from({ length: 5 }, (_, i) => currentDate.getFullYear() - i);
-
-
-  // Navigation functions - memoized to prevent unnecessary re-renders
-  const goToCurrentMonth = useCallback(() => {
-    setSelectedYear(currentDate.getFullYear());
-    setSelectedMonth(currentDate.getMonth() + 1);
-  }, [currentDate]);
-
-  const goToPreviousMonth = useCallback(() => {
-    setSelectedMonth(prevMonth => {
-      if (prevMonth === 1) {
-        setSelectedYear(prevYear => prevYear - 1);
-        return 12;
-      }
-      return prevMonth - 1;
-    });
-  }, []);
-
-  const goToNextMonth = useCallback(() => {
-    setSelectedMonth(prevMonth => {
-      if (prevMonth === 12) {
-        setSelectedYear(prevYear => prevYear + 1);
-        return 1;
-      }
-      return prevMonth + 1;
-    });
-  }, []);
-
-  const isCurrentMonth = selectedYear === currentDate.getFullYear() && 
-                        selectedMonth === currentDate.getMonth() + 1;
-
-  const handleMonthYearChange = (value: string) => {
-    const [year, month] = value.split('-').map(Number);
-    setSelectedYear(year);
-    setSelectedMonth(month);
-  };
-
-  const currentMonthYearValue = `${selectedYear}-${selectedMonth}`;
-
-  // Keyboard navigation for time filter
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle if not typing in an input/textarea
-      if (
-        event.target instanceof HTMLInputElement ||
-        event.target instanceof HTMLTextAreaElement ||
-        (event.target as HTMLElement)?.isContentEditable
-      ) {
-        return;
-      }
-
-      // Arrow keys for month navigation (Cmd/Ctrl + Arrow)
-      if (event.key === "ArrowLeft" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        goToPreviousMonth();
-      } else if (event.key === "ArrowRight" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        if (!isCurrentMonth) {
-          goToNextMonth();
-        }
-      } else if (event.key === "Home" && (event.metaKey || event.ctrlKey)) {
-        event.preventDefault();
-        goToCurrentMonth();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [goToPreviousMonth, goToNextMonth, goToCurrentMonth, isCurrentMonth]);
-
-  // Optimize monthYearOptions with better memoization
-  const monthYearOptions = useMemo(() => {
-    const options: Array<{ value: string; label: string; month: number; year: number }> = [];
-    const startYear = currentDate.getFullYear();
-    const currentMonth = currentDate.getMonth() + 1;
-    
-    // Generate options: current year + previous 2 years, all months
-    for (let year = startYear; year >= startYear - 2; year--) {
-      for (let month = 12; month >= 1; month--) {
-        // Only show past and current months (not future)
-        const isFuture = year > startYear || (year === startYear && month > currentMonth);
-        if (!isFuture) {
-          options.push({
-            value: `${year}-${month}`,
-            label: `${MONTHS[month - 1]} ${year}`,
-            month,
-            year
-          });
-        }
-      }
+  // Format date range for display
+  const formattedDateRange = useMemo(() => {
+    const startMonth = format(dateRange.start, 'MMM yyyy', { locale: sv });
+    const endMonth = format(dateRange.end, 'MMM yyyy', { locale: sv });
+    if (startMonth === endMonth) {
+      return format(dateRange.start, 'MMMM yyyy', { locale: sv });
     }
-    
-    return options;
-  }, [currentDate]);
+    return `${format(dateRange.start, 'MMM', { locale: sv })} - ${format(dateRange.end, 'MMM yyyy', { locale: sv })}`;
+  }, [dateRange]);
+
+  // Get current month key for chart highlighting
+  const currentMonthKey = useMemo(() => {
+    const endDate = dateRange.end;
+    return `${endDate.getFullYear()}-${String(endDate.getMonth() + 1).padStart(2, '0')}`;
+  }, [dateRange]);
 
   const toggleCategory = (category: string) => {
     setExpandedCategories(prev => {
@@ -307,112 +188,9 @@ export default function Analys() {
           <h1 className="text-heading text-2xl">Analys</h1>
         </div>
 
-        {/* Time Filter - Expert UX Optimized */}
-        <div 
-          ref={filterRef}
-          className="mb-6 animate-fade-in" 
-          style={{ animationDelay: '20ms' }}
-          role="group"
-          aria-label="Tidsfilter för analys"
-        >
-          <div className="flex items-center gap-2 sm:gap-3 flex-nowrap">
-            {/* Previous month button - optimized */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToPreviousMonth}
-              className="h-9 w-9 p-0 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-accent hover:scale-105 active:scale-95 focus-visible:ring-2 focus-visible:ring-offset-1"
-              aria-label="Föregående månad"
-              title="Föregående månad (⌘←)"
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-
-            {/* Combined Month/Year Selector - optimized */}
-            <div className="flex-1 min-w-0">
-              <Select
-                value={currentMonthYearValue}
-                onValueChange={handleMonthYearChange}
-              >
-                <SelectTrigger 
-                  className="h-9 w-full text-sm font-medium [touch-action:manipulation] transition-all duration-150 hover:border-foreground/20 hover:bg-accent/50 focus:ring-2 focus:ring-primary/20 focus:ring-offset-1"
-                  aria-label="Välj månad och år"
-                >
-                  <div className="flex items-center gap-1.5 min-w-0">
-                    <Calendar className="h-3.5 w-3.5 text-muted-foreground flex-shrink-0" />
-                    <SelectValue className="font-medium truncate">
-                      {MONTHS[selectedMonth - 1]} {selectedYear}
-                    </SelectValue>
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="max-h-[300px]">
-                  {monthYearOptions.map((option) => {
-                    const isCurrent = option.year === currentDate.getFullYear() && 
-                                     option.month === currentDate.getMonth() + 1;
-                    const isSelected = option.value === currentMonthYearValue;
-                    return (
-                      <SelectItem 
-                        key={option.value} 
-                        value={option.value}
-                        className={`transition-colors cursor-pointer ${
-                          isCurrent ? "font-medium" : ""
-                        } ${
-                          isSelected ? "bg-accent" : "hover:bg-accent/50"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between w-full gap-2">
-                          <span>{option.label}</span>
-                          {isCurrent && (
-                            <span className="text-xs px-1.5 py-0.5 rounded-full bg-primary/10 text-primary whitespace-nowrap">
-                              Nuvarande
-                            </span>
-                          )}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Next month button - optimized */}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={goToNextMonth}
-              className="h-9 w-9 p-0 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-accent hover:scale-105 active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-transparent focus-visible:ring-2 focus-visible:ring-offset-1"
-              aria-label="Nästa månad"
-              title={isCurrentMonth ? "Redan på nuvarande månad" : "Nästa månad (⌘→)"}
-              disabled={isCurrentMonth}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-
-            {/* Quick action: Current month - only when needed */}
-            {!isCurrentMonth && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={goToCurrentMonth}
-                className="h-9 text-xs px-2.5 flex-shrink-0 [touch-action:manipulation] transition-all duration-150 hover:bg-primary/10 hover:text-primary active:scale-95 rounded-md font-medium focus-visible:ring-2 focus-visible:ring-offset-1"
-                title="Gå till nuvarande månad (⌘Home)"
-                aria-label="Gå till nuvarande månad"
-              >
-                <span className="whitespace-nowrap">
-                  <span className="hidden sm:inline">Nuvarande</span>
-                  <span className="sm:hidden">Nu</span>
-                </span>
-              </Button>
-            )}
-          </div>
-          
-          {/* Keyboard shortcut hint - subtle, only on desktop */}
-          <p className="text-xs text-muted-foreground mt-2 hidden lg:block">
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono">⌘</kbd>
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono ml-1">←</kbd>
-            <kbd className="px-1.5 py-0.5 rounded bg-muted text-xs font-mono ml-1">→</kbd>
-            {" "}för att navigera
-          </p>
+        {/* Filter Bar */}
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '20ms' }}>
+          <FilterBar members={household?.members || []} loading={loading} />
         </div>
 
         {/* Summary Metrics - Grid Layout */}
@@ -433,18 +211,6 @@ export default function Analys() {
                   <TrendingUp size={16} className="text-income" />
                 </div>
               </div>
-              {previousMonthTotals.totalIncomes > 0 && (
-                <div className="mt-3 pt-3 border-t border-border/40">
-                  <div className={`flex items-center gap-1.5 text-xs ${
-                    changes.incomeChange >= 0 ? 'text-income' : 'text-icon-pink'
-                  }`}>
-                    <span className="font-medium">
-                      {changes.incomeChange >= 0 ? '+' : ''}{changes.incomeChange.toFixed(0)}%
-                    </span>
-                    <span className="text-muted-foreground">vs förra månaden</span>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -464,18 +230,6 @@ export default function Analys() {
                   <TrendingDown size={16} className="text-expense" />
                 </div>
               </div>
-              {previousMonthTotals.totalExpenses > 0 && (
-                <div className="mt-3 pt-3 border-t border-border/40">
-                  <div className={`flex items-center gap-1.5 text-xs ${
-                    changes.expenseChange <= 0 ? 'text-income' : 'text-icon-pink'
-                  }`}>
-                    <span className="font-medium">
-                      {changes.expenseChange >= 0 ? '+' : ''}{changes.expenseChange.toFixed(0)}%
-                    </span>
-                    <span className="text-muted-foreground">vs förra månaden</span>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -499,18 +253,6 @@ export default function Analys() {
                   )}
                 </div>
               </div>
-              {(previousMonthTotals.totalIncomes > 0 || previousMonthTotals.totalExpenses > 0) && (
-                <div className="mt-3 pt-3 border-t border-border/40">
-                  <div className={`flex items-center gap-1.5 text-xs ${
-                    changes.nettoChange >= 0 ? 'text-income' : 'text-icon-pink'
-                  }`}>
-                    <span className="font-medium">
-                      {changes.nettoChange >= 0 ? '+' : ''}{changes.nettoChange.toLocaleString("sv-SE")} kr
-                    </span>
-                    <span className="text-muted-foreground">vs förra månaden</span>
-                  </div>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
@@ -532,7 +274,7 @@ export default function Analys() {
             {monthlyTrend.some(m => m.expenses > 0 || m.incomes > 0) ? (
               <TrendChart
                 data={monthlyTrend}
-                selectedMonth={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}`}
+                selectedMonth={currentMonthKey}
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
@@ -566,7 +308,7 @@ export default function Analys() {
             {monthlyTrend.some(m => m.expenses > 0 || m.incomes > 0) ? (
               <ComparisonBar
                 data={monthlyTrend}
-                selectedMonth={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}`}
+                selectedMonth={currentMonthKey}
               />
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
@@ -588,8 +330,8 @@ export default function Analys() {
                 <PieChart size={18} className="text-muted-foreground" />
                 Kategorifördelning
               </CardTitle>
-              <p className="text-caption mt-1">
-                {MONTHS[selectedMonth - 1]} {selectedYear}
+              <p className="text-caption mt-1 capitalize">
+                {formattedDateRange}
               </p>
             </CardHeader>
             <CardContent className="p-5 pt-0">
@@ -625,7 +367,7 @@ export default function Analys() {
                 Utgifter per kategori
               </CardTitle>
               <p className="text-caption mt-1">
-                Andel av inkomst • Klicka för detaljer
+                Andel av inkomst - Klicka för detaljer
               </p>
             </CardHeader>
             <CardContent className="p-5 pt-0">
