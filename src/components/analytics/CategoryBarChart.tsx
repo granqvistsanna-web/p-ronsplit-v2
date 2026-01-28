@@ -12,12 +12,14 @@ import {
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
 import type { Expense, GroupMember } from "@/lib/types";
 import { aggregateByCategory, aggregateByCategoryAndMember } from "@/lib/categoryUtils";
+import type { SelectedCategory } from "./CategoryDrillDown";
 
 export interface CategoryBarChartProps {
   expenses: Expense[];
   members?: GroupMember[];
   showAll?: boolean;
   stacked?: boolean;
+  onCategoryClick?: (category: SelectedCategory) => void;
 }
 
 // Custom tooltip with refined styling matching TrendChart
@@ -93,11 +95,29 @@ const CustomLegend = ({ members }: { members: GroupMember[] }) => {
   );
 };
 
-export function CategoryBarChart({ expenses, members, showAll = false, stacked = false }: CategoryBarChartProps) {
+export function CategoryBarChart({ expenses, members, showAll = false, stacked = false, onCategoryClick }: CategoryBarChartProps) {
   // Aggregate expenses by category with useMemo for performance
   const categoryData = useMemo(() => {
     return aggregateByCategory(expenses);
   }, [expenses]);
+
+  // Handle bar click to trigger drill-down
+  const handleBarClick = (data: any) => {
+    if (!onCategoryClick) return;
+
+    // Extract from payload (Recharts wraps data in payload for click events)
+    const categoryId = data.categoryId || data.payload?.categoryId;
+    const categoryName = data.categoryName || data.payload?.categoryName;
+    const icon = data.icon || data.payload?.icon;
+
+    if (categoryId) {
+      onCategoryClick({
+        id: categoryId,
+        name: categoryName,
+        icon: icon || '',
+      });
+    }
+  };
 
   // Stacked data for member breakdown
   const stackedData = useMemo(
@@ -212,6 +232,9 @@ export function CategoryBarChart({ expenses, members, showAll = false, stacked =
                   radius={idx === members.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
                   animationDuration={800}
                   animationEasing="ease-out"
+                  onClick={handleBarClick}
+                  cursor="pointer"
+                  style={{ cursor: 'pointer' }}
                 />
               ))}
             </>
@@ -222,6 +245,9 @@ export function CategoryBarChart({ expenses, members, showAll = false, stacked =
               radius={[4, 4, 0, 0]}
               animationDuration={800}
               animationEasing="ease-out"
+              onClick={handleBarClick}
+              cursor="pointer"
+              style={{ cursor: 'pointer' }}
             />
           )}
 

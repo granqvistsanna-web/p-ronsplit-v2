@@ -23,6 +23,7 @@ export interface CategoryData {
 export interface StackedCategoryData {
   categoryId: string;
   categoryName: string;
+  icon: string;
   [memberId: string]: number | string; // Dynamic member keys for amounts
 }
 
@@ -140,6 +141,7 @@ export function aggregateByCategoryAndMember(
     const data: StackedCategoryData = {
       categoryId,
       categoryName: categoryInfo.name,
+      icon: categoryInfo.icon,
     };
 
     // Add each member's amount (0 if they didn't spend in this category)
