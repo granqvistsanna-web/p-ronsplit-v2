@@ -42,38 +42,20 @@ export default function Analys() {
   const currentYear = dateRange.end.getFullYear();
   const currentMonth = dateRange.end.getMonth();
 
-  // Filter data by dateRange and memberIds
-  const filteredData = useMemo(() => {
-    const filteredExpenses = expenses.filter(e => {
-      const expenseDate = new Date(e.date);
-      const matchesDate = expenseDate >= dateRange.start && expenseDate <= dateRange.end;
-      const matchesMember = memberIds.length === 0 || memberIds.includes(e.paid_by);
-      return matchesDate && matchesMember;
-    });
-    const filteredIncomes = incomes.filter(i => {
-      const incomeDate = new Date(i.date);
-      const matchesDate = incomeDate >= dateRange.start && incomeDate <= dateRange.end;
-      const matchesMember = memberIds.length === 0 || memberIds.includes(i.recipient);
-      return matchesDate && matchesMember;
-    });
-
-    return { filteredExpenses, filteredIncomes };
-  }, [expenses, incomes, dateRange, memberIds]);
-
-  // Calculate totals
+  // Calculate totals (server-side filtered data)
   const totals = useMemo(() => {
-    const totalExpenses = filteredData.filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = filteredData.filteredIncomes.reduce((sum, i) => sum + öreToKr(i.amount), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalIncomes = incomes.reduce((sum, i) => sum + öreToKr(i.amount), 0);
     const netto = totalIncomes - totalExpenses;
 
     return { totalExpenses, totalIncomes, netto };
-  }, [filteredData]);
+  }, [expenses, incomes]);
 
-  // Group expenses by category
+  // Group expenses by category (server-side filtered data)
   const expensesByCategory = useMemo(() => {
-    const categoryMap = new Map<string, { amount: number; expenses: typeof filteredData.filteredExpenses }>();
+    const categoryMap = new Map<string, { amount: number; expenses: typeof expenses }>();
 
-    filteredData.filteredExpenses.forEach(expense => {
+    expenses.forEach(expense => {
       const current = categoryMap.get(expense.category) || { amount: 0, expenses: [] };
       categoryMap.set(expense.category, {
         amount: current.amount + expense.amount,
@@ -88,7 +70,7 @@ export default function Analys() {
         expenses: data.expenses.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       }))
       .sort((a, b) => b.amount - a.amount);
-  }, [filteredData]);
+  }, [expenses]);
 
   // Group by month for trend (last 6 months ending at dateRange.end)
   const monthlyTrend = useMemo(() => {
