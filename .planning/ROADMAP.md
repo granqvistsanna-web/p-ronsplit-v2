@@ -12,7 +12,7 @@ Transform Päronsplit's basic analytics into a proactive budgeting cockpit. User
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Filter Foundation** - Date range and member filtering with URL state
+- [x] **Phase 1: Filter Foundation** - Date range and member filtering with URL state
 - [x] **Phase 2: Enhanced Data Fetching** - Filter-aware data hooks and queries
 - [ ] **Phase 3: Category Visualization** - Bar charts with top N control
 - [ ] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
@@ -35,8 +35,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 Plans:
 - [x] 01-01: useFilterParams hook and date presets (2026-01-28)
-- [ ] 01-02: FilterBar component
-- [ ] 01-03: Integration and polish
+- [x] 01-02: MemberFilter multi-select component (2026-01-28)
+- [x] 01-03: FilterBar and Analys integration (2026-01-28)
 
 ### Phase 2: Enhanced Data Fetching
 **Goal**: All analytics data reflects selected filters from Phase 1
@@ -121,7 +121,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Filter Foundation | 1/3 | In progress | - |
+| 1. Filter Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
 | 3. Category Visualization | 0/TBD | Not started | - |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |

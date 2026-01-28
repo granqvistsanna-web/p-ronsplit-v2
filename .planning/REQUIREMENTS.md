@@ -9,9 +9,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Filter Bar
 
-- [ ] **FILT-01**: User can filter analytics by date range using presets (This month, Last month, Last 30 days, YTD, Last 3/6/12 months)
-- [ ] **FILT-02**: User can filter by household member via multi-select (default: all members)
-- [ ] **FILT-03**: Reset link appears when filters deviate from default
+- [x] **FILT-01**: User can filter analytics by date range using presets (This month, Last month, Last 30 days, YTD, Last 3/6/12 months)
+- [x] **FILT-02**: User can filter by household member via multi-select (default: all members)
+- [x] **FILT-03**: Reset link appears when filters deviate from default
 
 ### Categories Breakdown
 
@@ -81,9 +81,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FILT-01 | Phase 1 | Pending |
-| FILT-02 | Phase 1 | Pending |
-| FILT-03 | Phase 1 | Pending |
+| FILT-01 | Phase 1 | Complete |
+| FILT-02 | Phase 1 | Complete |
+| FILT-03 | Phase 1 | Complete |
 | CAT-01 | Phase 3 | Pending |
 | CAT-02 | Phase 3 | Pending |
 | CAT-03 | Phase 4 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-28 after Phase 2 completion*
+*Last updated: 2026-01-28 after Phase 1 completion*
