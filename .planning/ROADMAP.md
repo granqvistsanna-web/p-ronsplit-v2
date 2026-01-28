@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
 - [x] **Phase 5: Budget Backend** - Database schema and CRUD operations
 - [x] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
-- [ ] **Phase 7: Wire Filters to Main Page** - Fix integration gap from audit (GAP CLOSURE)
+- [x] **Phase 7: Wire Filters to Main Page** - Fix integration gap from audit (GAP CLOSURE)
 
 ## Phase Details
 
@@ -131,7 +131,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 07-01-PLAN.md — Wire filters to hooks and remove client-side filtering
+- [x] 07-01: Wire filters to hooks and remove client-side filtering (2026-01-28)
 
 ## Progress
 
@@ -146,4 +146,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
 | 5. Budget Backend | 2/2 | Complete | 2026-01-28 |
 | 6. Budget Tracking UI | 2/2 | Complete | 2026-01-28 |
-| 7. Wire Filters to Main Page | 0/1 | Pending | — |
+| 7. Wire Filters to Main Page | 1/1 | Complete | 2026-01-28 |

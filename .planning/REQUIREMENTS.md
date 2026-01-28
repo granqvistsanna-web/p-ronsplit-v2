@@ -26,15 +26,15 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Budgets
 
 - [x] **BUD-01**: Budgets stored in Supabase table with group-based RLS (all household members can CRUD)
-- [ ] **BUD-02**: User can set budget amount per category
-- [ ] **BUD-03**: User can enable/disable budget tracking per category
-- [ ] **BUD-04**: User sees progress bar showing budget vs actual spending
-- [ ] **BUD-05**: Progress bar color indicates status: neutral (<80%), warning (80-100%), error (>100%)
-- [ ] **BUD-06**: User sees pacing insight ("on track" vs "over pace" based on day in period)
+- [x] **BUD-02**: User can set budget amount per category
+- [x] **BUD-03**: User can enable/disable budget tracking per category
+- [x] **BUD-04**: User sees progress bar showing budget vs actual spending
+- [x] **BUD-05**: Progress bar color indicates status: neutral (<80%), warning (80-100%), error (>100%)
+- [x] **BUD-06**: User sees pacing insight ("on track" vs "over pace" based on day in period)
 
 ### Technical
 
-- [ ] **TECH-01**: Charts render correctly on mobile with explicit height constraints
+- [x] **TECH-01**: Charts render correctly on mobile with explicit height constraints
 - [x] **TECH-02**: Currency stored as integers (cents) to prevent rounding errors
 - [x] **TECH-03**: Touch targets are minimum 44px on mobile
 
@@ -92,12 +92,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CAT-06 | Phase 3 | Complete |
 | CAT-07 | Phase 4 | Complete |
 | BUD-01 | Phase 5 | Complete |
-| BUD-02 | Phase 6 | Pending |
-| BUD-03 | Phase 6 | Pending |
-| BUD-04 | Phase 6 | Pending |
-| BUD-05 | Phase 6 | Pending |
-| BUD-06 | Phase 6 | Pending |
-| TECH-01 | Phase 6 | Pending |
+| BUD-02 | Phase 6 | Complete |
+| BUD-03 | Phase 6 | Complete |
+| BUD-04 | Phase 6 | Complete |
+| BUD-05 | Phase 6 | Complete |
+| BUD-06 | Phase 6 | Complete |
+| TECH-01 | Phase 6 | Complete |
 | TECH-02 | Phase 2 | Complete |
 | TECH-03 | Phase 4 | Complete |
 
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-01-27*
-*Last updated: 2026-01-28 after Phase 5 completion*
+*Last updated: 2026-01-28 after Phase 7 completion (milestone complete)*
