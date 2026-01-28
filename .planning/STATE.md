@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 4 in progress - Drill-Down Panels
+**Current focus:** Phase 4 complete - Drill-Down Panels. Ready for Phase 5 - Budget Management.
 
 ## Current Position
 
 Phase: 4 of 6 (Drill-Down Panels)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-28 — Completed 04-01-PLAN.md (Drill-down components)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-28 — Completed 04-02-PLAN.md (Category drill-down integration)
 
-Progress: [████████████░] 90% (9 of 10 current plans completed)
+Progress: [█████████████] 100% (10 of 10 current plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 9
+- Total plans completed: 10
 - Average duration: 2 min
-- Total execution time: 0.33 hours
+- Total execution time: 0.37 hours
 
 **By Phase:**
 
@@ -30,10 +30,10 @@ Progress: [████████████░] 90% (9 of 10 current plans c
 | 1. Filter Foundation | 3 | 7 min | 2 min |
 | 2. Enhanced Data Fetching | 3 | 6 min | 2 min |
 | 3. Category Visualization | 2 | 6 min | 3 min |
-| 4. Drill-Down Panels | 1 | 3 min | 3 min |
+| 4. Drill-Down Panels | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-03 (3 min), 01-03 (4 min), 03-01 (3 min), 03-02 (3 min), 04-01 (3 min)
+- Last 5 plans: 01-03 (4 min), 03-01 (3 min), 03-02 (3 min), 04-01 (3 min), 04-02 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -74,6 +74,9 @@ Recent decisions affecting current work:
 - Responsive dialog pattern: Sheet (>=768px) + Drawer (<768px) via useIsMobile (04-01)
 - 44px touch target minimum for accessibility compliance on close buttons (04-01)
 - CSS selector [&>button] for targeting Sheet's built-in close button sizing (04-01)
+- Recharts payload extraction with fallback for click handlers (04-02)
+- Reset selectedCategory on panel close prevents stale data flash (04-02)
+- Read-only drill-down (no onEdit) for v1 simplicity (04-02)
 
 ### Pending Todos
 
@@ -85,6 +88,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T17:35:00Z
-Stopped at: Completed 04-01-PLAN.md (Drill-down components)
+Last session: 2026-01-28T16:38:00Z
+Stopped at: Completed 04-02-PLAN.md (Category drill-down integration)
 Resume file: None
