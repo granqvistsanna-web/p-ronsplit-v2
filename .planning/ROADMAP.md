@@ -112,10 +112,11 @@ Plans:
   4. Progress bar color indicates status: neutral gray (<80%), warning yellow (80-100%), error red (>100%)
   5. Pacing insight displays ("On track" vs "Over pace") based on current day in period
   6. All Recharts components have explicit height constraints to prevent layout issues
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] TBD
+- [ ] 06-01-PLAN.md — Pacing calculation utilities in budgetUtils.ts
+- [ ] 06-02-PLAN.md — Pacing insight UI in BudgetCategoryList and BudgetOverviewSection
 
 ## Progress
 
@@ -129,4 +130,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
 | 5. Budget Backend | 2/2 | Complete | 2026-01-28 |
-| 6. Budget Tracking UI | 0/TBD | Not started | - |
+| 6. Budget Tracking UI | 0/2 | Not started | - |
