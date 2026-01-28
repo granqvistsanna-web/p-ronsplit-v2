@@ -3,22 +3,42 @@ import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Users, Loader2 } from "lucide-react";
 import { CategoryBarChart } from "./CategoryBarChart";
+import { CategoryDrillDown, SelectedCategory } from "./CategoryDrillDown";
 import { useFilterParams } from "@/hooks/useFilterParams";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useGroups } from "@/hooks/useGroups";
+import { useAuth } from "@/hooks/useAuth";
 import { aggregateByCategory } from "@/lib/categoryUtils";
 
 export function CategoryChartSection() {
   const [showAll, setShowAll] = useState(false);
   const [stackedMode, setStackedMode] = useState(false);
+  const [drillDownOpen, setDrillDownOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<SelectedCategory | null>(null);
 
   const { dateRange, memberIds } = useFilterParams();
   const { currentGroup } = useGroups();
+  const { user } = useAuth();
   const { expenses, loading } = useExpenses({
     groupId: currentGroup?.id || '',
     dateRange,
     memberIds,
   });
+
+  // Handle category click to open drill-down
+  const handleCategoryClick = (category: SelectedCategory) => {
+    setSelectedCategory(category);
+    setDrillDownOpen(true);
+  };
+
+  // Handle drill-down close and reset state
+  const handleDrillDownClose = (open: boolean) => {
+    setDrillDownOpen(open);
+    if (!open) {
+      // Reset selected category after panel closes (prevents stale data flash)
+      setSelectedCategory(null);
+    }
+  };
 
   const categoryData = useMemo(
     () => aggregateByCategory(expenses),
@@ -68,6 +88,7 @@ export function CategoryChartSection() {
           members={members}
           showAll={showAll}
           stacked={stackedMode}
+          onCategoryClick={handleCategoryClick}
         />
       )}
 
@@ -77,6 +98,16 @@ export function CategoryChartSection() {
           Visar {Math.min(8, categoryData.length)} av {categoryData.length} kategorier
         </p>
       )}
+
+      {/* Category drill-down panel */}
+      <CategoryDrillDown
+        open={drillDownOpen}
+        onOpenChange={handleDrillDownClose}
+        selectedCategory={selectedCategory}
+        expenses={expenses}
+        members={members}
+        currentUserId={user?.id}
+      />
     </div>
   );
 }
