@@ -6,7 +6,7 @@ import { useIncomes } from "@/hooks/useIncomes";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useFilterParams } from "@/hooks/useFilterParams";
 import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, TrendingUp, TrendingDown, PieChart } from "lucide-react";
-import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar } from "@/components/analytics";
+import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection } from "@/components/analytics";
 import { FilterBar } from "@/components/filters";
 import { format, subMonths } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -318,6 +318,13 @@ export default function Analys() {
                 <p className="text-caption">Ingen data tillgänglig</p>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        {/* Category Bar Chart with Stacked Mode */}
+        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '135ms' }}>
+          <CardContent className="p-5">
+            <CategoryChartSection />
           </CardContent>
         </Card>
 
