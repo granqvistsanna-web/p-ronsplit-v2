@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 3: Category Visualization** - Bar charts with top N control
 - [x] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
 - [x] **Phase 5: Budget Backend** - Database schema and CRUD operations
-- [ ] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
+- [x] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
 
 ## Phase Details
 
@@ -115,8 +115,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 06-01-PLAN.md — Pacing calculation utilities in budgetUtils.ts
-- [ ] 06-02-PLAN.md — Pacing insight UI in BudgetCategoryList and BudgetOverviewSection
+- [x] 06-01: Pacing calculation utilities in budgetUtils.ts (2026-01-28)
+- [x] 06-02: Pacing insight UI in BudgetCategoryList and BudgetOverviewSection (2026-01-28)
 
 ## Progress
 
@@ -130,4 +130,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
 | 5. Budget Backend | 2/2 | Complete | 2026-01-28 |
-| 6. Budget Tracking UI | 0/2 | Not started | - |
+| 6. Budget Tracking UI | 2/2 | Complete | 2026-01-28 |
