@@ -81,7 +81,7 @@ export function MemberFilter({
       </PopoverTrigger>
       <PopoverContent className="w-[240px] p-0" align="start">
         <Command>
-          <CommandInput placeholder="Sok medlem..." />
+          <CommandInput placeholder="Sök medlem..." />
           <div className="flex items-center justify-between border-b px-3 py-2">
             <Button
               variant="ghost"
@@ -89,7 +89,7 @@ export function MemberFilter({
               className="h-8 px-2 text-xs"
               onClick={handleSelectAll}
             >
-              Valj alla
+              Välj alla
             </Button>
             <Button
               variant="ghost"
