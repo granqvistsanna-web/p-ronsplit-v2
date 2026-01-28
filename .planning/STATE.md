@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 4 complete - Drill-Down Panels. Ready for Phase 5 - Budget Management.
+**Current focus:** Phase 5 in progress - Budget Backend. Budgets table created, types ready.
 
 ## Current Position
 
-Phase: 4 of 6 (Drill-Down Panels)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-28 — Completed 04-02-PLAN.md (Category drill-down integration)
+Phase: 5 of 6 (Budget Backend)
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-01-28 — Completed 05-01-PLAN.md (Budget database schema)
 
-Progress: [█████████████] 100% (10 of 10 current plans completed)
+Progress: [█████████████░░] 85% (11 of 13 total plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 2 min
-- Total execution time: 0.37 hours
+- Total plans completed: 11
+- Average duration: 2.3 min
+- Total execution time: 0.43 hours
 
 **By Phase:**
 
@@ -31,9 +31,10 @@ Progress: [█████████████] 100% (10 of 10 current plans
 | 2. Enhanced Data Fetching | 3 | 6 min | 2 min |
 | 3. Category Visualization | 2 | 6 min | 3 min |
 | 4. Drill-Down Panels | 2 | 5 min | 2.5 min |
+| 5. Budget Backend | 1 | 4 min | 4 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-03 (4 min), 03-01 (3 min), 03-02 (3 min), 04-01 (3 min), 04-02 (2 min)
+- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 04-01 (3 min), 04-02 (2 min), 05-01 (4 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -77,6 +78,9 @@ Recent decisions affecting current work:
 - Recharts payload extraction with fallback for click handlers (04-02)
 - Reset selectedCategory on panel close prevents stale data flash (04-02)
 - Read-only drill-down (no onEdit) for v1 simplicity (04-02)
+- TEXT group_id without FK reference (groups table lacks primary key constraint) (05-01)
+- BIGINT for budget amount column (ore storage consistent with expenses/incomes) (05-01)
+- RLS policies use ::text cast for group_id comparison (05-01)
 
 ### Pending Todos
 
@@ -84,10 +88,10 @@ None yet.
 
 ### Blockers/Concerns
 
-None yet.
+- Groups table lacks proper primary key constraint - prevents FK references from other tables
 
 ## Session Continuity
 
-Last session: 2026-01-28T16:38:00Z
-Stopped at: Completed 04-02-PLAN.md (Category drill-down integration)
+Last session: 2026-01-28T18:46:14Z
+Stopped at: Completed 05-01-PLAN.md (Budget database schema)
 Resume file: None
