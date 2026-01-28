@@ -19,19 +19,19 @@ Progress: [██░░░░░░░░] 33% (2 of 6 plans completed)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 1 min
-- Total execution time: 0.02 hours
+- Total plans completed: 2
+- Average duration: 2 min
+- Total execution time: 0.05 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 2. Enhanced Data Fetching | 1 | 1 min | 1 min |
+| 2. Enhanced Data Fetching | 2 | 3 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (1 min)
-- Trend: Baseline (first plan)
+- Last 5 plans: 02-01 (1 min), 02-02 (2 min)
+- Trend: Steady
 
 *Updated after each plan completion*
 
@@ -48,6 +48,8 @@ Recent decisions affecting current work:
 - Side panel + bottom sheet for drill-down: Better UX than full navigation or modal — defines Phase 4 approach
 - Date objects serialized to ISO strings in query keys for stable comparison (02-01)
 - Hierarchical query key structure enables granular cache invalidation (02-01)
+- Integer storage (ore) for all currency to prevent floating-point errors (02-02)
+- BIGINT database type for monetary amounts provides sufficient range (02-02)
 
 ### Pending Todos
 
@@ -59,6 +61,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T10:24:41Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-01-28T11:25:42Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
