@@ -80,10 +80,11 @@ Plans:
   4. Panel shows transaction list with dates, amounts, and category name
   5. All touch targets are minimum 44px for mobile accessibility
   6. Closing panel returns to category chart without data loss
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] TBD
+- [ ] 04-01: TransactionList and CategoryDrillDown responsive components
+- [ ] 04-02: Bar click handlers and CategoryChartSection integration
 
 ### Phase 5: Budget Backend
 **Goal**: Budget data storage and retrieval infrastructure is production-ready
@@ -125,6 +126,6 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 1. Filter Foundation | 3/3 | Complete | 2026-01-28 |
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
 | 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
-| 4. Drill-Down Panels | 0/TBD | Not started | - |
+| 4. Drill-Down Panels | 0/2 | Not started | - |
 | 5. Budget Backend | 0/TBD | Not started | - |
 | 6. Budget Tracking UI | 0/TBD | Not started | - |
