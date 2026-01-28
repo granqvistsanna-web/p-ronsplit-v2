@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 5 complete - Budget Backend. Ready for Phase 6 - Budget Tracking UI.
+**Current focus:** Phase 6 in progress - Budget Tracking UI.
 
 ## Current Position
 
-Phase: 5 of 6 (Budget Backend)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-28 — Completed 05-02-PLAN.md (useBudgets React Query hook)
+Phase: 6 of 6 (Budget Tracking UI)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-28 — Completed 06-01-PLAN.md (Budget pacing calculation)
 
-Progress: [██████████████] 100% (12 of 12 current plans completed)
+Progress: [███████████████] 93% (13 of 14 current plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 12
-- Average duration: 2.3 min
-- Total execution time: 0.47 hours
+- Total plans completed: 13
+- Average duration: 2.2 min
+- Total execution time: 0.50 hours
 
 **By Phase:**
 
@@ -32,9 +32,10 @@ Progress: [██████████████] 100% (12 of 12 current pl
 | 3. Category Visualization | 2 | 6 min | 3 min |
 | 4. Drill-Down Panels | 2 | 5 min | 2.5 min |
 | 5. Budget Backend | 2 | 6 min | 3 min |
+| 6. Budget Tracking UI | 1 | 2 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-02 (3 min), 04-01 (3 min), 04-02 (2 min), 05-01 (4 min), 05-02 (2 min)
+- Last 5 plans: 04-01 (3 min), 04-02 (2 min), 05-01 (4 min), 05-02 (2 min), 06-01 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -84,6 +85,9 @@ Recent decisions affecting current work:
 - BudgetFilters uses same pattern as ExpenseFilters/IncomeFilters for consistency (05-02)
 - saveBudget uses upsert on (group_id, category, period) for idempotent creates (05-02)
 - No date serialization needed for budget query keys (no dateRange field) (05-02)
+- Use date-fns getDaysInMonth for accurate monthly day counts (28-31) (06-01)
+- Leap year calculation for yearly pacing (365/366 days) (06-01)
+- Pacing compares actual spending to time-proportional expected spending (06-01)
 
 ### Pending Todos
 
@@ -95,6 +99,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T18:50:28Z
-Stopped at: Completed 05-02-PLAN.md (useBudgets React Query hook)
+Last session: 2026-01-28T19:09:18Z
+Stopped at: Completed 06-01-PLAN.md (Budget pacing calculation)
 Resume file: None
