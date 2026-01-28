@@ -131,7 +131,18 @@ export function calculateBudgetPacing(
     totalDays = 365 + (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 1 : 0);
   }
 
+  // Guard against division by zero or invalid calculations
+  if (totalDays <= 0 || currentDay < 0) {
+    return { pacing: "on-track", expectedSpending: 0 };
+  }
+
   const expectedSpending = (budget * currentDay) / totalDays;
+
+  // Guard against NaN/Infinity from invalid inputs
+  if (!Number.isFinite(expectedSpending)) {
+    return { pacing: "on-track", expectedSpending: 0 };
+  }
+
   const pacing: PacingStatus = spent <= expectedSpending ? "on-track" : "over-pace";
 
   return { pacing, expectedSpending };

@@ -18,6 +18,7 @@ export interface Budget {
   amount: number; // BIGINT stored in ore
   enabled: boolean;
   period: string;
+  icon: string | null; // Custom emoji/icon for the category
   created_at: string;
   updated_at: string;
 }
@@ -90,6 +91,7 @@ export function useBudgets(filters: BudgetFilters) {
       amount: number;
       enabled?: boolean;
       period?: string;
+      icon?: string | null;
     }) => {
       if (!user) {
         throw new Error("Du måste vara inloggad");
@@ -101,6 +103,7 @@ export function useBudgets(filters: BudgetFilters) {
         amount: budget.amount,
         enabled: budget.enabled ?? true,
         period: budget.period ?? "monthly",
+        icon: budget.icon,
       };
 
       const { data, error } = await supabase
@@ -150,6 +153,7 @@ export function useBudgets(filters: BudgetFilters) {
         category: updates.category,
         enabled: updates.enabled,
         period: updates.period,
+        icon: updates.icon,
       };
 
       // Remove undefined fields to avoid overwriting with null

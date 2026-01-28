@@ -45,7 +45,8 @@ export function calculateBalance(
   settlements: Settlement[] = [],
   incomes: Income[] = []
 ): Balance[] {
-  if (members.length === 0) return [];
+  // Need at least 2 members to have a meaningful balance
+  if (members.length < 2) return [];
 
   // Calculate income and expenses for each member
   const memberData: Record<string, { income: number; expenses: number }> = {};
@@ -131,7 +132,8 @@ export function getBalanceBreakdown(
   settlements: Settlement[] = [],
   incomes: Income[] = []
 ): BalanceBreakdown[] {
-  if (members.length === 0) return [];
+  // Need at least 2 members to have a meaningful balance
+  if (members.length < 2) return [];
 
   const memberData: Record<string, BalanceBreakdown> = {};
   

@@ -12,6 +12,13 @@ import type { Expense } from "@/lib/types";
 import { toast } from "sonner";
 import { X, Sparkles, Plus, Trash2 } from "lucide-react";
 
+// Common emojis for budget categories
+const EMOJI_OPTIONS = [
+  "📦", "🏠", "🚗", "🛒", "🍽️", "🎬", "💊", "👕", "✈️", "🐕",
+  "🪴", "🛋️", "🔧", "💡", "📱", "🎁", "🏋️", "📚", "🎨", "🎵",
+  "☕", "🍺", "👶", "💇", "🧹", "🔒", "💳", "🏥", "🎓", "⚽",
+];
+
 interface BudgetSettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -22,6 +29,7 @@ interface BudgetSettingsModalProps {
       amount: number;
       enabled: boolean;
       period: BudgetPeriod;
+      icon?: string | null;
     }[]
   ) => Promise<void>;
   groupId: string;
@@ -51,6 +59,8 @@ export function BudgetSettingsModal({
   const [budgetInputs, setBudgetInputs] = useState<BudgetInput[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState("");
+  const [newCategoryEmoji, setNewCategoryEmoji] = useState("📦");
+  const [showEmojiPicker, setShowEmojiPicker] = useState<string | null>(null);
 
   // Initialize inputs from existing budgets or defaults
   useEffect(() => {
@@ -86,7 +96,7 @@ export function BudgetSettingsModal({
         inputs.push({
           categoryId: budget.category,
           categoryName: budget.category,
-          icon: "📦",
+          icon: budget.icon || "📦", // Use stored icon or default to 📦
           amount: öreToKr(budget.amount).toString(),
           enabled: budget.enabled,
           isCustom: true,
@@ -95,6 +105,8 @@ export function BudgetSettingsModal({
 
       setBudgetInputs(inputs);
       setNewCategoryName("");
+      setNewCategoryEmoji("📦");
+      setShowEmojiPicker(null);
     }
   }, [isOpen, existingBudgets, period]);
 
@@ -112,6 +124,15 @@ export function BudgetSettingsModal({
         input.categoryId === categoryId ? { ...input, enabled } : input
       )
     );
+  };
+
+  const handleIconChange = (categoryId: string, icon: string) => {
+    setBudgetInputs((prev) =>
+      prev.map((input) =>
+        input.categoryId === categoryId ? { ...input, icon } : input
+      )
+    );
+    setShowEmojiPicker(null);
   };
 
   const handleSuggestBudget = (categoryId: string) => {
@@ -144,7 +165,7 @@ export function BudgetSettingsModal({
       {
         categoryId: trimmedName,
         categoryName: trimmedName,
-        icon: "📦",
+        icon: newCategoryEmoji,
         amount: "",
         enabled: true,
         isCustom: true,
@@ -152,6 +173,7 @@ export function BudgetSettingsModal({
     ]);
 
     setNewCategoryName("");
+    setNewCategoryEmoji("📦");
     toast.success(`Kategori "${trimmedName}" tillagd`);
   };
 
@@ -171,6 +193,7 @@ export function BudgetSettingsModal({
         amount: krToÖre(parseFloat(input.amount)),
         enabled: input.enabled,
         period: period,
+        icon: input.isCustom ? input.icon : null, // Only save icon for custom categories
       }));
 
     if (budgetsToSave.length === 0) {
@@ -264,14 +287,39 @@ export function BudgetSettingsModal({
                     </Label>
                   </div>
                   {customCategories.map((input) => (
-                    <CategoryBudgetRow
-                      key={input.categoryId}
-                      input={input}
-                      onAmountChange={handleAmountChange}
-                      onEnabledChange={handleEnabledChange}
-                      onSuggest={handleSuggestBudget}
-                      onRemove={handleRemoveCustomCategory}
-                    />
+                    <div key={input.categoryId} className="relative">
+                      <CategoryBudgetRow
+                        input={input}
+                        onAmountChange={handleAmountChange}
+                        onEnabledChange={handleEnabledChange}
+                        onSuggest={handleSuggestBudget}
+                        onRemove={handleRemoveCustomCategory}
+                        onIconClick={() =>
+                          setShowEmojiPicker(
+                            showEmojiPicker === input.categoryId
+                              ? null
+                              : input.categoryId
+                          )
+                        }
+                      />
+                      {/* Emoji picker for this category */}
+                      {showEmojiPicker === input.categoryId && (
+                        <div className="absolute left-0 top-full mt-1 z-10 bg-background border rounded-lg shadow-lg p-2 grid grid-cols-10 gap-1 w-[280px]">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() =>
+                                handleIconChange(input.categoryId, emoji)
+                              }
+                              className="p-1.5 hover:bg-muted rounded text-lg transition-colors"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   ))}
                 </>
               )}
@@ -282,6 +330,38 @@ export function BudgetSettingsModal({
                   Lägg till egen kategori
                 </Label>
                 <div className="flex gap-2">
+                  {/* Emoji selector for new category */}
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setShowEmojiPicker(
+                          showEmojiPicker === "new" ? null : "new"
+                        )
+                      }
+                      className="h-10 w-10 flex items-center justify-center rounded-md border bg-muted/50 hover:bg-muted transition-colors text-xl"
+                      title="Välj emoji"
+                    >
+                      {newCategoryEmoji}
+                    </button>
+                    {showEmojiPicker === "new" && (
+                      <div className="absolute left-0 top-full mt-1 z-10 bg-background border rounded-lg shadow-lg p-2 grid grid-cols-10 gap-1 w-[280px]">
+                        {EMOJI_OPTIONS.map((emoji) => (
+                          <button
+                            key={emoji}
+                            type="button"
+                            onClick={() => {
+                              setNewCategoryEmoji(emoji);
+                              setShowEmojiPicker(null);
+                            }}
+                            className="p-1.5 hover:bg-muted rounded text-lg transition-colors"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   <Input
                     type="text"
                     value={newCategoryName}
@@ -349,6 +429,7 @@ interface CategoryBudgetRowProps {
   onEnabledChange: (categoryId: string, enabled: boolean) => void;
   onSuggest: (categoryId: string) => void;
   onRemove?: (categoryId: string) => void;
+  onIconClick?: () => void;
 }
 
 function CategoryBudgetRow({
@@ -357,12 +438,24 @@ function CategoryBudgetRow({
   onEnabledChange,
   onSuggest,
   onRemove,
+  onIconClick,
 }: CategoryBudgetRowProps) {
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
       {/* Category icon and name */}
       <div className="flex items-center gap-2 min-w-[120px]">
-        <span className="text-xl">{input.icon}</span>
+        {input.isCustom && onIconClick ? (
+          <button
+            type="button"
+            onClick={onIconClick}
+            className="text-xl hover:bg-muted p-1 rounded transition-colors"
+            title="Byt emoji"
+          >
+            {input.icon}
+          </button>
+        ) : (
+          <span className="text-xl">{input.icon}</span>
+        )}
         <span className="font-medium text-sm">{input.categoryName}</span>
       </div>
 

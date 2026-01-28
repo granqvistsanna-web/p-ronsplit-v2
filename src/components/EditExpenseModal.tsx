@@ -68,7 +68,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
           splits[member.user_id] = perPerson.toFixed(2);
         });
         setCustomSplits(splits);
-      } else if (currentSum > 0 && Math.abs(currentSum - totalAmount) > 0.01) {
+      } else if (currentSum > 0 && Math.abs(currentSum - totalAmount) > 0.02) {
         // If amount changed and splits exist, scale them proportionally
         const scaleFactor = totalAmount / currentSum;
         const splits: Record<string, string> = {};
@@ -123,7 +123,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
         return;
       }
 
-      if (Math.abs(splitSum - totalAmount) > 0.01) {
+      if (Math.abs(splitSum - totalAmount) > 0.02) {
         toast.error(`Summan av fördelningen (${splitSum.toFixed(2)} kr) måste vara lika med totala beloppet (${totalAmount.toFixed(2)} kr)`);
         return;
       }
@@ -325,7 +325,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Summa:</span>
                             <span className={`font-medium ${
-                              Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) < 0.01
+                              Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) < 0.02
                                 ? "text-income"
                                 : "text-destructive"
                             }`}>
