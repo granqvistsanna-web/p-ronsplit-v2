@@ -95,10 +95,11 @@ Plans:
   2. RLS policies allow all household members to create, read, update, and delete budgets for their group
   3. useBudgets hook follows existing pattern (useExpenses/useIncomes) and provides CRUD operations
   4. Budget amounts are stored as integers (cents) consistent with expense storage
-**Plans**: TBD
+**Plans**: 2
 
 Plans:
-- [ ] TBD
+- [ ] 05-01: Database migration with budgets table and RLS policies
+- [ ] 05-02: useBudgets React Query hook with CRUD operations
 
 ### Phase 6: Budget Tracking UI
 **Goal**: Users can set budgets and see visual progress with pacing insights
@@ -127,5 +128,5 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 2. Enhanced Data Fetching | 3/3 | Complete | 2026-01-28 |
 | 3. Category Visualization | 2/2 | Complete | 2026-01-28 |
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
-| 5. Budget Backend | 0/TBD | Not started | - |
+| 5. Budget Backend | 0/2 | Not started | - |
 | 6. Budget Tracking UI | 0/TBD | Not started | - |
