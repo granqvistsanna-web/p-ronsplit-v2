@@ -42,8 +42,8 @@ export default function Aktivitet() {
   const { user } = useAuth();
   const { household, loading: householdLoading } = useGroups();
   const { sidebarWidth } = useSidebar();
-  const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses(household?.id);
-  const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, addIncomes, refetch: refetchIncomes } = useIncomes(household?.id);
+  const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses({ groupId: household?.id || '' });
+  const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, addIncomes, refetch: refetchIncomes } = useIncomes({ groupId: household?.id || '' });
   const { settlements, loading: settlementsLoading, addSettlement, updateSettlement, deleteSettlement, refetch: refetchSettlements } = useSettlements(household?.id);
 
   const [searchQuery, setSearchQuery] = useState("");
