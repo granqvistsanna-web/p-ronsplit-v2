@@ -43,10 +43,10 @@ export function useSettlements(groupId?: string) {
 
       if (error) throw error;
 
-      // Convert amounts from öre to kronor
+      // Convert amounts from öre to kronor (with null-safety)
       const settlementsInKronor = (data || []).map((s) => ({
         ...s,
-        amount: toKronor(s.amount),
+        amount: s.amount != null ? toKronor(s.amount) : 0,
       }));
       setSettlements(settlementsInKronor);
     } catch (error) {

@@ -61,7 +61,7 @@ export function SettlementHistory({ settlements, members }: SettlementHistoryPro
               </div>
             </div>
             <span className="text-number text-foreground">
-              {settlement.amount.toLocaleString("sv-SE")} kr
+              {Math.round(settlement.amount).toLocaleString("sv-SE")} kr
             </span>
           </div>
         );

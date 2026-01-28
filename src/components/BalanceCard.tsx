@@ -140,7 +140,7 @@ export function BalanceCard({
                           {from?.name} → {to?.name}
                         </span>
                         <span className="text-number-sm text-foreground shrink-0">
-                          {s.amount.toLocaleString("sv-SE")} kr
+                          {Math.round(s.amount).toLocaleString("sv-SE")} kr
                         </span>
                       </div>
                     );
@@ -296,7 +296,7 @@ export function BalanceCard({
                           {from?.name} → {to?.name}
                         </span>
                         <span className="text-number-sm text-foreground shrink-0">
-                          {s.amount.toLocaleString("sv-SE")} kr
+                          {Math.round(s.amount).toLocaleString("sv-SE")} kr
                         </span>
                       </div>
                     );
