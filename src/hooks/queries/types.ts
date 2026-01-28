@@ -40,3 +40,16 @@ export interface IncomeFilters {
   /** Optional array of member IDs to filter incomes by recipient field */
   memberIds?: string[];
 }
+
+/**
+ * Filter parameters for budget queries.
+ * Combines household context with optional period and enabled filters.
+ */
+export interface BudgetFilters {
+  /** ID of the household/group to fetch budgets for */
+  groupId: string;
+  /** Optional period filter ('monthly' or 'yearly') */
+  period?: string;
+  /** Only fetch enabled budgets */
+  enabledOnly?: boolean;
+}

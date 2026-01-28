@@ -14,7 +14,7 @@
  * - Invalidate specific filtered list: queryClient.invalidateQueries({ queryKey: queryKeys.expenses.list(filters) })
  */
 
-import type { ExpenseFilters, IncomeFilters } from './types';
+import type { ExpenseFilters, IncomeFilters, BudgetFilters } from './types';
 
 /**
  * Serializes a filter object by converting Date objects to ISO strings.
@@ -80,5 +80,17 @@ export const queryKeys = {
     /** Key for a specific filtered income list */
     list: (filters: IncomeFilters) =>
       [...queryKeys.incomes.lists(), serializeFilters(filters)] as const,
+  },
+  /**
+   * Budget query keys.
+   */
+  budgets: {
+    /** Base key for all budget queries - use to invalidate everything */
+    all: ['budgets'] as const,
+    /** Key for all budget lists - use to invalidate all filtered/unfiltered lists */
+    lists: () => [...queryKeys.budgets.all, 'list'] as const,
+    /** Key for a specific filtered budget list */
+    list: (filters: BudgetFilters) =>
+      [...queryKeys.budgets.lists(), filters] as const,
   },
 } as const;
