@@ -18,6 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 4: Drill-Down Panels** - Responsive side panel/bottom sheet for transactions
 - [x] **Phase 5: Budget Backend** - Database schema and CRUD operations
 - [x] **Phase 6: Budget Tracking UI** - Progress bars, pacing insights, and polish
+- [ ] **Phase 7: Wire Filters to Main Page** - Fix integration gap from audit (GAP CLOSURE)
 
 ## Phase Details
 
@@ -118,10 +119,24 @@ Plans:
 - [x] 06-01: Pacing calculation utilities in budgetUtils.ts (2026-01-28)
 - [x] 06-02: Pacing insight UI in BudgetCategoryList and BudgetOverviewSection (2026-01-28)
 
+### Phase 7: Wire Filters to Main Page (GAP CLOSURE)
+**Goal**: Pass filter parameters to data hooks in Analys.tsx and remove client-side workaround
+**Depends on**: Phase 6
+**Gap Closure**: Closes integration gap from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. useExpenses hook in Analys.tsx receives dateRange and memberIds from useFilterParams
+  2. useIncomes hook in Analys.tsx receives dateRange and memberIds from useFilterParams
+  3. Client-side filtering code (lines 38-53) is removed as no longer needed
+  4. Charts display correctly with server-side filtered data
+**Plans**: 1
+
+Plans:
+- [ ] 07-01: Wire filters to hooks and remove client-side filtering
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -131,3 +146,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | 4. Drill-Down Panels | 2/2 | Complete | 2026-01-28 |
 | 5. Budget Backend | 2/2 | Complete | 2026-01-28 |
 | 6. Budget Tracking UI | 2/2 | Complete | 2026-01-28 |
+| 7. Wire Filters to Main Page | 0/1 | Pending | — |
