@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 5 in progress - Budget Backend. Budgets table created, types ready.
+**Current focus:** Phase 5 in progress - Budget Backend. useBudgets hook ready.
 
 ## Current Position
 
 Phase: 5 of 6 (Budget Backend)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-28 — Completed 05-01-PLAN.md (Budget database schema)
+Last activity: 2026-01-28 — Completed 05-02-PLAN.md (useBudgets React Query hook)
 
-Progress: [█████████████░░] 85% (11 of 13 total plans completed)
+Progress: [██████████████░] 92% (12 of 13 total plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11
+- Total plans completed: 12
 - Average duration: 2.3 min
-- Total execution time: 0.43 hours
+- Total execution time: 0.47 hours
 
 **By Phase:**
 
@@ -31,10 +31,10 @@ Progress: [█████████████░░] 85% (11 of 13 total pl
 | 2. Enhanced Data Fetching | 3 | 6 min | 2 min |
 | 3. Category Visualization | 2 | 6 min | 3 min |
 | 4. Drill-Down Panels | 2 | 5 min | 2.5 min |
-| 5. Budget Backend | 1 | 4 min | 4 min |
+| 5. Budget Backend | 2 | 6 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 03-01 (3 min), 03-02 (3 min), 04-01 (3 min), 04-02 (2 min), 05-01 (4 min)
+- Last 5 plans: 03-02 (3 min), 04-01 (3 min), 04-02 (2 min), 05-01 (4 min), 05-02 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -81,6 +81,9 @@ Recent decisions affecting current work:
 - TEXT group_id without FK reference (groups table lacks primary key constraint) (05-01)
 - BIGINT for budget amount column (ore storage consistent with expenses/incomes) (05-01)
 - RLS policies use ::text cast for group_id comparison (05-01)
+- BudgetFilters uses same pattern as ExpenseFilters/IncomeFilters for consistency (05-02)
+- saveBudget uses upsert on (group_id, category, period) for idempotent creates (05-02)
+- No date serialization needed for budget query keys (no dateRange field) (05-02)
 
 ### Pending Todos
 
@@ -92,6 +95,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T18:46:14Z
-Stopped at: Completed 05-01-PLAN.md (Budget database schema)
+Last session: 2026-01-28T18:50:28Z
+Stopped at: Completed 05-02-PLAN.md (useBudgets React Query hook)
 Resume file: None
