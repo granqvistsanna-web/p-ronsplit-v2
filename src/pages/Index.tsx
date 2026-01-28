@@ -9,6 +9,8 @@ import { SwishModal } from "@/components/SwishModal";
 import { BalanceCard } from "@/components/BalanceCard";
 import { MemberSummaryCard } from "@/components/MemberSummaryCard";
 import { GroupSelector } from "@/components/GroupSelector";
+import { Confetti } from "@/components/Confetti";
+import { SuccessAnimation } from "@/components/SuccessAnimation";
 import {
   DashboardSkeleton,
   HeroSummaryCard,
@@ -23,6 +25,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMonthSelection } from "@/hooks/useMonthSelection";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useSidebar } from "@/hooks/useSidebar";
+import { useCelebration } from "@/hooks/useCelebration";
 import { toast } from "sonner";
 
 const Index = () => {
@@ -30,6 +33,7 @@ const Index = () => {
   const { household, allGroups, loading: householdLoading, selectGroup } = useGroups();
   const { selectedYear, selectedMonth } = useMonthSelection();
   const { sidebarWidth } = useSidebar();
+  const { celebration, celebrateConfetti, celebrateSuccess, celebrateParty } = useCelebration();
 
   const {
     expenses,
@@ -131,11 +135,14 @@ const Index = () => {
     date: string;
   }) => {
     await addExpense(newExpense);
-  }, [addExpense]);
+    celebrateSuccess();
+  }, [addExpense, celebrateSuccess]);
 
   const handleAddIncome = useCallback(async (newIncome: IncomeInput) => {
-    return await addIncome(newIncome);
-  }, [addIncome]);
+    const result = await addIncome(newIncome);
+    celebrateSuccess();
+    return result;
+  }, [addIncome, celebrateSuccess]);
 
   const handleImportExpenses = useCallback(async (newExpenses: {
     group_id: string;
@@ -164,6 +171,8 @@ const Index = () => {
         date,
       });
       if (result) {
+        celebrateConfetti();
+        celebrateParty("Avräkning klar! 🎉");
         toast.success("Avräkning registrerad!");
       } else {
         toast.error("Kunde inte registrera avräkning");
@@ -174,7 +183,7 @@ const Index = () => {
     } finally {
       setIsSettling(false);
     }
-  }, [household?.id, addSettlement]);
+  }, [household?.id, addSettlement, celebrateConfetti, celebrateParty]);
 
   const handleEditExpense = useCallback((expense: Expense) => {
     setEditingExpense(expense);
@@ -197,7 +206,20 @@ const Index = () => {
   }
 
   return (
-    <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
+    <>
+      {/* Celebration animations */}
+      <Confetti isActive={celebration.isActive && celebration.type === "confetti"} />
+      <SuccessAnimation
+        isVisible={celebration.isActive && celebration.type === "success"}
+        type="check"
+      />
+      <SuccessAnimation
+        isVisible={celebration.isActive && celebration.type === "party"}
+        type="party"
+        message={celebration.message}
+      />
+      
+      <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-6 animate-fade-in">
@@ -345,6 +367,7 @@ const Index = () => {
         members={household.members}
       />
     </div>
+    </>
   );
 };
 
