@@ -47,10 +47,12 @@ Plans:
   2. Charts update automatically when filters change without page reload
   3. Currency values are stored and calculated as integers (cents) to prevent rounding errors
   4. Loading states display correctly during data refetch on filter change
-**Plans**: TBD
+**Plans**: 3 plans
 
 Plans:
-- [ ] TBD
+- [ ] 02-01-PLAN.md - Query key factory and filter type definitions
+- [ ] 02-02-PLAN.md - Currency utilities and database migration
+- [ ] 02-03-PLAN.md - Convert useExpenses and useIncomes to React Query
 
 ### Phase 3: Category Visualization
 **Goal**: Users see spending breakdown by category in interactive bar chart
@@ -120,7 +122,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Filter Foundation | 0/3 | Ready | - |
-| 2. Enhanced Data Fetching | 0/TBD | Not started | - |
+| 2. Enhanced Data Fetching | 0/3 | Ready | - |
 | 3. Category Visualization | 0/TBD | Not started | - |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |
 | 5. Budget Backend | 0/TBD | Not started | - |
@@ -128,4 +130,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 ---
 *Roadmap created: 2026-01-27*
-*Last updated: 2026-01-27 - Phase 1 planned with 3 plans in 2 waves*
+*Last updated: 2026-01-28 - Phase 2 planned with 3 plans in 2 waves*
