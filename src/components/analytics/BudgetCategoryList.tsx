@@ -9,7 +9,7 @@ import {
 } from "@/lib/budgetUtils";
 import type { Budget } from "@/hooks/useBudgets";
 import type { Expense } from "@/lib/types";
-import { Target, ChevronDown, ChevronRight } from "lucide-react";
+import { Target, ChevronDown, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
 
 interface BudgetCategoryListProps {
   budgets: Budget[];
@@ -155,6 +155,37 @@ export function BudgetCategoryList({
   );
 }
 
+interface PacingInsightProps {
+  pacing: "on-track" | "over-pace";
+  spent: number;
+  expectedSpending: number;
+}
+
+function PacingInsight({ pacing, spent, expectedSpending }: PacingInsightProps) {
+  const isOnTrack = pacing === "on-track";
+  const difference = Math.abs(spent - expectedSpending);
+
+  return (
+    <div className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full whitespace-nowrap ${
+      isOnTrack
+        ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
+        : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
+    }`}>
+      {isOnTrack ? (
+        <>
+          <TrendingDown size={12} />
+          <span>På rätt väg</span>
+        </>
+      ) : (
+        <>
+          <TrendingUp size={12} />
+          <span>+{formatBudgetAmount(difference)}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
 interface BudgetCategoryItemProps {
   metric: BudgetMetric;
   expenses: CategoryExpenseDetail[];
@@ -222,6 +253,13 @@ function BudgetCategoryItem({
           </span>
           <p className="text-xs text-muted-foreground">kvar</p>
         </div>
+
+        {/* Pacing Insight */}
+        <PacingInsight
+          pacing={metric.pacing}
+          spent={metric.spent}
+          expectedSpending={metric.expectedSpending}
+        />
 
         {/* Expand/Collapse Icon */}
         <div className="text-muted-foreground">
