@@ -6,31 +6,60 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  Legend,
   ResponsiveContainer,
 } from "recharts";
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
-import type { Expense } from "@/lib/types";
-import { aggregateByCategory } from "@/lib/categoryUtils";
+import type { Expense, GroupMember } from "@/lib/types";
+import { aggregateByCategory, aggregateByCategoryAndMember } from "@/lib/categoryUtils";
 
 export interface CategoryBarChartProps {
   expenses: Expense[];
+  members?: GroupMember[];
   showAll?: boolean;
+  stacked?: boolean;
 }
 
-// Chart configuration for theming
-const chartConfig = {
-  amount: {
-    label: "Belopp",
-    color: "hsl(var(--chart-1))",
-  },
-} satisfies ChartConfig;
-
 // Custom tooltip with refined styling matching TrendChart
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload, stacked, members }: any) => {
   if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;
 
+  // For stacked mode, show breakdown per member
+  if (stacked && members) {
+    const total = members.reduce((sum: number, member: GroupMember) => sum + (data[member.user_id] || 0), 0);
+
+    return (
+      <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2.5 shadow-notion-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <p className="text-label-mono font-medium">{data.categoryName}</p>
+        </div>
+        <div className="space-y-1">
+          {members.map((member: GroupMember) => {
+            const amount = data[member.user_id] || 0;
+            if (amount === 0) return null;
+            return (
+              <div key={member.user_id} className="flex items-center justify-between gap-4">
+                <span className="text-caption">{member.name}</span>
+                <span className="text-number-sm font-medium">
+                  {amount.toLocaleString('sv-SE')} kr
+                </span>
+              </div>
+            );
+          })}
+        </div>
+        <div className="flex items-center justify-between gap-4 mt-2 pt-2 border-t border-border/40">
+          <span className="text-caption font-medium">Totalt</span>
+          <span className="text-number font-semibold">
+            {total.toLocaleString('sv-SE')} kr
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  // For simple mode, show single amount
   return (
     <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2.5 shadow-notion-lg">
       <div className="flex items-center gap-2 mb-2">
@@ -47,14 +76,58 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
-export function CategoryBarChart({ expenses, showAll = false }: CategoryBarChartProps) {
+// Custom legend for stacked mode
+const CustomLegend = ({ members }: { members: GroupMember[] }) => {
+  return (
+    <div className="flex items-center justify-center gap-4 flex-wrap mt-3">
+      {members.map((member, idx) => (
+        <div key={member.user_id} className="flex items-center gap-1.5">
+          <div
+            className="w-3 h-3 rounded-sm"
+            style={{ backgroundColor: `hsl(var(--chart-${idx + 1}))` }}
+          />
+          <span className="text-caption">{member.name}</span>
+        </div>
+      ))}
+    </div>
+  );
+};
+
+export function CategoryBarChart({ expenses, members, showAll = false, stacked = false }: CategoryBarChartProps) {
   // Aggregate expenses by category with useMemo for performance
   const categoryData = useMemo(() => {
     return aggregateByCategory(expenses);
   }, [expenses]);
 
+  // Stacked data for member breakdown
+  const stackedData = useMemo(
+    () => stacked && members ? aggregateByCategoryAndMember(expenses, members) : [],
+    [expenses, members, stacked]
+  );
+
+  // Create chart config based on mode
+  const chartConfig = useMemo(() => {
+    if (stacked && members) {
+      return members.reduce((config, member, idx) => ({
+        ...config,
+        [member.user_id]: {
+          label: member.name,
+          color: `hsl(var(--chart-${idx + 1}))`,
+        },
+      }), {} as ChartConfig);
+    }
+    return {
+      amount: {
+        label: "Belopp",
+        color: "hsl(var(--chart-1))",
+      },
+    } satisfies ChartConfig;
+  }, [stacked, members]);
+
   // Apply top 8 slice unless showAll is true
-  const displayData = showAll ? categoryData : categoryData.slice(0, 8);
+  const displayData = showAll
+    ? (stacked ? stackedData : categoryData)
+    : (stacked ? stackedData.slice(0, 8) : categoryData.slice(0, 8));
 
   // Empty state
   if (displayData.length === 0) {
@@ -120,20 +193,39 @@ export function CategoryBarChart({ expenses, showAll = false }: CategoryBarChart
           />
 
           <Tooltip
-            content={<CustomTooltip />}
+            content={<CustomTooltip stacked={stacked} members={members} />}
             cursor={{
               fill: "hsl(var(--muted))",
               opacity: 0.1,
             }}
           />
 
-          <Bar
-            dataKey="amount"
-            fill="url(#barGradient)"
-            radius={[4, 4, 0, 0]}
-            animationDuration={800}
-            animationEasing="ease-out"
-          />
+          {stacked && members ? (
+            <>
+              {members.map((member, idx) => (
+                <Bar
+                  key={member.user_id}
+                  dataKey={member.user_id}
+                  stackId="members"
+                  fill={`hsl(var(--chart-${idx + 1}))`}
+                  name={member.name}
+                  radius={idx === members.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]}
+                  animationDuration={800}
+                  animationEasing="ease-out"
+                />
+              ))}
+            </>
+          ) : (
+            <Bar
+              dataKey="amount"
+              fill="url(#barGradient)"
+              radius={[4, 4, 0, 0]}
+              animationDuration={800}
+              animationEasing="ease-out"
+            />
+          )}
+
+          {stacked && members && <Legend content={<CustomLegend members={members} />} />}
         </BarChart>
       </ResponsiveContainer>
     </ChartContainer>
