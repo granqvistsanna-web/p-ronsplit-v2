@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-27)
 ## Current Position
 
 Phase: 6 of 6 (Budget Tracking UI)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-28 — Completed 06-01-PLAN.md (Budget pacing calculation)
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-28 — Completed 06-02-PLAN.md (Budget pacing UI)
 
-Progress: [███████████████] 93% (13 of 14 current plans completed)
+Progress: [████████████████] 100% (14 of 14 current plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13
-- Average duration: 2.2 min
-- Total execution time: 0.50 hours
+- Total plans completed: 14
+- Average duration: 2.1 min
+- Total execution time: 0.52 hours
 
 **By Phase:**
 
@@ -32,10 +32,10 @@ Progress: [███████████████] 93% (13 of 14 current 
 | 3. Category Visualization | 2 | 6 min | 3 min |
 | 4. Drill-Down Panels | 2 | 5 min | 2.5 min |
 | 5. Budget Backend | 2 | 6 min | 3 min |
-| 6. Budget Tracking UI | 1 | 2 min | 2 min |
+| 6. Budget Tracking UI | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 04-01 (3 min), 04-02 (2 min), 05-01 (4 min), 05-02 (2 min), 06-01 (2 min)
+- Last 5 plans: 04-02 (2 min), 05-01 (4 min), 05-02 (2 min), 06-01 (2 min), 06-02 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -88,6 +88,9 @@ Recent decisions affecting current work:
 - Use date-fns getDaysInMonth for accurate monthly day counts (28-31) (06-01)
 - Leap year calculation for yearly pacing (365/366 days) (06-01)
 - Pacing compares actual spending to time-proportional expected spending (06-01)
+- Pacing badge replaces status badge in overview for time-aware feedback (06-02)
+- Show difference amount (+X kr) when over-pace for actionable insight (06-02)
+- Use Swedish characters (å, ä) consistently with existing UI text (06-02)
 
 ### Pending Todos
 
@@ -99,6 +102,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T19:09:18Z
-Stopped at: Completed 06-01-PLAN.md (Budget pacing calculation)
+Last session: 2026-01-28T19:13:51Z
+Stopped at: Completed 06-02-PLAN.md (Budget pacing UI) - Phase 6 complete
 Resume file: None
