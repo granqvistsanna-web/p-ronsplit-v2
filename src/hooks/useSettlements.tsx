@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import type { Settlement } from "@/lib/types";
+import { toOre, fromOre } from "@/lib/currency";
 
 // Re-export type for backwards compatibility
 export type { Settlement } from "@/lib/types";
@@ -42,7 +43,12 @@ export function useSettlements(groupId?: string) {
 
       if (error) throw error;
 
-      setSettlements(data || []);
+      // Convert amounts from öre to kronor
+      const settlementsInKronor = (data || []).map((s) => ({
+        ...s,
+        amount: fromOre(s.amount),
+      }));
+      setSettlements(settlementsInKronor);
     } catch (error) {
       console.error("Error fetching settlements:", error);
       toast.error("Kunde inte hämta avräkningar");
@@ -72,13 +78,16 @@ export function useSettlements(groupId?: string) {
     const month = formatSwedishMonth(dateObj);
 
     try {
+      // Convert amount from kronor to öre for database storage
+      const amountInOre = toOre(settlement.amount);
+
       const { data, error } = await supabase
         .from("settlements")
         .insert({
           group_id: settlement.group_id,
           from_user: settlement.from_user,
           to_user: settlement.to_user,
-          amount: settlement.amount,
+          amount: amountInOre,
           date: settlementDate,
           month,
         })
@@ -117,12 +126,16 @@ export function useSettlements(groupId?: string) {
         month = formatSwedishMonth(new Date(updates.date));
       }
 
+      // Convert amount to öre if it's being updated
+      const updateData = {
+        ...updates,
+        ...(updates.amount !== undefined ? { amount: toOre(updates.amount) } : {}),
+        ...(month ? { month } : {}),
+      };
+
       const { data, error } = await supabase
         .from("settlements")
-        .update({
-          ...updates,
-          ...(month ? { month } : {}),
-        })
+        .update(updateData)
         .eq("id", settlementId)
         .select()
         .single();
