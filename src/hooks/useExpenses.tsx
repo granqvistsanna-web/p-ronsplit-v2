@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { queryKeys } from "./queries/queryKeys";
+import type { ExpenseFilters } from "./queries/types";
 
 export interface ExpenseSplit {
   [userId: string]: number;
@@ -22,77 +24,89 @@ export interface Expense {
   repeat: ExpenseRepeat;
 }
 
-export function useExpenses(groupId?: string) {
+/**
+ * Parse splits from database JSONB to ExpenseSplit type.
+ * Internal helper function.
+ */
+const parseSplits = (value: unknown): ExpenseSplit | null => {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const record = value as Record<string, unknown>;
+  const out: ExpenseSplit = {};
+
+  for (const [userId, raw] of Object.entries(record)) {
+    const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
+    if (!Number.isFinite(n)) return null;
+    out[userId] = n;
+  }
+
+  return out;
+};
+
+export function useExpenses(filters: ExpenseFilters) {
   const { user } = useAuth();
-  const [expenses, setExpenses] = useState<Expense[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchExpenses = useCallback(async () => {
-    if (!user) {
-      setExpenses([]);
-      setLoading(false);
-      return;
-    }
-
-    const parseSplits = (value: unknown): ExpenseSplit | null => {
-      if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-      const record = value as Record<string, unknown>;
-      const out: ExpenseSplit = {};
-
-      for (const [userId, raw] of Object.entries(record)) {
-        const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
-        if (!Number.isFinite(n)) return null;
-        out[userId] = n;
+  // Query for fetching expenses with filters
+  const query = useQuery({
+    queryKey: queryKeys.expenses.list(filters),
+    queryFn: async () => {
+      if (!user) {
+        return [];
       }
 
-      return out;
-    };
+      // Build Supabase query with filters
+      let query = supabase
+        .from("expenses")
+        .select("*")
+        .eq("group_id", filters.groupId)
+        .order("date", { ascending: false });
 
-    try {
-      let query = supabase.from("expenses").select("*");
-
-      if (groupId) {
-        query = query.eq("group_id", groupId);
+      // Apply date range filter if provided
+      if (filters.dateRange) {
+        query = query
+          .gte("date", filters.dateRange.start.toISOString().split("T")[0])
+          .lte("date", filters.dateRange.end.toISOString().split("T")[0]);
       }
 
-      const { data, error } = await query.order("date", { ascending: false });
+      // Apply member filter if provided
+      if (filters.memberIds && filters.memberIds.length > 0) {
+        query = query.in("paid_by", filters.memberIds);
+      }
 
-      if (error) throw error;
+      const { data, error } = await query;
 
-      const normalized = (data ?? []).map((row: Record<string, unknown>) => ({
+      if (error) {
+        console.error("Error fetching expenses:", error);
+        throw error;
+      }
+
+      // Parse splits and normalize data
+      return (data || []).map((row) => ({
         ...row,
         splits: parseSplits(row.splits),
       })) as Expense[];
+    },
+    enabled: !!filters.groupId && !!user,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-      setExpenses(normalized);
-    } catch (error) {
-      console.error("Error fetching expenses:", error);
-      toast.error("Kunde inte hämta utgifter");
-    } finally {
-      setLoading(false);
-    }
-  }, [user, groupId]);
+  // Mutation: Add single expense
+  const addMutation = useMutation({
+    mutationFn: async (expense: {
+      group_id: string;
+      amount: number;
+      paid_by: string;
+      category: string;
+      description: string;
+      date: string;
+      splits?: ExpenseSplit | null;
+      repeat?: ExpenseRepeat;
+    }) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-  useEffect(() => {
-    fetchExpenses();
-  }, [fetchExpenses]);
-
-  const addExpense = async (expense: {
-    group_id: string;
-    amount: number;
-    paid_by: string;
-    category: string;
-    description: string;
-    date: string;
-    splits?: ExpenseSplit | null;
-    repeat?: ExpenseRepeat;
-  }) => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return null;
-    }
-
-    try {
       // Build insert payload - serialize splits to JSON string for database
       const insertData: Record<string, unknown> = {
         group_id: expense.group_id,
@@ -125,42 +139,44 @@ export function useExpenses(groupId?: string) {
         throw error;
       }
 
-      await fetchExpenses();
-      toast.success("Utgift tillagd!");
       return data;
-    } catch (error) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+      toast.success("Utgift tillagd!");
+    },
+    onError: (error) => {
       console.error("Error adding expense:", error);
       toast.error("Kunde inte lägga till utgift");
-      return null;
-    }
-  };
+    },
+  });
 
-  const addExpenses = async (expenses: {
-    group_id: string;
-    amount: number;
-    paid_by: string;
-    category: string;
-    description: string;
-    date: string;
-    splits?: ExpenseSplit | null;
-    repeat?: ExpenseRepeat;
-  }[]) => {
-    console.log('[addExpenses] Called with', expenses.length, 'expenses:', expenses);
+  // Mutation: Add multiple expenses (batch)
+  const addExpensesMutation = useMutation({
+    mutationFn: async (expenses: {
+      group_id: string;
+      amount: number;
+      paid_by: string;
+      category: string;
+      description: string;
+      date: string;
+      splits?: ExpenseSplit | null;
+      repeat?: ExpenseRepeat;
+    }[]) => {
+      console.log("[addExpenses] Called with", expenses.length, "expenses:", expenses);
 
-    if (!user) {
-      console.log('[addExpenses] No user, aborting');
-      toast.error("Du måste vara inloggad");
-      return [];
-    }
+      if (!user) {
+        console.log("[addExpenses] No user, aborting");
+        throw new Error("Du måste vara inloggad");
+      }
 
-    if (expenses.length === 0) {
-      console.log('[addExpenses] Empty expenses array, aborting');
-      return [];
-    }
+      if (expenses.length === 0) {
+        console.log("[addExpenses] Empty expenses array, aborting");
+        return [];
+      }
 
-    try {
       // Batch insert all expenses in a single query - serialize splits as JSON
-      const insertData = expenses.map(expense => ({
+      const insertData = expenses.map((expense) => ({
         group_id: expense.group_id,
         amount: expense.amount,
         category: expense.category,
@@ -171,7 +187,7 @@ export function useExpenses(groupId?: string) {
         splits: expense.splits ? JSON.stringify(expense.splits) : null,
       }));
 
-      console.log('[addExpenses] Insert data prepared:', insertData);
+      console.log("[addExpenses] Insert data prepared:", insertData);
 
       const { data, error } = await supabase
         .from("expenses")
@@ -179,45 +195,47 @@ export function useExpenses(groupId?: string) {
         .select();
 
       if (error) {
-        console.error('[addExpenses] Supabase error:', error);
+        console.error("[addExpenses] Supabase error:", error);
         throw error;
       }
 
-      console.log('[addExpenses] Insert successful, returned data:', data);
+      console.log("[addExpenses] Insert successful, returned data:", data);
 
-      await fetchExpenses();
-      console.log('[addExpenses] Refetch complete');
-
-      toast.success(`${expenses.length} utgifter tillagda!`);
       return data || [];
-    } catch (error) {
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+      console.log("[addExpenses] Refetch complete");
+      toast.success(`${data.length} utgifter tillagda!`);
+    },
+    onError: (error) => {
       console.error("Error adding expenses:", error);
       toast.error("Kunde inte lägga till utgifter");
-      return [];
-    }
-  };
+    },
+  });
 
-  const updateExpense = async (
-    expenseId: string,
-    updates: Partial<Omit<Expense, "id" | "created_at">>
-  ) => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return;
-    }
+  // Mutation: Update expense
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      expenseId,
+      updates,
+    }: {
+      expenseId: string;
+      updates: Partial<Omit<Expense, "id" | "created_at">>;
+    }) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-    try {
       // First, verify the expense exists
-      const expense = expenses.find(e => e.id === expenseId);
+      const expense = query.data?.find((e) => e.id === expenseId);
       if (!expense) {
-        toast.error("Utgiften hittades inte");
-        return;
+        throw new Error("Utgiften hittades inte");
       }
 
       // Verify expense belongs to current group if groupId is set
-      if (groupId && expense.group_id !== groupId) {
-        toast.error("Utgiften tillhör inte det valda hushållet");
-        return;
+      if (filters.groupId && expense.group_id !== filters.groupId) {
+        throw new Error("Utgiften tillhör inte det valda hushållet");
       }
 
       // RLS handles access control - any group member can update expenses in their group
@@ -234,39 +252,38 @@ export function useExpenses(groupId?: string) {
         .eq("id", expenseId); // RLS handles access control
 
       if (error) throw error;
-
-      await fetchExpenses();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
       toast.success("Utgift uppdaterad!");
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error updating expense:", error);
-      toast.error("Kunde inte uppdatera utgift");
-    }
-  };
+      toast.error(error.message || "Kunde inte uppdatera utgift");
+    },
+  });
 
-  const deleteExpense = async (expenseId: string) => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return;
-    }
+  // Mutation: Delete expense with undo
+  const deleteMutation = useMutation({
+    mutationFn: async (expenseId: string) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-    try {
       // Find the expense to delete (for potential undo)
-      const expenseToDelete = expenses.find(e => e.id === expenseId);
+      const expenseToDelete = query.data?.find((e) => e.id === expenseId);
       if (!expenseToDelete) {
-        toast.error("Utgiften hittades inte");
-        return;
+        throw new Error("Utgiften hittades inte");
       }
 
       // Security check: Verify user created this expense or it belongs to current group
       if (expenseToDelete.paid_by !== user.id) {
-        toast.error("Du har inte behörighet att ta bort denna utgift");
-        return;
+        throw new Error("Du har inte behörighet att ta bort denna utgift");
       }
 
       // Additional check: Verify expense belongs to current group if groupId is set
-      if (groupId && expenseToDelete.group_id !== groupId) {
-        toast.error("Utgiften tillhör inte det valda hushållet");
-        return;
+      if (filters.groupId && expenseToDelete.group_id !== filters.groupId) {
+        throw new Error("Utgiften tillhör inte det valda hushållet");
       }
 
       // Delete from database - only if user is creator
@@ -278,36 +295,34 @@ export function useExpenses(groupId?: string) {
 
       if (error) throw error;
 
-      await fetchExpenses();
+      return expenseToDelete;
+    },
+    onSuccess: (expenseToDelete) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
 
       // Show toast with undo action
-      let undoClicked = false;
-
       toast.success("Utgift borttagen!", {
         duration: 5000,
         action: {
           label: "Ångra",
           onClick: async () => {
-            undoClicked = true;
             try {
               // Restore the expense
-              const { error: restoreError } = await supabase
-                .from("expenses")
-                .insert({
-                  id: expenseToDelete.id,
-                  group_id: expenseToDelete.group_id,
-                  amount: expenseToDelete.amount,
-                  paid_by: expenseToDelete.paid_by,
-                  category: expenseToDelete.category,
-                  description: expenseToDelete.description,
-                  date: expenseToDelete.date,
-                  splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
-                  repeat: expenseToDelete.repeat || "none",
-                } as any);
+              const { error: restoreError } = await supabase.from("expenses").insert({
+                id: expenseToDelete.id,
+                group_id: expenseToDelete.group_id,
+                amount: expenseToDelete.amount,
+                paid_by: expenseToDelete.paid_by,
+                category: expenseToDelete.category,
+                description: expenseToDelete.description,
+                date: expenseToDelete.date,
+                splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
+                repeat: expenseToDelete.repeat || "none",
+              } as any);
 
               if (restoreError) throw restoreError;
 
-              await fetchExpenses();
+              queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
               toast.success("Utgift återställd!");
             } catch (restoreError) {
               console.error("Error restoring expense:", restoreError);
@@ -316,19 +331,25 @@ export function useExpenses(groupId?: string) {
           },
         },
       });
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error deleting expense:", error);
-      toast.error("Kunde inte ta bort utgift");
-    }
-  };
+      toast.error(error.message || "Kunde inte ta bort utgift");
+    },
+  });
 
   return {
-    expenses,
-    loading,
-    addExpense,
-    addExpenses,
-    updateExpense,
-    deleteExpense,
-    refetch: fetchExpenses,
+    expenses: query.data ?? [],
+    loading: query.isLoading,
+    addExpense: addMutation.mutateAsync,
+    addExpenses: addExpensesMutation.mutateAsync,
+    updateExpense: async (
+      expenseId: string,
+      updates: Partial<Omit<Expense, "id" | "created_at">>
+    ) => {
+      await updateMutation.mutateAsync({ expenseId, updates });
+    },
+    deleteExpense: deleteMutation.mutateAsync,
+    refetch: query.refetch,
   };
 }
