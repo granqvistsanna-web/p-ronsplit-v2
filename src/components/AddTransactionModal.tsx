@@ -328,14 +328,20 @@ export function AddTransactionModal({
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4"
           >
-            <div className="bg-card border border-border rounded-t-xl sm:rounded-xl w-full sm:max-w-md max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col overflow-x-hidden">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="add-transaction-modal-title"
+              className="bg-card border border-border rounded-t-xl sm:rounded-xl w-full sm:max-w-md max-h-[90vh] sm:max-h-[calc(100vh-2rem)] flex flex-col overflow-x-hidden"
+            >
               {/* Header */}
               <div className="flex items-center justify-between px-4 sm:px-6 pt-4 sm:pt-6 pb-4 shrink-0">
-                <h2 className="text-lg font-medium text-foreground">
+                <h2 id="add-transaction-modal-title" className="text-lg font-medium text-foreground">
                   Lägg till transaktion
                 </h2>
                 <button
                   onClick={onClose}
+                  aria-label="Stäng"
                   className="text-muted-foreground hover:text-foreground h-8 w-8 flex items-center justify-center -mr-1"
                 >
                   ✕

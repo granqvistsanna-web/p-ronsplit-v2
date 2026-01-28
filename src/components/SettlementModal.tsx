@@ -41,10 +41,19 @@ export function SettlementModal({
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="settlement-modal-title"
+              className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden"
+            >
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-lg font-medium text-foreground">Avräkning</h2>
-                <button onClick={onClose} className="text-muted-foreground hover:text-foreground">
+                <h2 id="settlement-modal-title" className="text-lg font-medium text-foreground">Avräkning</h2>
+                <button
+                  onClick={onClose}
+                  aria-label="Stäng"
+                  className="text-muted-foreground hover:text-foreground"
+                >
                   ✕
                 </button>
               </div>

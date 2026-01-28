@@ -10,38 +10,68 @@ export interface ParsedTransaction {
   selected?: boolean;
 }
 
+export interface ParseResult {
+  transactions: ParsedTransaction[];
+  error?: string;
+  warning?: string;
+}
+
 // --- Public API --------------------------------------------------------------
 
 // Parses CSV and "Excel" exports from Swedish banks.
 // Banks often export for readability (blank rows, unnamed columns, header not on first row).
-export async function parseFile(content: string | ArrayBuffer, fileName: string): Promise<ParsedTransaction[]> {
+export async function parseFile(content: string | ArrayBuffer, fileName: string): Promise<ParseResult> {
   const name = fileName.toLowerCase();
   const isExcel = name.endsWith(".xlsx") || name.endsWith(".xls");
+
+  // Check for empty content
+  if (!content || (typeof content === "string" && content.trim().length === 0)) {
+    return { transactions: [], error: "Filen är tom" };
+  }
+
+  if (content instanceof ArrayBuffer && content.byteLength === 0) {
+    return { transactions: [], error: "Filen är tom" };
+  }
 
   if (isExcel) {
     // 1) Real Excel (binary)
     if (content instanceof ArrayBuffer) {
       try {
-        return await parseExcelArrayBuffer(content);
+        const transactions = await parseExcelArrayBuffer(content);
+        if (transactions.length === 0) {
+          return { transactions: [], error: "Kunde inte hitta några transaktioner i Excel-filen. Kontrollera att filen innehåller kolumner för datum, belopp och beskrivning." };
+        }
+        return { transactions };
       } catch (err) {
         console.error("Excel parsing failed (arrayBuffer):", err);
         // Fall through: many banks ship HTML/CSV with .xls extension.
-        return [];
+        return { transactions: [], error: "Kunde inte läsa Excel-filen. Filen kan vara skadad eller i ett format som inte stöds." };
       }
     }
 
     // 2) Sometimes .xls is actually HTML/CSV text
     if (typeof content === "string") {
       const excelResult = await parseExcelText(content);
-      return excelResult || parseCSV(content);
+      const transactions = excelResult || parseCSV(content);
+      if (transactions.length === 0) {
+        return { transactions: [], error: "Kunde inte hitta några transaktioner. Kontrollera att filen innehåller kolumner för datum, belopp och beskrivning." };
+      }
+      return { transactions };
     }
 
-    return [];
+    return { transactions: [], error: "Okänt filformat" };
   }
 
   // CSV (or any text export)
-  if (typeof content === "string") return parseCSV(content);
-  return [];
+  if (typeof content === "string") {
+    const transactions = parseCSV(content);
+    if (transactions.length === 0) {
+      return { transactions: [], error: "Kunde inte hitta några transaktioner i CSV-filen. Kontrollera att filen innehåller kolumner för datum, belopp och beskrivning." };
+    }
+    return { transactions };
+  }
+
+  return { transactions: [], error: "Filtypen stöds inte. Använd CSV eller Excel-format (.csv, .xlsx, .xls)." };
 }
 
 // --- Excel -------------------------------------------------------------------

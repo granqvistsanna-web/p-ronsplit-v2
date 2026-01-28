@@ -4,6 +4,7 @@ import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { queryKeys } from "./queries/queryKeys";
 import type { ExpenseFilters } from "./queries/types";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
 export interface ExpenseSplit {
   [userId: string]: number;
@@ -26,6 +27,7 @@ export interface Expense {
 
 /**
  * Parse splits from database JSONB to ExpenseSplit type.
+ * Skips invalid entries instead of discarding all data.
  * Internal helper function.
  */
 const parseSplits = (value: unknown): ExpenseSplit | null => {
@@ -35,11 +37,16 @@ const parseSplits = (value: unknown): ExpenseSplit | null => {
 
   for (const [userId, raw] of Object.entries(record)) {
     const n = typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
-    if (!Number.isFinite(n)) return null;
+    if (!Number.isFinite(n)) {
+      // Skip invalid entry but continue processing others
+      console.warn(`Invalid split value for user ${userId}:`, raw);
+      continue;
+    }
     out[userId] = n;
   }
 
-  return out;
+  // Return null only if no valid entries were found
+  return Object.keys(out).length > 0 ? out : null;
 };
 
 export function useExpenses(filters: ExpenseFilters) {
@@ -108,7 +115,7 @@ export function useExpenses(filters: ExpenseFilters) {
       }
 
       // Build insert payload - serialize splits to JSON string for database
-      const insertData: Record<string, unknown> = {
+      const insertData: TablesInsert<'expenses'> = {
         group_id: expense.group_id,
         amount: expense.amount,
         paid_by: user.id, // Always use current user
@@ -116,16 +123,12 @@ export function useExpenses(filters: ExpenseFilters) {
         description: expense.description,
         date: expense.date,
         repeat: expense.repeat || "none",
+        splits: expense.splits ? JSON.stringify(expense.splits) : null,
       };
-
-      // Only add splits if it's not null/undefined - serialize as JSON string
-      if (expense.splits) {
-        insertData.splits = JSON.stringify(expense.splits);
-      }
 
       const { data, error } = await supabase
         .from("expenses")
-        .insert(insertData as any)
+        .insert(insertData)
         .select()
         .single();
 
@@ -176,7 +179,7 @@ export function useExpenses(filters: ExpenseFilters) {
       }
 
       // Batch insert all expenses in a single query - serialize splits as JSON
-      const insertData = expenses.map((expense) => ({
+      const insertData: TablesInsert<'expenses'>[] = expenses.map((expense) => ({
         group_id: expense.group_id,
         amount: expense.amount,
         category: expense.category,
@@ -191,7 +194,7 @@ export function useExpenses(filters: ExpenseFilters) {
 
       const { data, error } = await supabase
         .from("expenses")
-        .insert(insertData as any)
+        .insert(insertData)
         .select();
 
       if (error) {
@@ -240,15 +243,26 @@ export function useExpenses(filters: ExpenseFilters) {
 
       // RLS handles access control - any group member can update expenses in their group
 
-      // Serialize splits if present
-      const dbUpdates: Record<string, unknown> = { ...updates };
-      if (updates.splits !== undefined) {
-        dbUpdates.splits = updates.splits ? JSON.stringify(updates.splits) : null;
-      }
+      // Serialize splits if present, build update payload
+      const dbUpdates: TablesUpdate<'expenses'> = {
+        amount: updates.amount,
+        category: updates.category,
+        description: updates.description,
+        date: updates.date,
+        repeat: updates.repeat,
+        splits: updates.splits !== undefined
+          ? (updates.splits ? JSON.stringify(updates.splits) : null)
+          : undefined,
+      };
+
+      // Remove undefined fields to avoid overwriting with null
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(dbUpdates).filter(([_, v]) => v !== undefined)
+      ) as TablesUpdate<'expenses'>;
 
       const { error } = await supabase
         .from("expenses")
-        .update(dbUpdates as any)
+        .update(cleanUpdates)
         .eq("id", expenseId); // RLS handles access control
 
       if (error) throw error;
@@ -308,7 +322,7 @@ export function useExpenses(filters: ExpenseFilters) {
           onClick: async () => {
             try {
               // Restore the expense
-              const { error: restoreError } = await supabase.from("expenses").insert({
+              const restoreData: TablesInsert<'expenses'> = {
                 id: expenseToDelete.id,
                 group_id: expenseToDelete.group_id,
                 amount: expenseToDelete.amount,
@@ -318,7 +332,8 @@ export function useExpenses(filters: ExpenseFilters) {
                 date: expenseToDelete.date,
                 splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
                 repeat: expenseToDelete.repeat || "none",
-              } as any);
+              };
+              const { error: restoreError } = await supabase.from("expenses").insert(restoreData);
 
               if (restoreError) throw restoreError;
 

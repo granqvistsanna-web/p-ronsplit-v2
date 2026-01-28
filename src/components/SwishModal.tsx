@@ -116,19 +116,25 @@ export function SwishModal({
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="swish-modal-title"
+              className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden"
+            >
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">
                   <div className="p-1.5 rounded-md bg-primary/10">
                     <Smartphone size={18} className="text-primary" />
                   </div>
-                  <h2 className="text-lg font-medium text-foreground">
+                  <h2 id="swish-modal-title" className="text-lg font-medium text-foreground">
                     Registrera Swish
                   </h2>
                 </div>
                 <button
                   onClick={handleClose}
+                  aria-label="Stäng"
                   className="text-muted-foreground hover:text-foreground transition-colors"
                 >
                   ✕

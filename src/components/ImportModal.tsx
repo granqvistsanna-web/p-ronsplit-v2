@@ -3,8 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Upload, Loader2, ArrowUpRight, ArrowDownLeft, Image, FileText, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { parseFile, ParsedTransaction } from "@/lib/fileParser";
-import { DEFAULT_CATEGORIES } from "@/lib/types";
+import { parseFile, ParsedTransaction, ParseResult } from "@/lib/fileParser";
+import { DEFAULT_CATEGORIES, krToÖre } from "@/lib/types";
 import { supabase } from "@/integrations/supabase/client";
 import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -164,37 +164,45 @@ export function ImportModal({
     }
 
     try {
-      let parsed: ParsedTransaction[];
+      let result: ParseResult;
 
       if (isExcel) {
         const buffer = await file.arrayBuffer();
-        parsed = await parseFile(buffer, file.name);
+        result = await parseFile(buffer, file.name);
 
         // Fallback: some banks export ".xls" that is actually HTML/text
-        if (parsed.length === 0) {
+        if (result.transactions.length === 0 && !result.error) {
           const text = await file.text();
-          parsed = await parseFile(text, file.name);
+          result = await parseFile(text, file.name);
         }
       } else {
         const content = await file.text();
-        parsed = await parseFile(content, file.name);
+        result = await parseFile(content, file.name);
       }
 
-      if (parsed.length === 0) {
-        const message = isExcel
-          ? "Inga transaktioner hittades. Filen verkar vara en layoutad bank-export. Prova att exportera som CSV, eller spara om som riktig .xlsx."
-          : "Inga transaktioner hittades. Kontrollera att filen innehåller datum + belopp. Ibland ligger rubriken längre ner i filen.";
-        toast.error(message);
+      // Show error if parsing failed
+      if (result.error) {
+        toast.error(result.error);
         return;
       }
 
-      toast.success(`${parsed.length} transaktioner hittades. Kategoriserar med AI...`);
-      await categorizeTransactions(parsed, "expense");
+      // Show warning if present
+      if (result.warning) {
+        toast.warning(result.warning);
+      }
+
+      if (result.transactions.length === 0) {
+        toast.error("Inga transaktioner hittades i filen.");
+        return;
+      }
+
+      toast.success(`${result.transactions.length} transaktioner hittades. Kategoriserar med AI...`);
+      await categorizeTransactions(result.transactions, "expense");
 
     } catch (err) {
       console.error("File parsing error:", err);
       toast.error(
-        err?.message ||
+        (err as Error)?.message ||
         "Kunde inte läsa filen. Om det är en bank-Excel, prova exportera som CSV eller spara om som .xlsx."
       );
     }
@@ -434,7 +442,7 @@ export function ImportModal({
       })
       .map(t => ({
         group_id: groupId,
-        amount: Math.round(t.amount * 100), // Convert to cents
+        amount: krToÖre(t.amount),
         recipient: currentUserId,
         type: "other" as IncomeType,
         note: t.description?.trim() || "",
@@ -510,12 +518,18 @@ export function ImportModal({
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
             className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-6 overflow-hidden"
           >
-            <div className="bg-card border border-border shadow-notion-xl rounded-t-2xl sm:rounded-2xl w-full sm:max-w-3xl max-h-[92vh] sm:max-h-[85vh] overflow-hidden flex flex-col">
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="import-modal-title"
+              className="bg-card border border-border shadow-notion-xl rounded-t-2xl sm:rounded-2xl w-full sm:max-w-3xl max-h-[92vh] sm:max-h-[85vh] overflow-hidden flex flex-col"
+            >
               {/* Header - minimal and clean */}
               <div className="flex items-center justify-between px-6 py-5 shrink-0">
-                <h2 className="text-lg font-semibold text-foreground tracking-tight">Importera transaktioner</h2>
+                <h2 id="import-modal-title" className="text-lg font-semibold text-foreground tracking-tight">Importera transaktioner</h2>
                 <button
                   onClick={handleClose}
+                  aria-label="Stäng"
                   className="text-muted-foreground hover:text-foreground hover:bg-secondary rounded-lg p-2 -m-2 transition-colors"
                 >
                   <X size={20} />

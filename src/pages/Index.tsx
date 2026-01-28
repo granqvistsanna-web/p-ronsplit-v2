@@ -38,7 +38,7 @@ const Index = () => {
     addExpenses,
     updateExpense,
     deleteExpense,
-  } = useExpenses(household?.id);
+  } = useExpenses({ groupId: household?.id || '' });
 
   const {
     incomes,
@@ -47,7 +47,7 @@ const Index = () => {
     addIncomes,
     updateIncome,
     deleteIncome,
-  } = useIncomes(household?.id);
+  } = useIncomes({ groupId: household?.id || '' });
 
   const {
     settlements,

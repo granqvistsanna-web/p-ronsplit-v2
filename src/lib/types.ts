@@ -64,13 +64,37 @@ export interface Expense {
 export type IncomeType = "salary" | "bonus" | "benefit" | "fkassa" | "bidrag" | "other";
 export type IncomeRepeat = "none" | "monthly";
 
+// ============================================================================
+// Income amount units
+// ============================================================================
+/**
+ * IMPORTANT: Income amounts are stored in CENTS (öre) in the database.
+ * This differs from expenses which are stored in kr.
+ *
+ * When displaying: divide by ÖRE_PER_KR (100)
+ * When storing: multiply by ÖRE_PER_KR (100)
+ *
+ * Use the helper functions below for conversions.
+ */
+export const ÖRE_PER_KR = 100;
+
+/** Convert öre (cents) to kr for display */
+export const öreToKr = (öre: number): number => öre / ÖRE_PER_KR;
+
+/** Convert kr to öre (cents) for storage */
+export const krToÖre = (kr: number): number => Math.round(kr * ÖRE_PER_KR);
+
 /**
  * Income entry.
+ *
+ * NOTE: The `amount` field is stored in CENTS (öre), not kr.
+ * Use öreToKr(income.amount) to convert for display.
  */
 export interface Income {
   id: string;
   group_id: string;
-  amount: number; // Stored in cents (öre)
+  /** Amount in öre (cents). Use öreToKr() for display. */
+  amount: number;
   recipient: string;
   type: IncomeType;
   note: string | null;
@@ -83,9 +107,13 @@ export interface Income {
 
 /**
  * Input type for creating new incomes.
+ *
+ * NOTE: The `amount` field should be in CENTS (öre), not kr.
+ * Use krToÖre() when converting user input.
  */
 export interface IncomeInput {
   group_id: string;
+  /** Amount in öre (cents). Use krToÖre() to convert from user input. */
   amount: number;
   recipient: string;
   type: IncomeType;

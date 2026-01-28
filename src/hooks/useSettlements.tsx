@@ -2,10 +2,22 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { format } from "date-fns";
+import { sv } from "date-fns/locale";
 import type { Settlement } from "@/lib/types";
 
 // Re-export type for backwards compatibility
 export type { Settlement } from "@/lib/types";
+
+/**
+ * Format a date as Swedish month + year (e.g., "Januari 2024")
+ * Uses date-fns for consistent cross-browser formatting
+ */
+function formatSwedishMonth(date: Date): string {
+  const formatted = format(date, "MMMM yyyy", { locale: sv });
+  // Capitalize first letter
+  return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+}
 
 export function useSettlements(groupId?: string) {
   const { user } = useAuth();
@@ -57,10 +69,7 @@ export function useSettlements(groupId?: string) {
 
     const settlementDate = settlement.date || new Date().toISOString().split("T")[0];
     const dateObj = new Date(settlementDate);
-    const month = dateObj.toLocaleDateString("sv-SE", {
-      month: "long",
-      year: "numeric",
-    });
+    const month = formatSwedishMonth(dateObj);
 
     try {
       const { data, error } = await supabase
@@ -71,7 +80,7 @@ export function useSettlements(groupId?: string) {
           to_user: settlement.to_user,
           amount: settlement.amount,
           date: settlementDate,
-          month: month.charAt(0).toUpperCase() + month.slice(1),
+          month,
         })
         .select()
         .single();
@@ -105,12 +114,7 @@ export function useSettlements(groupId?: string) {
       // Recalculate month if date is updated
       let month: string | undefined;
       if (updates.date) {
-        const dateObj = new Date(updates.date);
-        const monthStr = dateObj.toLocaleDateString("sv-SE", {
-          month: "long",
-          year: "numeric",
-        });
-        month = monthStr.charAt(0).toUpperCase() + monthStr.slice(1);
+        month = formatSwedishMonth(new Date(updates.date));
       }
 
       const { data, error } = await supabase

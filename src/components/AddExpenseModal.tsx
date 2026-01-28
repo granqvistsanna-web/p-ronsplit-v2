@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,9 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
   const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
   const [potentialDuplicates, setPotentialDuplicates] = useState<PotentialDuplicate[]>([]);
   const [showAllCategories, setShowAllCategories] = useState(false);
+
+  // Ref to prevent race condition on rapid form submissions
+  const isSubmittingRef = useRef(false);
 
   // Initialize custom splits when toggled on, when members change, or when amount changes
   useEffect(() => {
@@ -177,13 +180,17 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // Guard against race condition from rapid form submissions
+    if (isSubmittingRef.current) return;
+
     if (!validateForm()) return;
 
+    isSubmittingRef.current = true;
     setIsCheckingDuplicates(true);
-    
+
     try {
       const duplicates = await checkForDuplicates();
-      
+
       if (duplicates.length > 0) {
         setPotentialDuplicates(duplicates);
         setShowDuplicateWarning(true);
@@ -192,6 +199,7 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
       }
     } finally {
       setIsCheckingDuplicates(false);
+      isSubmittingRef.current = false;
     }
   };
 
@@ -224,10 +232,19 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
               transition={{ duration: 0.15 }}
               className="fixed inset-0 z-50 flex items-center justify-center p-4"
             >
-              <div className="bg-card border border-border rounded-md w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden p-4 sm:p-6">
+              <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="add-expense-modal-title"
+                className="bg-card border border-border rounded-md w-full max-w-md max-h-[calc(100vh-2rem)] overflow-y-auto overflow-x-hidden p-4 sm:p-6"
+              >
                 <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-lg font-medium text-foreground">Ny utgift</h2>
-                  <button onClick={onClose} className="text-muted-foreground hover:text-foreground h-8 w-8 flex items-center justify-center -mr-1">
+                  <h2 id="add-expense-modal-title" className="text-lg font-medium text-foreground">Ny utgift</h2>
+                  <button
+                    onClick={onClose}
+                    aria-label="Stäng"
+                    className="text-muted-foreground hover:text-foreground h-8 w-8 flex items-center justify-center -mr-1"
+                  >
                     ✕
                   </button>
                 </div>
