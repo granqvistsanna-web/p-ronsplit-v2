@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { queryKeys } from "./queries/queryKeys";
+import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { IncomeFilters } from "./queries/types";
 import type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
 
@@ -71,7 +72,7 @@ export function useIncomes(filters: IncomeFilters) {
       return typedIncomes;
     },
     enabled: !!filters.groupId && !!user,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: STALE_TIME_FREQUENT,
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 

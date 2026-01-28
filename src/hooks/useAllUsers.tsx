@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
+import { STALE_TIME_STATIC, GC_TIME_DEFAULT } from "./queries/config";
 
 export interface PublicUser {
   id: string;
@@ -29,8 +30,8 @@ export function useAllUsers() {
       return (data || []) as PublicUser[];
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes - users don't change frequently
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: STALE_TIME_STATIC,
+    gcTime: GC_TIME_DEFAULT
   });
 
   return { users, loading };

@@ -12,6 +12,7 @@ import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { PublicRoute } from "@/components/PublicRoute";
 import { OfflineIndicator } from "@/components/OfflineIndicator";
 import { SideNav } from "@/components/SideNav";
+import { STALE_TIME_DEFAULT, GC_TIME_DEFAULT } from "@/hooks/queries/config";
 import Index from "./pages/Index";
 import Analys from "./pages/Analys";
 import Aktivitet from "./pages/Aktivitet";
@@ -26,10 +27,10 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      // Cache data for 5 minutes
-      staleTime: 5 * 60 * 1000,
-      // Keep unused data in cache for 10 minutes
-      gcTime: 10 * 60 * 1000,
+      // Default stale time for queries (individual hooks may override)
+      staleTime: STALE_TIME_DEFAULT,
+      // Keep unused data in cache
+      gcTime: GC_TIME_DEFAULT,
       // Retry failed requests
       retry: 3,
       retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),

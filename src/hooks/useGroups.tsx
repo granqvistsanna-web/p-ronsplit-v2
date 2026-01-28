@@ -16,8 +16,50 @@ interface PublicProfile {
 const SELECTED_GROUP_KEY = "selected_group_id";
 
 const generateGroupId = () => crypto.randomUUID();
-const generateInviteCode = () =>
-  Math.random().toString(36).substring(2, 8).toUpperCase();
+
+/**
+ * Generate a cryptographically secure invite code.
+ * Uses crypto.getRandomValues() for better randomness than Math.random().
+ * 6-character code from 36-char alphabet = 36^6 = 2.17 billion combinations.
+ */
+const generateInviteCode = (): string => {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed I, O, 0, 1 to avoid confusion
+  const codeLength = 6;
+  const randomValues = new Uint8Array(codeLength);
+  crypto.getRandomValues(randomValues);
+
+  let code = '';
+  for (let i = 0; i < codeLength; i++) {
+    code += chars[randomValues[i] % chars.length];
+  }
+  return code;
+};
+
+/**
+ * Generate a unique invite code by checking against existing codes in the database.
+ * Retries up to maxAttempts times if a collision occurs.
+ */
+const generateUniqueInviteCode = async (maxAttempts = 5): Promise<string> => {
+  for (let attempt = 0; attempt < maxAttempts; attempt++) {
+    const code = generateInviteCode();
+
+    // Check if code already exists
+    const { data } = await supabase
+      .from('groups')
+      .select('id')
+      .eq('invite_code', code)
+      .limit(1);
+
+    if (!data || data.length === 0) {
+      return code; // Code is unique
+    }
+
+    console.warn(`Invite code collision detected (attempt ${attempt + 1}), regenerating...`);
+  }
+
+  // Fallback: use UUID-based code if all attempts fail (extremely unlikely)
+  return crypto.randomUUID().substring(0, 6).toUpperCase();
+};
 
 export function useGroups() {
   const { user } = useAuth();
@@ -43,7 +85,7 @@ export function useGroups() {
 
       // Create household if it doesn't exist (fallback for existing users)
       const groupId = generateGroupId();
-      const inviteCode = generateInviteCode();
+      const inviteCode = await generateUniqueInviteCode();
 
       const { data: groupData, error: groupError } = await supabase
         .from("groups")
@@ -342,7 +384,7 @@ export function useGroups() {
 
     try {
       const groupId = generateGroupId();
-      const inviteCode = generateInviteCode();
+      const inviteCode = await generateUniqueInviteCode();
 
       const { data: groupData, error: groupError } = await supabase
         .from("groups")

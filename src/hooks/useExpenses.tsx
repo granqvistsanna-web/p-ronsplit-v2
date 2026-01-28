@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { queryKeys } from "./queries/queryKeys";
+import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { ExpenseFilters } from "./queries/types";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 
@@ -94,7 +95,7 @@ export function useExpenses(filters: ExpenseFilters) {
       })) as Expense[];
     },
     enabled: !!filters.groupId && !!user,
-    staleTime: 30 * 1000, // 30 seconds
+    staleTime: STALE_TIME_FREQUENT,
     gcTime: 5 * 60 * 1000, // 5 minutes
   });
 
