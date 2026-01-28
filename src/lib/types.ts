@@ -57,7 +57,7 @@ export interface Expense {
   description: string | null;
   date: string;
   created_at: string;
-  splits: ExpenseSplit | null;
+  splits?: ExpenseSplit | null;
   repeat: ExpenseRepeat;
 }
 

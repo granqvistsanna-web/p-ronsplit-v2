@@ -13,9 +13,9 @@ export function CategoryChartSection() {
   const [stackedMode, setStackedMode] = useState(false);
 
   const { dateRange, memberIds } = useFilterParams();
-  const { currentGroup } = useGroups();
+  const { household } = useGroups();
   const { expenses, loading } = useExpenses({
-    groupId: currentGroup?.id || '',
+    groupId: household?.id || '',
     dateRange,
     memberIds,
   });
@@ -26,7 +26,7 @@ export function CategoryChartSection() {
   );
 
   const hasMore = categoryData.length > 8;
-  const members = currentGroup?.members || [];
+  const members = household?.members || [];
 
   return (
     <div className="space-y-4">
