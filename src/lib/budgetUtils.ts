@@ -36,6 +36,8 @@ export interface BudgetMetric {
   remaining: number; // In kr (can be negative)
   percentUsed: number;
   status: BudgetStatus;
+  pacing: PacingStatus;
+  expectedSpending: number; // In kr
 }
 
 /**
@@ -227,6 +229,7 @@ export function getCategoryInfo(categoryId: string): Category {
 
 /**
  * Calculate budget metrics for all budgets.
+ * Includes pacing calculation to compare spending to time-based expectations.
  *
  * @param budgets - Array of budgets (amounts in öre)
  * @param expenses - Array of expenses (amounts in kr)
@@ -256,6 +259,13 @@ export function calculateBudgetMetrics(
       const percentUsed = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;
       const status = getBudgetStatus(percentUsed);
 
+      const { pacing, expectedSpending } = calculateBudgetPacing(
+        spent,
+        budgetAmount,
+        year,
+        month
+      );
+
       return {
         categoryId: budget.category,
         categoryName: categoryInfo.name,
@@ -266,6 +276,8 @@ export function calculateBudgetMetrics(
         remaining,
         percentUsed,
         status,
+        pacing,
+        expectedSpending,
       };
     });
 
