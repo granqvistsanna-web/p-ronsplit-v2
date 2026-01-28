@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 3 complete - Ready for Phase 4
+**Current focus:** Phase 4 in progress - Drill-Down Panels
 
 ## Current Position
 
-Phase: 3 of 6 (Category Visualization)
-Plan: 2 of 2 in current phase
-Status: Phase complete
-Last activity: 2026-01-28 — Completed 03-02-PLAN.md (Stacked member breakdown and integration)
+Phase: 4 of 6 (Drill-Down Panels)
+Plan: 1 of 2 in current phase
+Status: In progress
+Last activity: 2026-01-28 — Completed 04-01-PLAN.md (Drill-down components)
 
-Progress: [███████████░] 80% (8 of 10 current plans completed)
+Progress: [████████████░] 90% (9 of 10 current plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8
+- Total plans completed: 9
 - Average duration: 2 min
-- Total execution time: 0.28 hours
+- Total execution time: 0.33 hours
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: [███████████░] 80% (8 of 10 current plans comp
 | 1. Filter Foundation | 3 | 7 min | 2 min |
 | 2. Enhanced Data Fetching | 3 | 6 min | 2 min |
 | 3. Category Visualization | 2 | 6 min | 3 min |
+| 4. Drill-Down Panels | 1 | 3 min | 3 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-02 (2 min), 02-03 (3 min), 01-03 (4 min), 03-01 (3 min), 03-02 (3 min)
+- Last 5 plans: 02-03 (3 min), 01-03 (4 min), 03-01 (3 min), 03-02 (3 min), 04-01 (3 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -70,6 +71,9 @@ Recent decisions affecting current work:
 - Zero-fill member amounts for complete data structure (03-02)
 - Toggle component for stacked mode switch (better UX than checkbox) (03-02)
 - Self-contained chart sections with internal controls reduce coupling (03-02)
+- Responsive dialog pattern: Sheet (>=768px) + Drawer (<768px) via useIsMobile (04-01)
+- 44px touch target minimum for accessibility compliance on close buttons (04-01)
+- CSS selector [&>button] for targeting Sheet's built-in close button sizing (04-01)
 
 ### Pending Todos
 
@@ -81,6 +85,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T14:34:48Z
-Stopped at: Completed 03-02-PLAN.md (Stacked member breakdown and integration)
+Last session: 2026-01-28T17:35:00Z
+Stopped at: Completed 04-01-PLAN.md (Drill-down components)
 Resume file: None
