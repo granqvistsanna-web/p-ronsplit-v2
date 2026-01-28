@@ -6,6 +6,7 @@
 import type { Budget } from "@/hooks/useBudgets";
 import type { Expense, Category } from "./types";
 import { DEFAULT_CATEGORIES, öreToKr } from "./types";
+import { getDate, getDaysInMonth, differenceInDays } from "date-fns";
 
 /**
  * Budget status based on spending percentage.
@@ -14,6 +15,13 @@ import { DEFAULT_CATEGORIES, öreToKr } from "./types";
  * - exceeded: >= 100% of budget spent
  */
 export type BudgetStatus = "on-track" | "warning" | "exceeded";
+
+/**
+ * Budget pacing status based on time elapsed in period.
+ * - on-track: Spending at or below expected pace
+ * - over-pace: Spending faster than expected
+ */
+export type PacingStatus = "on-track" | "over-pace";
 
 /**
  * Budget metric for a single category.
@@ -88,6 +96,43 @@ export function getBudgetProgressColor(status: BudgetStatus): string {
     case "exceeded":
       return "bg-red-500";
   }
+}
+
+/**
+ * Calculate budget pacing status based on time elapsed in period.
+ * Compares actual spending to expected spending based on days elapsed.
+ *
+ * @param spent - Amount spent so far (in kr)
+ * @param budget - Total budget amount (in kr)
+ * @param year - Current year
+ * @param month - Current month (0-11) for monthly, undefined for yearly
+ * @returns Pacing status and expected spending amount
+ */
+export function calculateBudgetPacing(
+  spent: number,
+  budget: number,
+  year: number,
+  month?: number
+): { pacing: PacingStatus; expectedSpending: number } {
+  const now = new Date();
+  let currentDay: number;
+  let totalDays: number;
+
+  if (month !== undefined) {
+    // Monthly pacing - use actual days in month
+    currentDay = getDate(now);
+    totalDays = getDaysInMonth(new Date(year, month));
+  } else {
+    // Yearly pacing - calculate day of year
+    const startOfYear = new Date(year, 0, 1);
+    currentDay = differenceInDays(now, startOfYear) + 1;
+    totalDays = 365 + (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 1 : 0);
+  }
+
+  const expectedSpending = (budget * currentDay) / totalDays;
+  const pacing: PacingStatus = spent <= expectedSpending ? "on-track" : "over-pace";
+
+  return { pacing, expectedSpending };
 }
 
 /**
