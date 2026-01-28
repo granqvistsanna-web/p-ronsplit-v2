@@ -16,14 +16,22 @@ import { sv } from "date-fns/locale";
 
 export default function Analys() {
   const { household, loading: householdLoading } = useGroups();
-  const { expenses, loading: expensesLoading } = useExpenses({ groupId: household?.id || '' });
-  const { incomes, loading: incomesLoading } = useIncomes({ groupId: household?.id || '' });
+  const { dateRange, memberIds } = useFilterParams();
+  const { expenses, loading: expensesLoading } = useExpenses({
+    groupId: household?.id || '',
+    dateRange,
+    memberIds,
+  });
+  const { incomes, loading: incomesLoading } = useIncomes({
+    groupId: household?.id || '',
+    dateRange,
+    memberIds,
+  });
   const { budgets, loading: budgetsLoading, saveBudget } = useBudgets({
     groupId: household?.id || '',
     period: 'yearly',
   });
   const { sidebarWidth } = useSidebar();
-  const { dateRange, memberIds } = useFilterParams();
 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [showBudgetSettings, setShowBudgetSettings] = useState(false);
