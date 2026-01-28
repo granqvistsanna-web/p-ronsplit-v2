@@ -5,7 +5,7 @@ import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
 import { useSidebar } from "@/hooks/useSidebar";
-import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, ChevronLeft, Calendar } from "lucide-react";
+import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, ChevronLeft, Calendar, TrendingUp, TrendingDown, PieChart } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar } from "@/components/analytics";
 
 const MONTHS = [
   "Januari", "Februari", "Mars", "April", "Maj", "Juni",
@@ -55,6 +56,44 @@ export default function Analys() {
 
     return { totalExpenses, totalIncomes, netto };
   }, [filteredData]);
+
+  // Calculate previous month totals for comparison
+  const previousMonthTotals = useMemo(() => {
+    const prevMonth = selectedMonth === 1 ? 12 : selectedMonth - 1;
+    const prevYear = selectedMonth === 1 ? selectedYear - 1 : selectedYear;
+
+    const prevExpenses = expenses.filter(e => {
+      const date = new Date(e.date);
+      return date.getFullYear() === prevYear && date.getMonth() + 1 === prevMonth;
+    });
+    const prevIncomes = incomes.filter(i => {
+      const date = new Date(i.date);
+      return date.getFullYear() === prevYear && date.getMonth() + 1 === prevMonth;
+    });
+
+    const totalExpenses = prevExpenses.reduce((sum, e) => sum + e.amount, 0);
+    const totalIncomes = prevIncomes.reduce((sum, i) => sum + i.amount / 100, 0);
+    const netto = totalIncomes - totalExpenses;
+
+    return { totalExpenses, totalIncomes, netto };
+  }, [expenses, incomes, selectedYear, selectedMonth]);
+
+  // Calculate percentage changes
+  const changes = useMemo(() => {
+    const incomeChange = previousMonthTotals.totalIncomes > 0
+      ? ((totals.totalIncomes - previousMonthTotals.totalIncomes) / previousMonthTotals.totalIncomes) * 100
+      : totals.totalIncomes > 0 ? 100 : 0;
+
+    const expenseChange = previousMonthTotals.totalExpenses > 0
+      ? ((totals.totalExpenses - previousMonthTotals.totalExpenses) / previousMonthTotals.totalExpenses) * 100
+      : totals.totalExpenses > 0 ? 100 : 0;
+
+    const nettoChange = previousMonthTotals.netto !== 0
+      ? totals.netto - previousMonthTotals.netto
+      : totals.netto;
+
+    return { incomeChange, expenseChange, nettoChange };
+  }, [totals, previousMonthTotals]);
 
   // Group expenses by category
   const expensesByCategory = useMemo(() => {
@@ -260,11 +299,6 @@ export default function Analys() {
     );
   }
 
-  const maxTrendValue = Math.max(
-    ...monthlyTrend.map(m => Math.max(m.expenses, m.incomes)),
-    1
-  );
-
   return (
     <div className={`pt-14 lg:pt-0 ${sidebarWidth} transition-all duration-300`}>
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
@@ -364,8 +398,7 @@ export default function Analys() {
                 title="Gå till nuvarande månad (⌘Home)"
                 aria-label="Gå till nuvarande månad"
               >
-                <span className="flex items-center gap-1.5 whitespace-nowrap">
-                  <Calendar className="h-3 w-3" />
+                <span className="whitespace-nowrap">
                   <span className="hidden sm:inline">Nuvarande</span>
                   <span className="sm:hidden">Nu</span>
                 </span>
@@ -385,120 +418,122 @@ export default function Analys() {
         {/* Summary Metrics - Grid Layout */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           {/* Income */}
-          <Card className="animate-fade-in" style={{ animationDelay: '40ms' }}>
+          <Card className="animate-fade-in group hover:shadow-notion transition-shadow" style={{ animationDelay: '40ms' }}>
             <CardContent className="p-5">
-              <div className="space-y-1">
-                <p className="text-label-mono">
-                  Inkomster
-                </p>
-                <p className="text-money-xl font-semibold text-foreground">
-                  {totals.totalIncomes.toLocaleString("sv-SE")} kr
-                </p>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-label-mono">
+                    Inkomster
+                  </p>
+                  <p className="text-number-lg font-semibold text-foreground">
+                    {totals.totalIncomes.toLocaleString("sv-SE")} kr
+                  </p>
+                </div>
+                <div className="rounded-full bg-income-bg p-2">
+                  <TrendingUp size={16} className="text-income" />
+                </div>
               </div>
+              {previousMonthTotals.totalIncomes > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/40">
+                  <div className={`flex items-center gap-1.5 text-xs ${
+                    changes.incomeChange >= 0 ? 'text-income' : 'text-icon-pink'
+                  }`}>
+                    <span className="font-medium">
+                      {changes.incomeChange >= 0 ? '+' : ''}{changes.incomeChange.toFixed(0)}%
+                    </span>
+                    <span className="text-muted-foreground">vs förra månaden</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
           {/* Expenses */}
-          <Card className="animate-fade-in" style={{ animationDelay: '60ms' }}>
+          <Card className="animate-fade-in group hover:shadow-notion transition-shadow" style={{ animationDelay: '60ms' }}>
             <CardContent className="p-5">
-              <div className="space-y-1">
-                <p className="text-label-mono">
-                  Utgifter
-                </p>
-                <p className="text-money-xl font-semibold text-foreground">
-                  {totals.totalExpenses.toLocaleString("sv-SE")} kr
-                </p>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-label-mono">
+                    Utgifter
+                  </p>
+                  <p className="text-number-lg font-semibold text-foreground">
+                    {totals.totalExpenses.toLocaleString("sv-SE")} kr
+                  </p>
+                </div>
+                <div className="rounded-full bg-expense-bg p-2">
+                  <TrendingDown size={16} className="text-expense" />
+                </div>
               </div>
+              {previousMonthTotals.totalExpenses > 0 && (
+                <div className="mt-3 pt-3 border-t border-border/40">
+                  <div className={`flex items-center gap-1.5 text-xs ${
+                    changes.expenseChange <= 0 ? 'text-income' : 'text-icon-pink'
+                  }`}>
+                    <span className="font-medium">
+                      {changes.expenseChange >= 0 ? '+' : ''}{changes.expenseChange.toFixed(0)}%
+                    </span>
+                    <span className="text-muted-foreground">vs förra månaden</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
 
-          {/* Balance */}
-          <Card className="animate-fade-in" style={{ animationDelay: '80ms' }}>
+          {/* Netto */}
+          <Card className="animate-fade-in group hover:shadow-notion transition-shadow" style={{ animationDelay: '80ms' }}>
             <CardContent className="p-5">
-              <div className="space-y-1">
-                <p className="text-label-mono">
-                  Netto
-                </p>
-                <p className={`text-money-xl font-semibold ${totals.netto >= 0 ? 'text-income' : 'text-icon-pink'}`}>
-                  {totals.netto >= 0 ? '+' : ''}{totals.netto.toLocaleString("sv-SE")} kr
-                </p>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <p className="text-label-mono">
+                    Netto
+                  </p>
+                  <p className={`text-number-lg font-semibold ${totals.netto >= 0 ? 'text-income' : 'text-icon-pink'}`}>
+                    {totals.netto >= 0 ? '+' : ''}{totals.netto.toLocaleString("sv-SE")} kr
+                  </p>
+                </div>
+                <div className={`rounded-full p-2 ${totals.netto >= 0 ? 'bg-income-bg' : 'bg-expense-bg'}`}>
+                  {totals.netto >= 0 ? (
+                    <TrendingUp size={16} className="text-income" />
+                  ) : (
+                    <TrendingDown size={16} className="text-expense" />
+                  )}
+                </div>
               </div>
+              {(previousMonthTotals.totalIncomes > 0 || previousMonthTotals.totalExpenses > 0) && (
+                <div className="mt-3 pt-3 border-t border-border/40">
+                  <div className={`flex items-center gap-1.5 text-xs ${
+                    changes.nettoChange >= 0 ? 'text-income' : 'text-icon-pink'
+                  }`}>
+                    <span className="font-medium">
+                      {changes.nettoChange >= 0 ? '+' : ''}{changes.nettoChange.toLocaleString("sv-SE")} kr
+                    </span>
+                    <span className="text-muted-foreground">vs förra månaden</span>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
 
-        {/* Trend Visualization - 6 Month View */}
+        {/* Trend Visualization - 6 Month View with Recharts */}
         <Card className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold">Utveckling</CardTitle>
-            <p className="text-caption mt-1">Senaste 6 månaderna</p>
-          </CardHeader>
-          <CardContent className="p-5 pt-0">
-            {monthlyTrend.some(m => m.expenses > 0 || m.incomes > 0) ? (
-              <div className="space-y-5">
-                {monthlyTrend.map((item, idx) => {
-                  const expenseHeight = maxTrendValue > 0 ? (item.expenses / maxTrendValue) * 100 : 0;
-                  const incomeHeight = maxTrendValue > 0 ? (item.incomes / maxTrendValue) * 100 : 0;
-                  const isCurrentMonth = item.month === `${selectedYear}-${String(selectedMonth).padStart(2, '0')}`;
-
-                  return (
-                    <div 
-                      key={item.month} 
-                      className="space-y-2 animate-fade-in"
-                      style={{ animationDelay: `${120 + idx * 20}ms` }}
-                    >
-                      <div className="flex items-baseline justify-between">
-                        <span className={`text-sm font-medium ${isCurrentMonth ? 'text-foreground' : 'text-muted-foreground'}`}>
-                          {(() => {
-                            const monthParts = item.month.split('-');
-                            if (monthParts.length === 2) {
-                              const monthIndex = parseInt(monthParts[1]) - 1;
-                              if (monthIndex >= 0 && monthIndex < MONTHS.length) {
-                                return `${MONTHS[monthIndex]} ${monthParts[0]}`;
-                              }
-                            }
-                            return item.month; // Fallback to raw value if parsing fails
-                          })()}
-                        </span>
-                        <div className="flex gap-4 text-xs text-numeric">
-                          <span className="text-income">
-                            +{item.incomes.toLocaleString("sv-SE")}
-                          </span>
-                          <span className="text-expense">
-                            -{item.expenses.toLocaleString("sv-SE")}
-                          </span>
-                        </div>
-                      </div>
-                      <div className="flex gap-2 h-2.5">
-                        <div className="flex-1 bg-muted rounded-sm overflow-hidden">
-                          <div
-                            className="h-full bg-income rounded-sm transition-all duration-500"
-                            style={{ width: `${incomeHeight}%` }}
-                          />
-                        </div>
-                        <div className="flex-1 bg-muted rounded-sm overflow-hidden">
-                          <div
-                            className="h-full bg-expense rounded-sm transition-all duration-500"
-                            style={{ width: `${expenseHeight}%` }}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-                
-                {/* Legend */}
-                <div className="flex items-center justify-center gap-6 pt-3 border-t border-border/60">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-income" />
-                    <span className="text-caption">Inkomster</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-sm bg-expense" />
-                    <span className="text-caption">Utgifter</span>
-                  </div>
-                </div>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  <TrendingUp size={18} className="text-muted-foreground" />
+                  Utveckling
+                </CardTitle>
+                <p className="text-caption mt-1">Inkomster & utgifter senaste 6 månaderna</p>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-5 pt-2">
+            {monthlyTrend.some(m => m.expenses > 0 || m.incomes > 0) ? (
+              <TrendChart
+                data={monthlyTrend}
+                selectedMonth={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}`}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="rounded-full bg-muted p-3 mb-3">
@@ -510,95 +545,210 @@ export default function Analys() {
           </CardContent>
         </Card>
 
-        {/* Category Breakdown */}
-        <Card className="animate-fade-in" style={{ animationDelay: '120ms' }}>
-          <CardHeader className="pb-4">
-            <CardTitle className="text-base font-semibold">Utgifter per kategori</CardTitle>
-            <p className="text-caption mt-1">
-              {MONTHS[selectedMonth - 1]} {selectedYear}
-            </p>
-          </CardHeader>
-          <CardContent className="p-5 pt-0">
-            {expensesByCategory.length > 0 ? (
-              <div className="space-y-4">
-                {expensesByCategory.map((item, idx) => {
-                  const total = totals.totalExpenses + totals.totalIncomes;
-                  const percentage = total > 0
-                    ? (item.amount / total) * 100
-                    : 0;
-                  const isExpanded = expandedCategories.has(item.category);
-
-                  return (
-                    <div
-                      key={item.category}
-                      className="space-y-2 animate-fade-in"
-                      style={{ animationDelay: `${140 + idx * 12}ms` }}
-                    >
-                      <div
-                        className="flex items-baseline justify-between cursor-pointer hover:opacity-80 transition-opacity"
-                        onClick={() => toggleCategory(item.category)}
-                      >
-                        <div className="flex items-center gap-2">
-                          {isExpanded ? (
-                            <ChevronDown size={16} className="text-muted-foreground" />
-                          ) : (
-                            <ChevronRight size={16} className="text-muted-foreground" />
-                          )}
-                          <span className="text-sm font-medium text-foreground">
-                            {item.category}
-                          </span>
-                        </div>
-                        <span className="text-caption text-numeric">
-                          {item.amount.toLocaleString("sv-SE")} kr · {percentage.toFixed(0)}%
-                        </span>
-                      </div>
-                      <div className="h-2 bg-muted rounded-full overflow-hidden">
-                        <div
-                          className="h-full bg-foreground/80 rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        />
-                      </div>
-
-                      {isExpanded && (
-                        <div className="mt-3 ml-6 space-y-2 border-l-2 border-border/40 pl-3">
-                          {item.expenses.map((expense) => (
-                            <div
-                              key={expense.id}
-                              className="flex items-start justify-between py-2 text-sm"
-                            >
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground truncate">
-                                  {expense.description}
-                                </p>
-                                <p className="text-caption text-xs">
-                                  {new Date(expense.date).toLocaleDateString("sv-SE", {
-                                    year: "numeric",
-                                    month: "short",
-                                    day: "numeric"
-                                  })}
-                                </p>
-                              </div>
-                              <span className="text-numeric font-medium ml-3 flex-shrink-0">
-                                {expense.amount.toLocaleString("sv-SE")} kr
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+        {/* Netto Comparison Bar Chart */}
+        <Card className="mb-6 animate-fade-in" style={{ animationDelay: '120ms' }}>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-semibold flex items-center gap-2">
+                  {totals.netto >= 0 ? (
+                    <TrendingUp size={18} className="text-income" />
+                  ) : (
+                    <TrendingDown size={18} className="text-icon-pink" />
+                  )}
+                  Månadsresultat
+                </CardTitle>
+                <p className="text-caption mt-1">Netto per månad (inkomster - utgifter)</p>
               </div>
+            </div>
+          </CardHeader>
+          <CardContent className="p-5 pt-2">
+            {monthlyTrend.some(m => m.expenses > 0 || m.incomes > 0) ? (
+              <ComparisonBar
+                data={monthlyTrend}
+                selectedMonth={`${selectedYear}-${String(selectedMonth).padStart(2, '0')}`}
+              />
             ) : (
               <div className="flex flex-col items-center justify-center py-12">
                 <div className="rounded-full bg-muted p-3 mb-3">
-                  <ArrowUpRight size={20} className="text-muted-foreground" />
+                  <BarChart3 size={20} className="text-muted-foreground" />
                 </div>
-                <p className="text-caption">Inga utgifter för vald period</p>
+                <p className="text-caption">Ingen data tillgänglig</p>
               </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Category Breakdown with Donut Chart */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 animate-fade-in" style={{ animationDelay: '140ms' }}>
+          {/* Donut Chart Card */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <PieChart size={18} className="text-muted-foreground" />
+                Kategorifördelning
+              </CardTitle>
+              <p className="text-caption mt-1">
+                {MONTHS[selectedMonth - 1]} {selectedYear}
+              </p>
+            </CardHeader>
+            <CardContent className="p-5 pt-0">
+              {expensesByCategory.length > 0 ? (
+                <div className="space-y-4">
+                  <CategoryDonut
+                    data={expensesByCategory}
+                    totalExpenses={totals.totalExpenses}
+                  />
+                  <div className="pt-2 border-t border-border/40">
+                    <CategoryLegend
+                      data={expensesByCategory}
+                      totalExpenses={totals.totalExpenses}
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="rounded-full bg-muted p-3 mb-3">
+                    <PieChart size={20} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-caption">Inga utgifter för vald period</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Detailed Category List */}
+          <Card>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-semibold flex items-center gap-2">
+                <ArrowUpRight size={18} className="text-muted-foreground" />
+                Utgifter per kategori
+              </CardTitle>
+              <p className="text-caption mt-1">
+                Andel av inkomst • Klicka för detaljer
+              </p>
+            </CardHeader>
+            <CardContent className="p-5 pt-0">
+              {expensesByCategory.length > 0 ? (
+                <div className="space-y-3">
+                  {/* Summary: Total expenses as % of income */}
+                  {totals.totalIncomes > 0 && (
+                    <div className="p-3 rounded-lg bg-muted/50 mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-muted-foreground">Totala utgifter av inkomst</span>
+                        <span className={`text-number-sm font-semibold ${
+                          (totals.totalExpenses / totals.totalIncomes) * 100 > 100 ? 'text-icon-pink' :
+                          (totals.totalExpenses / totals.totalIncomes) * 100 > 80 ? 'text-amber-500' : 'text-income'
+                        }`}>
+                          {((totals.totalExpenses / totals.totalIncomes) * 100).toFixed(0)}%
+                        </span>
+                      </div>
+                      <div className="h-2 bg-muted rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            (totals.totalExpenses / totals.totalIncomes) * 100 > 100 ? 'bg-icon-pink' :
+                            (totals.totalExpenses / totals.totalIncomes) * 100 > 80 ? 'bg-amber-500' : 'bg-income'
+                          }`}
+                          style={{ width: `${Math.min((totals.totalExpenses / totals.totalIncomes) * 100, 100)}%` }}
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        {totals.netto >= 0
+                          ? `Sparar ${((totals.netto / totals.totalIncomes) * 100).toFixed(0)}% av inkomsten`
+                          : `Överskrider budget med ${((-totals.netto / totals.totalIncomes) * 100).toFixed(0)}%`
+                        }
+                      </p>
+                    </div>
+                  )}
+                  <div className="space-y-3 max-h-[320px] overflow-y-auto pr-2">
+                  {expensesByCategory.map((item, idx) => {
+                    const percentOfExpenses = totals.totalExpenses > 0
+                      ? (item.amount / totals.totalExpenses) * 100
+                      : 0;
+                    const percentOfIncome = totals.totalIncomes > 0
+                      ? (item.amount / totals.totalIncomes) * 100
+                      : 0;
+                    const isExpanded = expandedCategories.has(item.category);
+
+                    return (
+                      <div
+                        key={item.category}
+                        className="animate-fade-in"
+                        style={{ animationDelay: `${160 + idx * 12}ms` }}
+                      >
+                        <div
+                          className="flex items-center justify-between cursor-pointer hover:bg-muted/50 rounded-md px-2 py-2 -mx-2 transition-colors"
+                          onClick={() => toggleCategory(item.category)}
+                        >
+                          <div className="flex items-center gap-2 min-w-0">
+                            {isExpanded ? (
+                              <ChevronDown size={16} className="text-muted-foreground flex-shrink-0" />
+                            ) : (
+                              <ChevronRight size={16} className="text-muted-foreground flex-shrink-0" />
+                            )}
+                            <span className="text-sm font-medium text-foreground truncate">
+                              {item.category}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-3 flex-shrink-0">
+                            <span className={`text-number-sm font-medium ${percentOfIncome > 30 ? 'text-icon-pink' : percentOfIncome > 15 ? 'text-amber-500' : 'text-income'}`}>
+                              {percentOfIncome.toFixed(0)}% av inkomst
+                            </span>
+                            <span className="text-number-sm font-medium">
+                              {item.amount.toLocaleString("sv-SE")} kr
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress bar - shows percentage of income */}
+                        <div className="h-1.5 bg-muted rounded-full overflow-hidden mx-2 mt-1">
+                          <div
+                            className={`h-full rounded-full transition-all duration-500 ${percentOfIncome > 30 ? 'bg-icon-pink' : percentOfIncome > 15 ? 'bg-amber-500' : 'bg-income'}`}
+                            style={{ width: `${Math.min(percentOfIncome, 100)}%` }}
+                          />
+                        </div>
+
+                        {isExpanded && (
+                          <div className="mt-2 ml-6 space-y-1 border-l-2 border-border/40 pl-3 animate-fade-in">
+                            {item.expenses.map((expense) => (
+                              <div
+                                key={expense.id}
+                                className="flex items-start justify-between py-1.5 text-sm hover:bg-muted/30 rounded px-2 -mx-2 transition-colors"
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm text-foreground truncate">
+                                    {expense.description || "Ingen beskrivning"}
+                                  </p>
+                                  <p className="text-timestamp text-xs">
+                                    {new Date(expense.date).toLocaleDateString("sv-SE", {
+                                      day: "numeric",
+                                      month: "short"
+                                    })}
+                                  </p>
+                                </div>
+                                <span className="text-number-sm font-medium ml-3 flex-shrink-0">
+                                  {expense.amount.toLocaleString("sv-SE")} kr
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center py-12">
+                  <div className="rounded-full bg-muted p-3 mb-3">
+                    <ArrowUpRight size={20} className="text-muted-foreground" />
+                  </div>
+                  <p className="text-caption">Inga utgifter för vald period</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );

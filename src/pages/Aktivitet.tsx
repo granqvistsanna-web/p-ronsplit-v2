@@ -273,9 +273,7 @@ export default function Aktivitet() {
     description: string;
     date: string;
   }[]) => {
-    console.log('[Aktivitet handleImportExpenses] Received', newExpenses.length, 'expenses to import');
     await addExpenses(newExpenses);
-    console.log('[Aktivitet handleImportExpenses] Import complete');
   }, [addExpenses]);
 
   const handleImportIncomes = useCallback(async (newIncomes: IncomeInput[]) => {

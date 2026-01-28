@@ -2,36 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
 
-export type IncomeType = "salary" | "bonus" | "benefit" | "fkassa" | "bidrag" | "other";
-export type IncomeRepeat = "none" | "monthly";
+// Re-export types for backwards compatibility
+export type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
 
-export interface Income {
-  id: string;
-  group_id: string;
-  amount: number; // Amount in cents
-  recipient: string;
-  type: IncomeType;
-  note: string | null;
-  date: string;
-  repeat: IncomeRepeat;
-  included_in_split: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface IncomeInput {
-  group_id: string;
-  amount: number;
-  recipient: string;
-  type: IncomeType;
-  note?: string;
-  date: string;
-  repeat?: IncomeRepeat;
-  included_in_split?: boolean;
-}
-
-// Database row type (before casting to our Income interface)
+// Internal type for database row casting
 interface IncomeRow {
   id: string;
   group_id: string;
@@ -223,14 +199,10 @@ export function useIncomes(groupId?: string) {
         return;
       }
 
-      console.log("Updating income:", { incomeId, updates });
-      
       const { data, error, count } = await supabase.from("incomes")
         .update(updates)
         .eq("id", incomeId)
         .select();
-
-      console.log("Update result:", { data, error, count });
 
       if (error) throw error;
 

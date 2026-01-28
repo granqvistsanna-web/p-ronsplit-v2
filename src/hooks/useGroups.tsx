@@ -2,32 +2,15 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import type { Group, GroupMember } from "@/lib/types";
 
-export interface GroupMember {
-  id: string;
-  user_id: string;
-  name: string;
-}
+// Re-export types for backwards compatibility
+export type { Group, GroupMember } from "@/lib/types";
 
 interface PublicProfile {
   id: string;
   user_id: string;
   name: string;
-}
-
-interface GroupInsert {
-  name: string;
-  is_temporary: boolean;
-}
-
-export interface Group {
-  id: string;
-  name: string;
-  is_temporary: boolean;
-  created_by: string;
-  created_at: string;
-  invite_code: string;
-  members: GroupMember[];
 }
 
 const SELECTED_GROUP_KEY = "selected_group_id";

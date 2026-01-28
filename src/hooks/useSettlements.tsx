@@ -2,17 +2,10 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import type { Settlement } from "@/lib/types";
 
-export interface Settlement {
-  id: string;
-  group_id: string;
-  from_user: string;
-  to_user: string;
-  amount: number;
-  date: string;
-  month: string;
-  created_at: string;
-}
+// Re-export type for backwards compatibility
+export type { Settlement } from "@/lib/types";
 
 export function useSettlements(groupId?: string) {
   const { user } = useAuth();

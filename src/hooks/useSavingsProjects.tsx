@@ -3,27 +3,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
 import { handleDatabaseError } from "@/lib/errorHandling";
+import type { SavingsProject, SavingsContribution } from "@/lib/types";
 
-export interface SavingsProject {
-  id: string;
-  group_id: string;
-  name: string;
-  description: string | null;
-  target_amount: number;
-  created_by: string;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface SavingsContribution {
-  id: string;
-  project_id: string;
-  user_id: string;
-  amount: number;
-  date: string;
-  note: string | null;
-  created_at: string;
-}
+// Re-export types for backwards compatibility
+export type { SavingsProject, SavingsContribution } from "@/lib/types";
 
 export interface ProjectWithStats extends SavingsProject {
   current_amount: number;
@@ -47,8 +30,7 @@ export function useSavingsProjects(groupId?: string) {
     }
 
     try {
-      // Use any to bypass type checking since these tables may not exist yet
-      let query = (supabase as any).from("savings_projects").select("*");
+      let query = supabase.from("savings_projects").select("*");
 
       if (groupId) {
         query = query.eq("group_id", groupId);
@@ -71,11 +53,11 @@ export function useSavingsProjects(groupId?: string) {
       }
 
       // Fetch all contributions for these projects
-      const projectIds = projectsData?.map((p: any) => p.id) || [];
+      const projectIds = projectsData?.map((p) => p.id) || [];
       let contributionsData: SavingsContribution[] = [];
 
       if (projectIds.length > 0) {
-        const { data: contribData, error: contribError } = await (supabase as any)
+        const { data: contribData, error: contribError } = await supabase
           .from("savings_contributions")
           .select("*")
           .in("project_id", projectIds)
@@ -84,19 +66,26 @@ export function useSavingsProjects(groupId?: string) {
         if (contribError && contribError.code !== "42P01") {
           throw contribError;
         }
-        contributionsData = contribData || [];
+        contributionsData = (contribData || []) as SavingsContribution[];
       }
 
       // Calculate stats for each project
-      const projectsWithStats: ProjectWithStats[] = (projectsData || []).map((project: any) => {
-        const projectContributions = contributionsData.filter((c: any) => c.project_id === project.id);
-        const current_amount = projectContributions.reduce((sum: number, c: any) => sum + Number(c.amount), 0);
+      const projectsWithStats: ProjectWithStats[] = (projectsData || []).map((project) => {
+        const projectContributions = contributionsData.filter((c) => c.project_id === project.id);
+        const current_amount = projectContributions.reduce((sum, c) => sum + Number(c.amount), 0);
         const contribution_count = projectContributions.length;
         const last_contribution_date =
           projectContributions.length > 0 ? projectContributions[0].date : null;
 
         return {
-          ...project,
+          id: project.id,
+          group_id: project.group_id,
+          name: project.name,
+          description: project.description,
+          target_amount: project.target_amount,
+          created_by: project.created_by,
+          created_at: project.created_at,
+          updated_at: project.updated_at,
           current_amount,
           contribution_count,
           last_contribution_date,
@@ -131,7 +120,7 @@ export function useSavingsProjects(groupId?: string) {
     }
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("savings_projects")
         .insert({
           group_id: project.group_id,
@@ -185,7 +174,7 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("savings_projects")
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq("id", projectId)
@@ -229,7 +218,7 @@ export function useSavingsProjects(groupId?: string) {
       }
 
       // Delete from database - contributions will cascade delete
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("savings_projects")
         .delete()
         .eq("id", projectId)
@@ -260,7 +249,7 @@ export function useSavingsProjects(groupId?: string) {
     }
 
     try {
-      const { data, error } = await (supabase as any)
+      const { data, error } = await supabase
         .from("savings_contributions")
         .insert({
           project_id: contribution.project_id,
@@ -308,7 +297,7 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("savings_contributions")
         .update(updates)
         .eq("id", contributionId)
@@ -346,7 +335,7 @@ export function useSavingsProjects(groupId?: string) {
       }
 
       // Delete from database
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("savings_contributions")
         .delete()
         .eq("id", contributionId)
@@ -364,7 +353,7 @@ export function useSavingsProjects(groupId?: string) {
           onClick: async () => {
             try {
               // Restore the contribution
-              const { error: restoreError } = await (supabase as any)
+              const { error: restoreError } = await supabase
                 .from("savings_contributions")
                 .insert({
                   id: contributionToDelete.id,
