@@ -5,32 +5,33 @@
 See: .planning/PROJECT.md (updated 2026-01-27)
 
 **Core value:** Users can see where their money goes and whether they're on track with their budget — at a glance, with the ability to drill deeper without losing context.
-**Current focus:** Phase 2 - Enhanced Data Fetching
+**Current focus:** Phase 1 - Filter Foundation
 
 ## Current Position
 
-Phase: 2 of 6 (Enhanced Data Fetching)
+Phase: 1 of 6 (Filter Foundation)
 Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-01-28 — Completed 02-02-PLAN.md
+Last activity: 2026-01-28 — Completed 01-02-PLAN.md (MemberFilter component)
 
-Progress: [██░░░░░░░░] 33% (2 of 6 plans completed)
+Progress: [██████░░░░] 67% (4 of 6 current plans completed)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
+- Total plans completed: 4
 - Average duration: 2 min
-- Total execution time: 0.05 hours
+- Total execution time: 0.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
+| 1. Filter Foundation | 2 | 3 min | 2 min |
 | 2. Enhanced Data Fetching | 2 | 3 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 02-01 (1 min), 02-02 (2 min)
+- Last 5 plans: 01-01 (1 min), 01-02 (2 min), 02-01 (1 min), 02-02 (2 min)
 - Trend: Steady
 
 *Updated after each plan completion*
@@ -50,6 +51,8 @@ Recent decisions affecting current work:
 - Hierarchical query key structure enables granular cache invalidation (02-01)
 - Integer storage (ore) for all currency to prevent floating-point errors (02-02)
 - BIGINT database type for monetary amounts provides sufficient range (02-02)
+- Empty selectedIds represents "all members" state in MemberFilter (01-02)
+- Popover + Command pattern for searchable multi-select filters (01-02)
 
 ### Pending Todos
 
@@ -61,6 +64,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-28T11:25:42Z
-Stopped at: Completed 02-02-PLAN.md
+Last session: 2026-01-28T10:26:24Z
+Stopped at: Completed 01-02-PLAN.md (MemberFilter multi-select component)
 Resume file: None
