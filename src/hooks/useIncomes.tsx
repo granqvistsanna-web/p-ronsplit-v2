@@ -1,7 +1,9 @@
-import { useState, useEffect, useCallback } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { queryKeys } from "./queries/queryKeys";
+import type { IncomeFilters } from "./queries/types";
 import type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
 
 // Re-export types for backwards compatibility
@@ -22,29 +24,42 @@ interface IncomeRow {
   updated_at: string;
 }
 
-export function useIncomes(groupId?: string) {
+export function useIncomes(filters: IncomeFilters) {
   const { user } = useAuth();
-  const [incomes, setIncomes] = useState<Income[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
 
-  const fetchIncomes = useCallback(async () => {
-    if (!user) {
-      setIncomes([]);
-      setLoading(false);
-      return;
-    }
-
-    try {
-      // Use type assertion since types may not be regenerated yet
-      let query = supabase.from("incomes").select("*");
-
-      if (groupId) {
-        query = query.eq("group_id", groupId);
+  // Query for fetching incomes with filters
+  const query = useQuery({
+    queryKey: queryKeys.incomes.list(filters),
+    queryFn: async () => {
+      if (!user) {
+        return [];
       }
 
-      const { data, error } = await query.order("date", { ascending: false });
+      let query = supabase
+        .from("incomes")
+        .select("*")
+        .eq("group_id", filters.groupId)
+        .order("date", { ascending: false });
 
-      if (error) throw error;
+      // Apply date range filter
+      if (filters.dateRange) {
+        query = query
+          .gte("date", filters.dateRange.start.toISOString().split("T")[0])
+          .lte("date", filters.dateRange.end.toISOString().split("T")[0]);
+      }
+
+      // Apply member filter (recipient field for incomes)
+      if (filters.memberIds && filters.memberIds.length > 0) {
+        query = query.in("recipient", filters.memberIds);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error("Error fetching incomes:", error);
+        throw error;
+      }
 
       // Cast the database response to our Income type
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
@@ -53,28 +68,22 @@ export function useIncomes(groupId?: string) {
         repeat: row.repeat as IncomeRepeat,
       }));
 
-      setIncomes(typedIncomes);
-    } catch (error) {
-      console.error("Error fetching incomes:", error);
-      // Don't show error toast for empty results - only log to console
-      setIncomes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, groupId]);
+      return typedIncomes;
+    },
+    enabled: !!filters.groupId && !!user,
+    staleTime: 30 * 1000, // 30 seconds
+    gcTime: 5 * 60 * 1000, // 5 minutes
+  });
 
-  useEffect(() => {
-    fetchIncomes();
-  }, [fetchIncomes]);
+  // Mutation: Add single income
+  const addMutation = useMutation({
+    mutationFn: async (income: IncomeInput) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-  const addIncome = async (income: IncomeInput): Promise<Income | null> => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return null;
-    }
-
-    try {
-      const { data, error } = await supabase.from("incomes")
+      const { data, error } = await supabase
+        .from("incomes")
         .insert({
           group_id: income.group_id,
           amount: income.amount,
@@ -98,9 +107,6 @@ export function useIncomes(groupId?: string) {
         throw error;
       }
 
-      await fetchIncomes();
-      toast.success("Inkomst tillagd!");
-
       // Cast to our typed Income interface
       const row = data as IncomeRow;
       const typedIncome: Income = {
@@ -110,26 +116,30 @@ export function useIncomes(groupId?: string) {
       };
 
       return typedIncome;
-    } catch (error) {
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
+      toast.success("Inkomst tillagd!");
+    },
+    onError: (error) => {
       console.error("Error adding income:", error);
       toast.error("Kunde inte lägga till inkomst");
-      return null;
-    }
-  };
+    },
+  });
 
-  const addIncomes = async (incomesData: IncomeInput[]): Promise<Income[]> => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return [];
-    }
+  // Mutation: Add multiple incomes (batch)
+  const addIncomesMutation = useMutation({
+    mutationFn: async (incomesData: IncomeInput[]) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-    if (incomesData.length === 0) {
-      return [];
-    }
+      if (incomesData.length === 0) {
+        return [];
+      }
 
-    try {
       // Batch insert all incomes in a single query
-      const insertData = incomesData.map(income => ({
+      const insertData = incomesData.map((income) => ({
         group_id: income.group_id,
         amount: income.amount,
         recipient: income.recipient,
@@ -140,10 +150,7 @@ export function useIncomes(groupId?: string) {
         included_in_split: income.included_in_split ?? true,
       }));
 
-      const { data, error } = await supabase
-        .from("incomes")
-        .insert(insertData)
-        .select();
+      const { data, error } = await supabase.from("incomes").insert(insertData).select();
 
       if (error) {
         console.error("Supabase error details:", {
@@ -155,9 +162,6 @@ export function useIncomes(groupId?: string) {
         throw error;
       }
 
-      await fetchIncomes();
-      toast.success(`${incomesData.length} inkomster tillagda!`);
-
       // Cast to our typed Income interface
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
         ...row,
@@ -166,85 +170,91 @@ export function useIncomes(groupId?: string) {
       }));
 
       return typedIncomes;
-    } catch (error) {
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
+      toast.success(`${data.length} inkomster tillagda!`);
+    },
+    onError: (error) => {
       console.error("Error adding incomes:", error);
       toast.error("Kunde inte lägga till inkomster");
-      return [];
-    }
-  };
+    },
+  });
 
-  const updateIncome = async (
-    incomeId: string,
-    updates: Partial<Omit<Income, "id" | "created_at" | "updated_at">>
-  ) => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return;
-    }
+  // Mutation: Update income
+  const updateMutation = useMutation({
+    mutationFn: async ({
+      incomeId,
+      updates,
+    }: {
+      incomeId: string;
+      updates: Partial<Omit<Income, "id" | "created_at" | "updated_at">>;
+    }) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-    try {
       // First, verify the income exists and user has permission
-      const income = incomes.find(i => i.id === incomeId);
+      const income = query.data?.find((i) => i.id === incomeId);
       if (!income) {
-        toast.error("Inkomsten hittades inte");
-        return;
+        throw new Error("Inkomsten hittades inte");
       }
 
       // No client-side security check needed - RLS handles access control
       // Any group member can update incomes in their group
 
       // Additional check: Verify income belongs to current group if groupId is set
-      if (groupId && income.group_id !== groupId) {
-        toast.error("Inkomsten tillhör inte det valda hushållet");
-        return;
+      if (filters.groupId && income.group_id !== filters.groupId) {
+        throw new Error("Inkomsten tillhör inte det valda hushållet");
       }
 
-      const { data, error, count } = await supabase.from("incomes")
-        .update(updates)
-        .eq("id", incomeId)
-        .select();
+      const { error } = await supabase.from("incomes").update(updates).eq("id", incomeId);
 
       if (error) throw error;
-
-      await fetchIncomes();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
       toast.success("Inkomst uppdaterad!");
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error updating income:", error);
-      toast.error("Kunde inte uppdatera inkomst");
-    }
-  };
+      toast.error(error.message || "Kunde inte uppdatera inkomst");
+    },
+  });
 
-  const deleteIncome = async (incomeId: string) => {
-    if (!user) {
-      toast.error("Du måste vara inloggad");
-      return;
-    }
+  // Mutation: Delete income with undo
+  const deleteMutation = useMutation({
+    mutationFn: async (incomeId: string) => {
+      if (!user) {
+        throw new Error("Du måste vara inloggad");
+      }
 
-    try {
       // Find the income to delete (for potential undo)
-      const incomeToDelete = incomes.find((i) => i.id === incomeId);
+      const incomeToDelete = query.data?.find((i) => i.id === incomeId);
       if (!incomeToDelete) {
-        toast.error("Inkomsten hittades inte");
-        return;
+        throw new Error("Inkomsten hittades inte");
       }
 
       // No client-side security check needed - RLS handles access control
       // Any group member can delete incomes in their group
 
       // Additional check: Verify income belongs to current group if groupId is set
-      if (groupId && incomeToDelete.group_id !== groupId) {
-        toast.error("Inkomsten tillhör inte det valda hushållet");
-        return;
+      if (filters.groupId && incomeToDelete.group_id !== filters.groupId) {
+        throw new Error("Inkomsten tillhör inte det valda hushållet");
       }
 
       // Delete from database - RLS handles access control
-      const { error } = await supabase.from("incomes")
+      const { error } = await supabase
+        .from("incomes")
         .delete()
         .eq("id", incomeId); // RLS handles access control
 
       if (error) throw error;
 
-      await fetchIncomes();
+      return incomeToDelete;
+    },
+    onSuccess: (incomeToDelete) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
 
       // Show toast with undo action
       toast.success("Inkomst borttagen!", {
@@ -254,22 +264,21 @@ export function useIncomes(groupId?: string) {
           onClick: async () => {
             try {
               // Restore the income
-              const { error: restoreError } = await supabase.from("incomes")
-                .insert({
-                  id: incomeToDelete.id,
-                  group_id: incomeToDelete.group_id,
-                  amount: incomeToDelete.amount,
-                  recipient: incomeToDelete.recipient,
-                  type: incomeToDelete.type,
-                  note: incomeToDelete.note,
-                  date: incomeToDelete.date,
-                  repeat: incomeToDelete.repeat,
-                  included_in_split: incomeToDelete.included_in_split,
-                });
+              const { error: restoreError } = await supabase.from("incomes").insert({
+                id: incomeToDelete.id,
+                group_id: incomeToDelete.group_id,
+                amount: incomeToDelete.amount,
+                recipient: incomeToDelete.recipient,
+                type: incomeToDelete.type,
+                note: incomeToDelete.note,
+                date: incomeToDelete.date,
+                repeat: incomeToDelete.repeat,
+                included_in_split: incomeToDelete.included_in_split,
+              });
 
               if (restoreError) throw restoreError;
 
-              await fetchIncomes();
+              queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
               toast.success("Inkomst återställd!");
             } catch (restoreError) {
               console.error("Error restoring income:", restoreError);
@@ -278,19 +287,25 @@ export function useIncomes(groupId?: string) {
           },
         },
       });
-    } catch (error) {
+    },
+    onError: (error: any) => {
       console.error("Error deleting income:", error);
-      toast.error("Kunde inte ta bort inkomst");
-    }
-  };
+      toast.error(error.message || "Kunde inte ta bort inkomst");
+    },
+  });
 
   return {
-    incomes,
-    loading,
-    addIncome,
-    addIncomes,
-    updateIncome,
-    deleteIncome,
-    refetch: fetchIncomes,
+    incomes: query.data ?? [],
+    loading: query.isLoading,
+    addIncome: addMutation.mutateAsync,
+    addIncomes: addIncomesMutation.mutateAsync,
+    updateIncome: async (
+      incomeId: string,
+      updates: Partial<Omit<Income, "id" | "created_at" | "updated_at">>
+    ) => {
+      await updateMutation.mutateAsync({ incomeId, updates });
+    },
+    deleteIncome: deleteMutation.mutateAsync,
+    refetch: query.refetch,
   };
 }
