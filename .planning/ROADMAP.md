@@ -128,10 +128,10 @@ Plans:
   2. useIncomes hook in Analys.tsx receives dateRange and memberIds from useFilterParams
   3. Client-side filtering code (lines 38-53) is removed as no longer needed
   4. Charts display correctly with server-side filtered data
-**Plans**: 1
+**Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: Wire filters to hooks and remove client-side filtering
+- [ ] 07-01-PLAN.md — Wire filters to hooks and remove client-side filtering
 
 ## Progress
 
