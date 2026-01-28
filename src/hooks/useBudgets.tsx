@@ -22,6 +22,8 @@ export interface Budget {
   updated_at: string;
 }
 
+export type BudgetPeriod = "monthly" | "weekly" | "yearly";
+
 /**
  * React Query hook for budget CRUD operations.
  *

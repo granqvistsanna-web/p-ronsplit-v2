@@ -3,10 +3,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
+import { useBudgets } from "@/hooks/useBudgets";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useFilterParams } from "@/hooks/useFilterParams";
 import { BarChart3, ArrowUpRight, ChevronDown, ChevronRight, TrendingUp, TrendingDown, PieChart } from "lucide-react";
-import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection } from "@/components/analytics";
+import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection, BudgetOverviewSection, BudgetCategoryList } from "@/components/analytics";
+import { BudgetSettingsModal } from "@/components/BudgetSettingsModal";
 import { FilterBar } from "@/components/filters";
 import { format, subMonths } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -15,12 +17,21 @@ export default function Analys() {
   const { household, loading: householdLoading } = useGroups();
   const { expenses, loading: expensesLoading } = useExpenses({ groupId: household?.id || '' });
   const { incomes, loading: incomesLoading } = useIncomes({ groupId: household?.id || '' });
+  const { budgets, loading: budgetsLoading, saveBudget } = useBudgets({
+    groupId: household?.id || '',
+    period: 'yearly',
+  });
   const { sidebarWidth } = useSidebar();
   const { dateRange, memberIds } = useFilterParams();
 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
+  const [showBudgetSettings, setShowBudgetSettings] = useState(false);
 
   const loading = householdLoading || expensesLoading || incomesLoading;
+
+  // Current year and month for budget calculations
+  const currentYear = dateRange.end.getFullYear();
+  const currentMonth = dateRange.end.getMonth();
 
   // Filter data by dateRange and memberIds
   const filteredData = useMemo(() => {
@@ -256,6 +267,30 @@ export default function Analys() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Budget Overview Section */}
+        <div className="mb-6 animate-fade-in" style={{ animationDelay: '90ms' }}>
+          <BudgetOverviewSection
+            budgets={budgets}
+            expenses={expenses}
+            year={currentYear}
+            period="yearly"
+            onEditBudgets={() => setShowBudgetSettings(true)}
+            loading={budgetsLoading}
+          />
+        </div>
+
+        {/* Budget by Category */}
+        {budgets.length > 0 && (
+          <div className="mb-6 animate-fade-in" style={{ animationDelay: '95ms' }}>
+            <BudgetCategoryList
+              budgets={budgets}
+              expenses={expenses}
+              year={currentYear}
+              loading={budgetsLoading}
+            />
+          </div>
+        )}
 
         {/* Trend Visualization - 6 Month View with Recharts */}
         <Card className="mb-6 animate-fade-in" style={{ animationDelay: '100ms' }}>
@@ -499,6 +534,21 @@ export default function Analys() {
           </Card>
         </div>
       </main>
+
+      {/* Budget Settings Modal */}
+      <BudgetSettingsModal
+        isOpen={showBudgetSettings}
+        onClose={() => setShowBudgetSettings(false)}
+        onSave={async (budgetsToSave) => {
+          for (const budget of budgetsToSave) {
+            await saveBudget(budget);
+          }
+        }}
+        groupId={household?.id || ''}
+        existingBudgets={budgets}
+        expenses={expenses}
+        period="yearly"
+      />
     </div>
   );
 }
