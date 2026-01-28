@@ -34,7 +34,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 **Plans**: TBD
 
 Plans:
-- [ ] TBD
+- [x] 01-01: useFilterParams hook and date presets (2026-01-28)
+- [ ] 01-02: FilterBar component
+- [ ] 01-03: Integration and polish
 
 ### Phase 2: Enhanced Data Fetching
 **Goal**: All analytics data reflects selected filters from Phase 1
@@ -117,7 +119,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Filter Foundation | 0/TBD | Not started | - |
+| 1. Filter Foundation | 1/3 | In progress | - |
 | 2. Enhanced Data Fetching | 0/TBD | Not started | - |
 | 3. Category Visualization | 0/TBD | Not started | - |
 | 4. Drill-Down Panels | 0/TBD | Not started | - |
