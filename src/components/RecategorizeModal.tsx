@@ -6,6 +6,8 @@ import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { Expense } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Confetti } from "@/components/Confetti";
+import { SuccessAnimation } from "@/components/SuccessAnimation";
 
 interface CategorySuggestion {
   id: string;
@@ -32,6 +34,7 @@ export function RecategorizeModal({
   const [suggestions, setSuggestions] = useState<CategorySuggestion[]>([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState<Set<string>>(new Set());
   const [applying, setApplying] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
 
   // Filter to only uncategorized expenses (övrigt)
   const uncategorizedExpenses = expenses.filter(e => e.category === "ovrigt");
@@ -140,12 +143,15 @@ export function RecategorizeModal({
     setApplying(true);
     try {
       await onApply(updates);
+      setShowCelebration(true);
       toast.success(`${updates.length} utgifter uppdaterade!`);
-      handleClose();
+      setTimeout(() => {
+        setShowCelebration(false);
+        handleClose();
+      }, 1800);
     } catch (err) {
       console.error("Apply error:", err);
       toast.error("Kunde inte uppdatera utgifter");
-    } finally {
       setApplying(false);
     }
   };
@@ -154,6 +160,8 @@ export function RecategorizeModal({
     setStep("idle");
     setSuggestions([]);
     setSelectedSuggestions(new Set());
+    setApplying(false);
+    setShowCelebration(false);
     onClose();
   };
 
@@ -165,6 +173,14 @@ export function RecategorizeModal({
 
   return (
     <AnimatePresence>
+      {/* Celebration effects */}
+      <Confetti isActive={showCelebration} particleCount={60} />
+      <SuccessAnimation
+        isVisible={showCelebration}
+        type="sparkles"
+        message="Kategorisering klar! ✨"
+      />
+      
       {isOpen && (
         <>
           <motion.div
