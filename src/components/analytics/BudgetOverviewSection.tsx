@@ -4,12 +4,13 @@ import { Button } from "@/components/ui/button";
 import {
   calculateBudgetMetrics,
   calculateBudgetSummary,
+  calculateBudgetPacing,
   getBudgetProgressColor,
   formatBudgetAmount,
 } from "@/lib/budgetUtils";
 import type { Budget } from "@/hooks/useBudgets";
 import type { Expense } from "@/lib/types";
-import { Settings2, Wallet, TrendingDown, PiggyBank } from "lucide-react";
+import { Settings2, Wallet, TrendingDown, PiggyBank, TrendingUp } from "lucide-react";
 
 interface BudgetOverviewSectionProps {
   budgets: Budget[];
@@ -36,6 +37,16 @@ export function BudgetOverviewSection({
   );
 
   const summary = useMemo(() => calculateBudgetSummary(metrics), [metrics]);
+
+  const overallPacing = useMemo(() => {
+    if (summary.totalBudget === 0) return null;
+    return calculateBudgetPacing(
+      summary.totalSpent,
+      summary.totalBudget,
+      year,
+      month
+    );
+  }, [summary.totalSpent, summary.totalBudget, year, month]);
 
   // No budgets set yet - show setup prompt
   if (budgets.length === 0 && !loading) {
@@ -154,21 +165,27 @@ export function BudgetOverviewSection({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="text-sm font-medium">Total budgetförbrukning</span>
-              <span
-                className={`text-xs px-2 py-0.5 rounded-full ${
-                  summary.status === "on-track"
-                    ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
-                    : summary.status === "warning"
-                    ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
-                    : "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400"
-                }`}
-              >
-                {summary.status === "on-track"
-                  ? "På rätt väg"
-                  : summary.status === "warning"
-                  ? "Varning"
-                  : "Överskriden"}
-              </span>
+              {overallPacing && (
+                <span
+                  className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+                    overallPacing.pacing === "on-track"
+                      ? "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400"
+                      : "bg-yellow-100 text-yellow-700 dark:bg-yellow-950 dark:text-yellow-400"
+                  }`}
+                >
+                  {overallPacing.pacing === "on-track" ? (
+                    <>
+                      <TrendingDown size={12} />
+                      På rätt väg
+                    </>
+                  ) : (
+                    <>
+                      <TrendingUp size={12} />
+                      Over budget
+                    </>
+                  )}
+                </span>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <span className="text-number-sm font-semibold">
