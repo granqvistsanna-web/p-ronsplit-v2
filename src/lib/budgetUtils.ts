@@ -5,7 +5,8 @@
 
 import type { Budget } from "@/hooks/useBudgets";
 import type { Expense, Category } from "./types";
-import { DEFAULT_CATEGORIES, öreToKr } from "./types";
+import { DEFAULT_CATEGORIES } from "./types";
+import { toKronor } from "./currency";
 import { getDate, getDaysInMonth, differenceInDays } from "date-fns";
 
 /**
@@ -264,7 +265,7 @@ export function calculateBudgetMetrics(
     .filter((budget) => budget.enabled)
     .map((budget) => {
       const categoryInfo = getCategoryInfo(budget.category);
-      const budgetAmount = öreToKr(budget.amount); // Convert from öre to kr
+      const budgetAmount = toKronor(budget.amount); // Convert from öre to kr
       const spent = spentByCategory[budget.category.toLowerCase()] || 0;
       const remaining = budgetAmount - spent;
       const percentUsed = budgetAmount > 0 ? (spent / budgetAmount) * 100 : 0;

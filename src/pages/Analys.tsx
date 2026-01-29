@@ -1,5 +1,5 @@
 import { useState, useMemo } from "react";
-import { öreToKr } from "@/lib/types";
+import { toKronor } from "@/lib/currency";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
@@ -45,7 +45,7 @@ export default function Analys() {
   // Calculate totals (server-side filtered data)
   const totals = useMemo(() => {
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = incomes.reduce((sum, i) => sum + öreToKr(i.amount), 0);
+    const totalIncomes = incomes.reduce((sum, i) => sum + toKronor(i.amount), 0);
     const netto = totalIncomes - totalExpenses;
 
     return { totalExpenses, totalIncomes, netto };
@@ -97,7 +97,7 @@ export default function Analys() {
       const incDate = new Date(i.date);
       const monthKey = `${incDate.getFullYear()}-${String(incDate.getMonth() + 1).padStart(2, '0')}`;
       const existing = groups.get(monthKey) || { expenses: 0, incomes: 0 };
-      existing.incomes += öreToKr(i.amount);
+      existing.incomes += toKronor(i.amount);
       groups.set(monthKey, existing);
     });
 

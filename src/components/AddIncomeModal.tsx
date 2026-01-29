@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { IncomeType, IncomeRepeat, IncomeInput, Income } from "@/hooks/useIncomes";
 import { getIncomeTypeIcon, getIncomeTypeLabel } from "@/lib/incomeUtils";
+import { toOre } from "@/lib/currency";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -73,7 +74,7 @@ export function AddIncomeModal({
   };
 
   const checkForDuplicates = async (): Promise<PotentialDuplicate[]> => {
-    const amountCents = Math.round(parseFloat(amount) * 100);
+    const amountCents = toOre(parseFloat(amount));
     
     try {
       const { data, error } = await supabase.functions.invoke("check-duplicates", {
@@ -102,7 +103,7 @@ export function AddIncomeModal({
   const saveIncome = async (saveAndAddAnother: boolean) => {
     if (!user) return;
 
-    const amountCents = Math.round(parseFloat(amount) * 100);
+    const amountCents = toOre(parseFloat(amount));
 
     const result = await onAdd({
       group_id: groupId,

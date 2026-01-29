@@ -4,7 +4,8 @@ import { Upload, Loader2, ArrowUpRight, ArrowDownLeft, Image, FileText, X, Spark
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { parseFile, ParsedTransaction, ParseResult } from "@/lib/fileParser";
-import { DEFAULT_CATEGORIES, krToÖre } from "@/lib/types";
+import { DEFAULT_CATEGORIES } from "@/lib/types";
+import { toOre } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -442,7 +443,7 @@ export function ImportModal({
       })
       .map(t => ({
         group_id: groupId,
-        amount: krToÖre(t.amount),
+        amount: toOre(t.amount),
         recipient: currentUserId,
         type: "other" as IncomeType,
         note: t.description?.trim() || "",

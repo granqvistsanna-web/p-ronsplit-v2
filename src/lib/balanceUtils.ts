@@ -2,7 +2,7 @@ import { GroupMember } from "@/hooks/useGroups";
 import { Expense } from "@/hooks/useExpenses";
 import { Settlement } from "@/hooks/useSettlements";
 import { Income } from "@/hooks/useIncomes";
-import { öreToKr } from "@/lib/types";
+import { toKronor } from "@/lib/currency";
 
 export interface Balance {
   userId: string;
@@ -68,7 +68,7 @@ export function calculateBalance(
   // Sum incomes received by each member (only included_in_split)
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
-    const amountKr = öreToKr(income.amount);
+    const amountKr = toKronor(income.amount);
     if (!amountKr || amountKr <= 0 || !Number.isFinite(amountKr)) {
       return;
     }
@@ -163,7 +163,7 @@ export function getBalanceBreakdown(
   // Sum incomes
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
-    const amountKr = öreToKr(income.amount);
+    const amountKr = toKronor(income.amount);
     if (!amountKr || amountKr <= 0) return;
     if (memberData[income.recipient]) {
       memberData[income.recipient].incomeReceived += amountKr;

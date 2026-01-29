@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Expense } from "@/hooks/useExpenses";
 import { Income } from "@/hooks/useIncomes";
 import { GroupMember } from "@/hooks/useGroups";
-import { öreToKr } from "@/lib/types";
+import { toKronor } from "@/lib/currency";
 
 interface MemberSummaryCardProps {
   expenses: Expense[];
@@ -28,7 +28,7 @@ export const MemberSummaryCard = ({
       // Sum incomes received by this member (amount is in öre)
       const totalIncomes = incomes
         .filter((i) => i.recipient === member.user_id)
-        .reduce((sum, i) => sum + öreToKr(i.amount), 0);
+        .reduce((sum, i) => sum + toKronor(i.amount), 0);
 
       return {
         ...member,
@@ -72,7 +72,7 @@ export const MemberSummaryCard = ({
                       Inkomst
                     </p>
                     <p className="text-number-lg text-income">
-                      {member.totalIncomes.toLocaleString("sv-SE")} kr
+                      {Math.round(member.totalIncomes).toLocaleString("sv-SE")} kr
                     </p>
                   </div>
 
@@ -82,7 +82,7 @@ export const MemberSummaryCard = ({
                       Utgift
                     </p>
                     <p className="text-number-lg text-expense">
-                      {member.totalExpenses.toLocaleString("sv-SE")} kr
+                      {Math.round(member.totalExpenses).toLocaleString("sv-SE")} kr
                     </p>
                   </div>
                 </div>

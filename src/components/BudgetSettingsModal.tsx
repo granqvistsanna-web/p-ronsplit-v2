@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
-import { krToÖre, öreToKr } from "@/lib/types";
+import { toOre, toKronor } from "@/lib/currency";
 import { getSuggestedBudget } from "@/lib/budgetUtils";
 import type { Budget, BudgetPeriod } from "@/hooks/useBudgets";
 import type { Expense } from "@/lib/types";
@@ -76,7 +76,7 @@ export function BudgetSettingsModal({
           categoryId: category.id,
           categoryName: category.name,
           icon: category.icon,
-          amount: existing ? öreToKr(existing.amount).toString() : "",
+          amount: existing ? toKronor(existing.amount).toString() : "",
           enabled: existing?.enabled ?? true,
           isCustom: false,
         };
@@ -97,7 +97,7 @@ export function BudgetSettingsModal({
           categoryId: budget.category,
           categoryName: budget.category,
           icon: budget.icon || "📦", // Use stored icon or default to 📦
-          amount: öreToKr(budget.amount).toString(),
+          amount: toKronor(budget.amount).toString(),
           enabled: budget.enabled,
           isCustom: true,
         });
@@ -190,7 +190,7 @@ export function BudgetSettingsModal({
       .map((input) => ({
         group_id: groupId,
         category: input.categoryId,
-        amount: krToÖre(parseFloat(input.amount)),
+        amount: toOre(parseFloat(input.amount)),
         enabled: input.enabled,
         period: period,
         icon: input.isCustom ? input.icon : null, // Only save icon for custom categories

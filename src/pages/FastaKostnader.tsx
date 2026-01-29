@@ -7,7 +7,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { RecurringSummaryCard, RecurringItemCard } from "@/components/recurring";
 import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
-import { DEFAULT_CATEGORIES, öreToKr } from "@/lib/types";
+import { DEFAULT_CATEGORIES } from "@/lib/types";
+import { toKronor } from "@/lib/currency";
 import { getIncomeTypeLabel, getIncomeTypeIcon } from "@/lib/incomeUtils";
 import { Repeat } from "lucide-react";
 
@@ -54,7 +55,7 @@ export default function FastaKostnader() {
 
   const getMonthlyIncomeAmount = (income: Income): number => {
     // Income is stored in öre
-    return öreToKr(income.amount);
+    return toKronor(income.amount);
   };
 
   // Group expenses by category
@@ -366,7 +367,7 @@ const IncomeGroupCard = memo(function IncomeGroupCard({
           {items.map((item) => {
             if (item.type !== "income") return null;
             const income = item.data;
-            const amount = öreToKr(income.amount);
+            const amount = toKronor(income.amount);
             const memberName = getMemberName(income.recipient);
 
             return (

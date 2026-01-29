@@ -71,29 +71,22 @@ export type IncomeRepeat = "none" | "monthly";
  * IMPORTANT: Income amounts are stored in CENTS (öre) in the database.
  * This differs from expenses which are stored in kr.
  *
- * When displaying: divide by ÖRE_PER_KR (100)
- * When storing: multiply by ÖRE_PER_KR (100)
+ * When displaying: use toKronor() from @/lib/currency
+ * When storing: use toOre() from @/lib/currency
  *
- * Use the helper functions below for conversions.
+ * @see @/lib/currency for conversion functions
  */
-export const ÖRE_PER_KR = 100;
-
-/** Convert öre (cents) to kr for display */
-export const öreToKr = (öre: number): number => öre / ÖRE_PER_KR;
-
-/** Convert kr to öre (cents) for storage */
-export const krToÖre = (kr: number): number => Math.round(kr * ÖRE_PER_KR);
 
 /**
  * Income entry.
  *
  * NOTE: The `amount` field is stored in CENTS (öre), not kr.
- * Use öreToKr(income.amount) to convert for display.
+ * Use toKronor(income.amount) from @/lib/currency to convert for display.
  */
 export interface Income {
   id: string;
   group_id: string;
-  /** Amount in öre (cents). Use öreToKr() for display. */
+  /** Amount in öre (cents). Use toKronor() for display. */
   amount: number;
   recipient: string;
   type: IncomeType;
@@ -109,11 +102,11 @@ export interface Income {
  * Input type for creating new incomes.
  *
  * NOTE: The `amount` field should be in CENTS (öre), not kr.
- * Use krToÖre() when converting user input.
+ * Use toOre() from @/lib/currency when converting user input.
  */
 export interface IncomeInput {
   group_id: string;
-  /** Amount in öre (cents). Use krToÖre() to convert from user input. */
+  /** Amount in öre (cents). Use toOre() to convert from user input. */
   amount: number;
   recipient: string;
   type: IncomeType;

@@ -4,7 +4,7 @@ import { Repeat } from "lucide-react";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import type { Expense, GroupMember } from "@/lib/types";
 import type { Income } from "@/hooks/useIncomes";
-import { öreToKr } from "@/lib/types";
+import { toKronor } from "@/lib/currency";
 
 type RecurringItem =
   | { type: "expense"; data: Expense }
@@ -59,7 +59,7 @@ export const RecurringItemCard = memo(function RecurringItemCard({
       return item.data.amount;
     }
     // Income is stored in öre
-    return öreToKr(item.data.amount);
+    return toKronor(item.data.amount);
   };
 
   const getMonthlyAmount = (item: RecurringItem): number => {
