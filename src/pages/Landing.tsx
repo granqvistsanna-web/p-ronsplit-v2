@@ -9,23 +9,23 @@ const Landing = () => {
   const features = [
     {
       icon: Users,
-      title: "Dela med gruppen",
-      description: "Bjud in vänner, familj eller kollegor. Alla ser samma uppdateringar i realtid."
+      title: "Dela med vem du vill",
+      description: "Lägg till familjen, kompisgänget eller kollegorna. Alla ser samma sak."
     },
     {
       icon: Calculator,
-      title: "Automatiska beräkningar",
-      description: "Slipp räkna själv. Vi visar direkt vem som är skyldig vem."
+      title: "Vi räknar åt dig",
+      description: "Vem är skyldig vem? Vi håller koll så du slipper."
     },
     {
       icon: PieChart,
-      title: "Tydlig översikt",
-      description: "Se var pengarna går med enkla kategorier och sammanställningar."
+      title: "Koll på läget",
+      description: "Se vart pengarna tar vägen, månad för månad."
     },
     {
       icon: Bell,
-      title: "Håll koll",
-      description: "Transparent historik och smidiga avräkningar när det passar dig."
+      title: "Gör upp när det passar",
+      description: "Swisha varandra när ni känner för det. Historiken finns kvar."
     }
   ];
 
@@ -49,12 +49,12 @@ const Landing = () => {
       <section className="container max-w-3xl mx-auto px-6 pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="space-y-6">
           <h1 className="text-4xl md:text-5xl font-medium text-foreground tracking-tight leading-tight">
-            Dela utgifter,<br />
-            utan krångel.
+            Slipp bråka<br />
+            om vem som betalade.
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">
-            Päronsplit gör det enkelt att hålla koll på gemensamma utgifter. 
-            Transparent, snabbt och alltid rättvist.
+            Håll koll på gemensamma utgifter med familjen, kompisarna eller sambon. 
+            Enkelt och rättvist.
           </p>
           <div className="pt-4">
             <Button
@@ -62,7 +62,7 @@ const Landing = () => {
               onClick={() => navigate("/auth")}
               className="bg-foreground text-background hover:bg-foreground/90 h-11 px-6"
             >
-              Kom igång gratis
+              Testa gratis
             </Button>
           </div>
         </div>
@@ -94,10 +94,10 @@ const Landing = () => {
       <section className="container max-w-3xl mx-auto px-6 py-20 md:py-28">
         <div className="text-center space-y-6">
           <h2 className="text-2xl md:text-3xl font-medium text-foreground tracking-tight">
-            Redo att börja?
+            Sugen på att testa?
           </h2>
           <p className="text-muted-foreground">
-            Skapa ett konto och bjud in din grupp. Helt gratis.
+            Det tar en minut att komma igång. Kostar inget.
           </p>
           <Button
             size="lg"
