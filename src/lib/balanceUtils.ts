@@ -56,6 +56,7 @@ export function calculateBalance(
   });
 
   // Sum expenses paid by each member
+  // NOTE: Expenses are stored in kr (kronor) in the database
   expenses.forEach((expense) => {
     if (!expense.amount || expense.amount <= 0 || !Number.isFinite(expense.amount)) {
       return;
@@ -66,9 +67,10 @@ export function calculateBalance(
   });
 
   // Sum incomes received by each member (only included_in_split)
+  // NOTE: Incomes are stored in öre (cents) in the database, so we convert to kr
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
-    const amountKr = toKronor(income.amount);
+    const amountKr = toKronor(income.amount); // öre -> kr
     if (!amountKr || amountKr <= 0 || !Number.isFinite(amountKr)) {
       return;
     }
@@ -153,6 +155,7 @@ export function getBalanceBreakdown(
   });
 
   // Sum expenses
+  // NOTE: Expenses are stored in kr (kronor) in the database
   expenses.forEach((expense) => {
     if (!expense.amount || expense.amount <= 0) return;
     if (memberData[expense.paid_by]) {
@@ -161,9 +164,10 @@ export function getBalanceBreakdown(
   });
 
   // Sum incomes
+  // NOTE: Incomes are stored in öre (cents) in the database, so we convert to kr
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
-    const amountKr = toKronor(income.amount);
+    const amountKr = toKronor(income.amount); // öre -> kr
     if (!amountKr || amountKr <= 0) return;
     if (memberData[income.recipient]) {
       memberData[income.recipient].incomeReceived += amountKr;

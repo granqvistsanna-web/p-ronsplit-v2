@@ -109,7 +109,15 @@ export function formatCurrency(ore: number, options?: { showDecimals?: boolean }
  * parseInputToOre("1 234,56") // => 123456 (handles thousand separator)
  * parseInputToOre("abc") // => null
  * parseInputToOre("") // => null
+ * parseInputToOre("1e10") // => null (rejects scientific notation)
+ * parseInputToOre("999999999999") // => null (rejects amounts over 1 billion kr)
  */
+
+// Maximum allowed amount: 1 billion kronor (prevents overflow and unrealistic amounts)
+const MAX_AMOUNT_KR = 1_000_000_000;
+// Minimum allowed amount: -1 billion kronor (for refunds/corrections)
+const MIN_AMOUNT_KR = -1_000_000_000;
+
 export function parseInputToOre(input: string): number | null {
   if (!input || typeof input !== 'string') {
     return null;
@@ -121,11 +129,23 @@ export function parseInputToOre(input: string): number | null {
   // Replace comma with period for parsing
   cleaned = cleaned.replace(',', '.');
 
+  // Security: Reject scientific notation (e.g., 1e308, 1E10)
+  // This prevents potential overflow attacks
+  if (/[eE]/.test(cleaned)) {
+    return null;
+  }
+
   // Try to parse as number
   const parsed = parseFloat(cleaned);
 
   // Validate: must be a valid number and not NaN
   if (isNaN(parsed) || !isFinite(parsed)) {
+    return null;
+  }
+
+  // Security: Reject unreasonably large or small amounts
+  // This prevents integer overflow and ensures realistic financial values
+  if (parsed > MAX_AMOUNT_KR || parsed < MIN_AMOUNT_KR) {
     return null;
   }
 

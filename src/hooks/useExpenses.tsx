@@ -320,34 +320,39 @@ export function useExpenses(filters: ExpenseFilters) {
         duration: 5000,
         action: {
           label: "Ångra",
-          onClick: async () => {
-            try {
-              // Restore the expense
-              const restoreData: TablesInsert<'expenses'> = {
-                id: expenseToDelete.id,
-                group_id: expenseToDelete.group_id,
-                amount: expenseToDelete.amount,
-                paid_by: expenseToDelete.paid_by,
-                category: expenseToDelete.category,
-                description: expenseToDelete.description,
-                date: expenseToDelete.date,
-                splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
-                repeat: expenseToDelete.repeat || "none",
-              };
-              const { error: restoreError } = await supabase.from("expenses").insert(restoreData);
+          onClick: (() => {
+            let restored = false;
+            return async () => {
+              if (restored) return; // Prevent double-click
+              restored = true;
+              try {
+                // Restore the expense
+                const restoreData: TablesInsert<'expenses'> = {
+                  id: expenseToDelete.id,
+                  group_id: expenseToDelete.group_id,
+                  amount: expenseToDelete.amount,
+                  paid_by: expenseToDelete.paid_by,
+                  category: expenseToDelete.category,
+                  description: expenseToDelete.description,
+                  date: expenseToDelete.date,
+                  splits: expenseToDelete.splits ? JSON.stringify(expenseToDelete.splits) : null,
+                  repeat: expenseToDelete.repeat || "none",
+                };
+                const { error: restoreError } = await supabase.from("expenses").insert(restoreData);
 
-              if (restoreError) throw restoreError;
+                if (restoreError) throw restoreError;
 
-              queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
-              toast.success("Utgift återställd!");
-            } catch (restoreError) {
-              console.error("Error restoring expense:", restoreError);
-              // Provide more context for debugging while keeping user message simple
-              const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
-              console.error("Restore error details:", errorDetail);
-              toast.error("Kunde inte återställa utgift. Försök igen eller kontakta support.");
-            }
-          },
+                queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+                toast.success("Utgift återställd!");
+              } catch (restoreError) {
+                console.error("Error restoring expense:", restoreError);
+                // Provide more context for debugging while keeping user message simple
+                const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
+                console.error("Restore error details:", errorDetail);
+                toast.error("Kunde inte återställa utgift. Försök igen eller kontakta support.");
+              }
+            };
+          })(),
         },
       });
     },

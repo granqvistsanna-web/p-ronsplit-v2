@@ -328,8 +328,8 @@ export function useGroups() {
     }
 
     try {
-      // Generate a new invite code directly
-      const newCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+      // Generate a cryptographically secure unique invite code
+      const newCode = await generateUniqueInviteCode();
       
       const { error } = await supabase
         .from("groups")

@@ -26,10 +26,12 @@ export function useSettlements(groupId?: string) {
   const [loading, setLoading] = useState(true);
 
   const fetchSettlements = useCallback(async () => {
+    let isMounted = true;
+
     if (!user) {
       setSettlements([]);
       setLoading(false);
-      return;
+      return () => { isMounted = false; };
     }
 
     try {
@@ -48,17 +50,32 @@ export function useSettlements(groupId?: string) {
         ...s,
         amount: s.amount != null ? toKronor(s.amount) : 0,
       }));
-      setSettlements(settlementsInKronor);
+      if (isMounted) {
+        setSettlements(settlementsInKronor);
+      }
     } catch (error) {
       console.error("Error fetching settlements:", error);
       toast.error("Kunde inte hämta avräkningar");
     } finally {
-      setLoading(false);
+      if (isMounted) {
+        setLoading(false);
+      }
     }
+
+    return () => { isMounted = false; };
   }, [user, groupId]);
 
   useEffect(() => {
-    fetchSettlements();
+    let cleanup: (() => void) | undefined;
+
+    const run = async () => {
+      cleanup = await fetchSettlements();
+    };
+    run();
+
+    return () => {
+      cleanup?.();
+    };
   }, [fetchSettlements]);
 
   const addSettlement = async (settlement: {
