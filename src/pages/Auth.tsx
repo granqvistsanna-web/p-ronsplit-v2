@@ -204,18 +204,18 @@ const Auth = () => {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      // Always show the same message regardless of whether the email exists
+      // to prevent account enumeration attacks
+      await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
 
-      if (error) {
-        toast.error("Kunde inte skicka återställningslänk. Försök igen.");
-      } else {
-        setResetEmailSent(true);
-        toast.success("Återställningslänk skickad till din e-post!");
-      }
+      setResetEmailSent(true);
+      toast.success("Om e-postadressen finns i vårt system skickas ett återställningsmail.");
     } catch (error) {
-      toast.error("Ett oväntat fel uppstod. Försök igen.");
+      // Still show success message to prevent account enumeration
+      setResetEmailSent(true);
+      toast.success("Om e-postadressen finns i vårt system skickas ett återställningsmail.");
     } finally {
       setIsSubmitting(false);
     }
@@ -271,7 +271,8 @@ const Auth = () => {
       } else {
         const { error } = await signUp(email, password, name);
         if (error) {
-          toast.error("Registreringen misslyckades. Försök igen eller kontakta support.");
+          // Generic message to prevent account enumeration
+          toast.error("Inloggningen misslyckades. Kontrollera dina uppgifter och försök igen.");
         } else {
           toast.success("Verifieringslänk skickad till din e-post");
           navigate("/verify-email");

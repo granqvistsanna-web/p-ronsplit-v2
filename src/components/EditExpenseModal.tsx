@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { GroupMember } from "@/hooks/useGroups";
 import { Expense, ExpenseSplit, ExpenseRepeat } from "@/hooks/useExpenses";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
+import { SPLIT_TOLERANCE_KR } from "@/lib/constants";
 import { RecurringSection, RepeatInterval } from "@/components/RecurringSection";
 import { DeleteConfirmationDialog } from "@/components/DeleteConfirmationDialog";
 import { toast } from "sonner";
@@ -59,29 +60,38 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
   useEffect(() => {
     if (useCustomSplit && amount && members.length > 0) {
       const totalAmount = parseFloat(amount) || 0;
-      const currentSum = calculateSplitSum();
 
-      // If splits are empty or don't exist for all members, initialize with equal split
-      const hasAllMembers = members.every(m => m.user_id in customSplits);
-      if (Object.keys(customSplits).length === 0 || !hasAllMembers) {
-        const perPerson = totalAmount / members.length;
-        const splits: Record<string, string> = {};
-        members.forEach((member) => {
-          splits[member.user_id] = perPerson.toFixed(2);
-        });
-        setCustomSplits(splits);
-      } else if (currentSum > 0 && Math.abs(currentSum - totalAmount) > 0.02) {
-        // If amount changed and splits exist, scale them proportionally
-        const scaleFactor = totalAmount / currentSum;
-        const splits: Record<string, string> = {};
-        members.forEach((member) => {
-          const currentValue = parseFloat(customSplits[member.user_id] || "0");
-          splits[member.user_id] = (currentValue * scaleFactor).toFixed(2);
-        });
-        setCustomSplits(splits);
-      }
+      // Use functional update to access current splits without stale closure
+      setCustomSplits((prevSplits) => {
+        const currentSum = Object.values(prevSplits).reduce(
+          (sum, val) => sum + (parseFloat(val) || 0),
+          0
+        );
+
+        // If splits are empty or don't exist for all members, initialize with equal split
+        const hasAllMembers = members.every(m => m.user_id in prevSplits);
+        if (Object.keys(prevSplits).length === 0 || !hasAllMembers) {
+          const perPerson = totalAmount / members.length;
+          const splits: Record<string, string> = {};
+          members.forEach((member) => {
+            splits[member.user_id] = perPerson.toFixed(2);
+          });
+          return splits;
+        } else if (currentSum > 0 && Math.abs(currentSum - totalAmount) > SPLIT_TOLERANCE_KR) {
+          // If amount changed and splits exist, scale them proportionally
+          const scaleFactor = totalAmount / currentSum;
+          const splits: Record<string, string> = {};
+          members.forEach((member) => {
+            const currentValue = parseFloat(prevSplits[member.user_id] || "0");
+            splits[member.user_id] = (currentValue * scaleFactor).toFixed(2);
+          });
+          return splits;
+        }
+
+        // No changes needed
+        return prevSplits;
+      });
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [useCustomSplit, amount, members]);
 
   const handleSplitChange = (userId: string, value: string) => {
@@ -125,7 +135,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
         return;
       }
 
-      if (Math.abs(splitSum - totalAmount) > 0.02) {
+      if (Math.abs(splitSum - totalAmount) > SPLIT_TOLERANCE_KR) {
         toast.error(`Summan av fördelningen (${splitSum.toFixed(2)} kr) måste vara lika med totala beloppet (${totalAmount.toFixed(2)} kr)`);
         return;
       }
@@ -328,7 +338,7 @@ export function EditExpenseModal({ isOpen, onClose, onSave, onDelete, expense, m
                           <div className="flex items-center justify-between text-sm">
                             <span className="text-muted-foreground">Summa:</span>
                             <span className={`font-medium ${
-                              Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) < 0.02
+                              Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) <= SPLIT_TOLERANCE_KR
                                 ? "text-income"
                                 : "text-destructive"
                             }`}>

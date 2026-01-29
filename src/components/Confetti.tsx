@@ -23,7 +23,7 @@ const SHAPES = ["●", "■", "▲", "★", "♦"];
 export function Confetti({ 
   isActive, 
   duration = 2500,
-  particleCount = 50 
+  particleCount = 25
 }: { 
   isActive: boolean;
   duration?: number;
@@ -74,7 +74,7 @@ export function Confetti({
                 delay: piece.delay,
                 ease: [0.25, 0.46, 0.45, 0.94],
               }}
-              style={{ color: piece.color }}
+              style={{ color: piece.color, willChange: "transform" }}
               className="absolute text-lg"
             >
               {SHAPES[piece.id % SHAPES.length]}

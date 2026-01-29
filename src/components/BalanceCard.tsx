@@ -41,11 +41,11 @@ export function BalanceCard({
   // Filter settlements for the selected month
   const monthlySettlements = useMemo(() => {
     return settlements.filter((s) => {
-      const date = new Date(s.date);
-      return (
-        date.getFullYear() === selectedYear &&
-        date.getMonth() + 1 === selectedMonth
-      );
+      // Parse date string directly to avoid timezone issues
+      // s.date format: "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss"
+      const [datePart] = s.date.split('T');
+      const [year, month] = datePart.split('-').map(Number);
+      return year === selectedYear && month === selectedMonth;
     });
   }, [settlements, selectedYear, selectedMonth]);
 

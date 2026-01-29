@@ -214,7 +214,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
               stroke: "hsl(var(--background))",
               strokeWidth: 2,
             }}
-            animationDuration={800}
+            animationDuration={300}
             animationEasing="ease-out"
           />
 
@@ -232,7 +232,7 @@ export function TrendChart({ data, selectedMonth }: TrendChartProps) {
               stroke: "hsl(var(--background))",
               strokeWidth: 2,
             }}
-            animationDuration={800}
+            animationDuration={300}
             animationEasing="ease-out"
             animationBegin={100}
           />

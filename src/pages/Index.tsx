@@ -286,87 +286,97 @@ const Index = () => {
       {/* Add FAB */}
       <AddFab onClick={() => setIsAddModalOpen(true)} />
 
-      {/* Modals */}
-      <AddTransactionModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
-        onAddExpense={handleAddExpense}
-        onAddIncome={handleAddIncome}
-        groupId={household.id}
-        members={household.members}
-        defaultType="expense"
-      />
+      {/* Modals - lazy loaded to reduce memory usage */}
+      {isAddModalOpen && (
+        <AddTransactionModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onAddExpense={handleAddExpense}
+          onAddIncome={handleAddIncome}
+          groupId={household.id}
+          members={household.members}
+          defaultType="expense"
+        />
+      )}
 
-      <ImportModal
-        isOpen={isImportModalOpen}
-        onClose={() => setIsImportModalOpen(false)}
-        onImportExpenses={handleImportExpenses}
-        onImportIncomes={handleImportIncomes}
-        groupId={household.id}
-        currentUserId={user?.id || ""}
-      />
+      {isImportModalOpen && (
+        <ImportModal
+          isOpen={isImportModalOpen}
+          onClose={() => setIsImportModalOpen(false)}
+          onImportExpenses={handleImportExpenses}
+          onImportIncomes={handleImportIncomes}
+          groupId={household.id}
+          currentUserId={user?.id || ""}
+        />
+      )}
 
-      <SwishModal
-        isOpen={isSwishModalOpen}
-        onClose={() => setIsSwishModalOpen(false)}
-        onSubmit={handleSettle}
-        members={household.members}
-        currentUserId={user?.id || ""}
-      />
+      {isSwishModalOpen && (
+        <SwishModal
+          isOpen={isSwishModalOpen}
+          onClose={() => setIsSwishModalOpen(false)}
+          onSubmit={handleSettle}
+          members={household.members}
+          currentUserId={user?.id || ""}
+        />
+      )}
 
-      <EditExpenseModal
-        isOpen={isEditExpenseModalOpen}
-        onClose={() => {
-          setIsEditExpenseModalOpen(false);
-          setEditingExpense(null);
-        }}
-        onSave={async (updatedExpense) => {
-          await updateExpense(updatedExpense.id, {
-            amount: updatedExpense.amount,
-            category: updatedExpense.category,
-            description: updatedExpense.description,
-            date: updatedExpense.date,
-            splits: updatedExpense.splits ?? null,
-          });
-          setIsEditExpenseModalOpen(false);
-          setEditingExpense(null);
-        }}
-        onDelete={async (expenseId) => {
-          await deleteExpense(expenseId);
-          setIsEditExpenseModalOpen(false);
-          setEditingExpense(null);
-        }}
-        expense={editingExpense}
-        members={household.members}
-      />
+      {isEditExpenseModalOpen && (
+        <EditExpenseModal
+          isOpen={isEditExpenseModalOpen}
+          onClose={() => {
+            setIsEditExpenseModalOpen(false);
+            setEditingExpense(null);
+          }}
+          onSave={async (updatedExpense) => {
+            await updateExpense(updatedExpense.id, {
+              amount: updatedExpense.amount,
+              category: updatedExpense.category,
+              description: updatedExpense.description,
+              date: updatedExpense.date,
+              splits: updatedExpense.splits ?? null,
+            });
+            setIsEditExpenseModalOpen(false);
+            setEditingExpense(null);
+          }}
+          onDelete={async (expenseId) => {
+            await deleteExpense(expenseId);
+            setIsEditExpenseModalOpen(false);
+            setEditingExpense(null);
+          }}
+          expense={editingExpense}
+          members={household.members}
+        />
+      )}
 
-      <EditIncomeModal
-        isOpen={isEditIncomeModalOpen}
-        onClose={() => {
-          setIsEditIncomeModalOpen(false);
-          setEditingIncome(null);
-        }}
-        onSave={async (updatedIncome) => {
-          await updateIncome(updatedIncome.id, {
-            amount: updatedIncome.amount,
-            type: updatedIncome.type,
-            note: updatedIncome.note,
-            date: updatedIncome.date,
-            repeat: updatedIncome.repeat,
-            included_in_split: updatedIncome.included_in_split,
-            recipient: updatedIncome.recipient,
-          });
-          setIsEditIncomeModalOpen(false);
-          setEditingIncome(null);
-        }}
-        onDelete={async (incomeId) => {
-          await deleteIncome(incomeId);
-          setIsEditIncomeModalOpen(false);
-          setEditingIncome(null);
-        }}
-        income={editingIncome}
-        members={household.members}
-      />
+      {isEditIncomeModalOpen && (
+        <EditIncomeModal
+          isOpen={isEditIncomeModalOpen}
+          onClose={() => {
+            setIsEditIncomeModalOpen(false);
+            setEditingIncome(null);
+          }}
+          onSave={async (updatedIncome) => {
+            await updateIncome(updatedIncome.id, {
+              amount: updatedIncome.amount,
+              type: updatedIncome.type,
+              note: updatedIncome.note,
+              date: updatedIncome.date,
+              repeat: updatedIncome.repeat,
+              included_in_split: updatedIncome.included_in_split,
+              recipient: updatedIncome.recipient,
+            });
+            setIsEditIncomeModalOpen(false);
+            setEditingIncome(null);
+          }}
+          onDelete={async (incomeId) => {
+            await deleteIncome(incomeId);
+            setIsEditIncomeModalOpen(false);
+            setEditingIncome(null);
+          }}
+          income={editingIncome}
+          members={household.members}
+        />
+      )}
     </div>
     </>
   );

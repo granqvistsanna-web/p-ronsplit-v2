@@ -145,8 +145,11 @@ export function useExpenses(filters: ExpenseFilters) {
 
       return data;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+    onSuccess: (_data, variables) => {
+      // Only invalidate queries for the affected group
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.expenses.list({ groupId: variables.group_id }),
+      });
       toast.success("Utgift tillagd!");
     },
     onError: (error) => {
@@ -207,8 +210,13 @@ export function useExpenses(filters: ExpenseFilters) {
 
       return data || [];
     },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+    onSuccess: (data, variables) => {
+      // Only invalidate queries for the affected group (all expenses in batch share the same group)
+      if (variables.length > 0) {
+        queryClient.invalidateQueries({
+          queryKey: queryKeys.expenses.list({ groupId: variables[0].group_id }),
+        });
+      }
       console.log("[addExpenses] Refetch complete");
       toast.success(`${data.length} utgifter tillagda!`);
     },
@@ -269,7 +277,10 @@ export function useExpenses(filters: ExpenseFilters) {
       if (error) throw error;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+      // Only invalidate queries for the current group (from hook filters)
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.expenses.list({ groupId: filters.groupId }),
+      });
       toast.success("Utgift uppdaterad!");
     },
     onError: (error: any) => {
@@ -313,7 +324,10 @@ export function useExpenses(filters: ExpenseFilters) {
       return expenseToDelete;
     },
     onSuccess: (expenseToDelete) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+      // Only invalidate queries for the affected group
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.expenses.list({ groupId: expenseToDelete.group_id }),
+      });
 
       // Show toast with undo action
       toast.success("Utgift borttagen!", {
@@ -342,7 +356,10 @@ export function useExpenses(filters: ExpenseFilters) {
 
                 if (restoreError) throw restoreError;
 
-                queryClient.invalidateQueries({ queryKey: queryKeys.expenses.lists() });
+                // Only invalidate queries for the affected group
+                queryClient.invalidateQueries({
+                  queryKey: queryKeys.expenses.list({ groupId: expenseToDelete.group_id }),
+                });
                 toast.success("Utgift återställd!");
               } catch (restoreError) {
                 console.error("Error restoring expense:", restoreError);

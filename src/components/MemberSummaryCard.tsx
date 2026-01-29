@@ -19,23 +19,24 @@ export const MemberSummaryCard = ({
   onMemberClick,
 }: MemberSummaryCardProps) => {
   const memberSummaries = useMemo(() => {
-    return members.map((member) => {
-      // Sum expenses paid by this member
-      const totalExpenses = expenses
-        .filter((e) => e.paid_by === member.user_id)
-        .reduce((sum, e) => sum + e.amount, 0);
-
-      // Sum incomes received by this member (amount is in öre)
-      const totalIncomes = incomes
-        .filter((i) => i.recipient === member.user_id)
-        .reduce((sum, i) => sum + toKronor(i.amount), 0);
-
-      return {
-        ...member,
-        totalExpenses,
-        totalIncomes,
-      };
+    // Pre-aggregate expenses by user (O(n))
+    const expensesByUser = new Map<string, number>();
+    expenses.forEach((e) => {
+      expensesByUser.set(e.paid_by, (expensesByUser.get(e.paid_by) || 0) + e.amount);
     });
+
+    // Pre-aggregate incomes by user (O(n)) - amount is in öre
+    const incomesByUser = new Map<string, number>();
+    incomes.forEach((i) => {
+      incomesByUser.set(i.recipient, (incomesByUser.get(i.recipient) || 0) + toKronor(i.amount));
+    });
+
+    // Now lookup is O(1) per member
+    return members.map((member) => ({
+      ...member,
+      totalExpenses: expensesByUser.get(member.user_id) || 0,
+      totalIncomes: incomesByUser.get(member.user_id) || 0,
+    }));
   }, [expenses, incomes, members]);
 
   if (members.length === 0) {

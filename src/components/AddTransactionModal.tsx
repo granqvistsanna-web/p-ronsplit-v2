@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { GroupMember } from "@/hooks/useGroups";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
+import { SPLIT_TOLERANCE_KR } from "@/lib/constants";
 import { ExpenseSplit, ExpenseRepeat } from "@/hooks/useExpenses";
 import { IncomeType, IncomeRepeat, IncomeInput, Income } from "@/hooks/useIncomes";
 import { getIncomeTypeIcon, getIncomeTypeLabel } from "@/lib/incomeUtils";
@@ -206,7 +207,7 @@ export function AddTransactionModal({
         return false;
       }
 
-      if (Math.abs(splitSum - totalAmount) > 0.01) {
+      if (Math.abs(splitSum - totalAmount) > SPLIT_TOLERANCE_KR) {
         toast.error(`Summan av fördelningen (${splitSum.toFixed(2)} kr) måste vara lika med totala beloppet (${totalAmount.toFixed(2)} kr)`);
         return false;
       }
@@ -597,7 +598,7 @@ export function AddTransactionModal({
                               <div className="flex items-center justify-between text-sm">
                                 <span className="text-muted-foreground">Summa:</span>
                                 <span className={`font-medium ${
-                                  Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) < 0.01
+                                  Math.abs(calculateSplitSum() - (parseFloat(amount) || 0)) <= SPLIT_TOLERANCE_KR
                                     ? "text-income"
                                     : "text-destructive"
                                 }`}>

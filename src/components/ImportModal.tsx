@@ -53,6 +53,28 @@ interface ExtendedTransaction extends ParsedTransaction {
   transactionType: TransactionType;
 }
 
+// Magic bytes for common file formats
+const XLSX_MAGIC = [0x50, 0x4B, 0x03, 0x04]; // PK.. (ZIP format)
+const XLS_MAGIC = [0xD0, 0xCF, 0x11, 0xE0];  // OLE compound document
+
+async function validateFileMagicBytes(file: File): Promise<boolean> {
+  const buffer = await file.slice(0, 4).arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+
+  const isXlsx = XLSX_MAGIC.every((b, i) => bytes[i] === b);
+  const isXls = XLS_MAGIC.every((b, i) => bytes[i] === b);
+
+  // CSV files are plain text, check for printable ASCII
+  if (file.name.endsWith('.csv')) {
+    const textBuffer = await file.slice(0, 100).arrayBuffer();
+    const textBytes = new Uint8Array(textBuffer);
+    // Check if mostly printable ASCII (allow some extended chars for Swedish)
+    return textBytes.every(b => (b >= 0x09 && b <= 0x7E) || b >= 0xC0);
+  }
+
+  return isXlsx || isXls;
+}
+
 export function ImportModal({
   isOpen,
   onClose,
@@ -161,6 +183,13 @@ export function ImportModal({
 
     if (!isExcel && !isCsv) {
       toast.error("Endast CSV- och Excel-filer stöds");
+      return;
+    }
+
+    // Validate file content matches expected format (magic bytes)
+    const isValidContent = await validateFileMagicBytes(file);
+    if (!isValidContent) {
+      toast.error("Filinnehållet matchar inte filtypen. Kontrollera att filen är en giltig CSV- eller Excel-fil.");
       return;
     }
 
