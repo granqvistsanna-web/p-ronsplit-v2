@@ -15,17 +15,49 @@
  *
  * @example
  * // Converting for database storage
- * const amountInOre = toOre(123.45); // 12345
+ * const amountInOre = toOre(123.45); // 12345 as Ore
  *
  * @example
  * // Converting from database for calculations
- * const amountInKr = toKronor(12345); // 123.45
+ * const amountInKr = toKronor(12345 as Ore); // 123.45 as Kronor
  *
  * @example
  * // Formatting for display
- * formatCurrency(12345); // "123 kr"
- * formatCurrency(12345, { showDecimals: true }); // "123,45 kr"
+ * formatCurrency(12345 as Ore); // "123 kr"
+ * formatCurrency(12345 as Ore, { showDecimals: true }); // "123,45 kr"
  */
+
+// ============================================================================
+// Branded Currency Types
+// ============================================================================
+/**
+ * Branded type for amounts in kronor (SEK).
+ * Use this for display values and user-facing calculations.
+ */
+export type Kronor = number & { readonly __brand: 'Kronor' };
+
+/**
+ * Branded type for amounts in öre (cents).
+ * Use this for database storage and internal calculations.
+ * 100 öre = 1 krona
+ */
+export type Ore = number & { readonly __brand: 'Ore' };
+
+/**
+ * Creates an Ore value from a raw number (e.g., from database).
+ * Use this when reading ore values from the database.
+ */
+export function oreFromDb(value: number): Ore {
+  return value as Ore;
+}
+
+/**
+ * Creates a Kronor value from a raw number.
+ * Use sparingly - prefer toKronor(ore) for conversions.
+ */
+export function kronorFromNumber(value: number): Kronor {
+  return value as Kronor;
+}
 
 /**
  * Converts kronor to ore (multiply by 100, round to integer).
@@ -33,30 +65,30 @@
  * Uses Math.round() to handle floating-point imprecision gracefully.
  *
  * @param kr - Amount in kronor (can have decimals)
- * @returns Amount in ore (integer)
+ * @returns Amount in ore (branded Ore type)
  *
  * @example
- * toOre(123.45) // => 12345
- * toOre(123.456) // => 12346 (rounds to nearest)
- * toOre(0.1 + 0.2) // => 30 (handles floating-point correctly)
+ * toOre(123.45) // => 12345 as Ore
+ * toOre(123.456) // => 12346 as Ore (rounds to nearest)
+ * toOre(0.1 + 0.2) // => 30 as Ore (handles floating-point correctly)
  */
-export function toOre(kr: number): number {
-  return Math.round(kr * 100);
+export function toOre(kr: number): Ore {
+  return Math.round(kr * 100) as Ore;
 }
 
 /**
  * Converts ore to kronor (divide by 100).
  *
- * @param ore - Amount in ore (integer)
- * @returns Amount in kronor (decimal)
+ * @param ore - Amount in ore (branded Ore type)
+ * @returns Amount in kronor (branded Kronor type)
  *
  * @example
- * toKronor(12345) // => 123.45
- * toKronor(100) // => 1.00
- * toKronor(1) // => 0.01
+ * toKronor(12345 as Ore) // => 123.45 as Kronor
+ * toKronor(100 as Ore) // => 1.00 as Kronor
+ * toKronor(1 as Ore) // => 0.01 as Kronor
  */
-export function toKronor(ore: number): number {
-  return ore / 100;
+export function toKronor(ore: Ore): Kronor {
+  return (ore / 100) as Kronor;
 }
 
 /**
@@ -70,18 +102,18 @@ export function toKronor(ore: number): number {
  * - Decimal separator: comma
  * - Currency symbol: "kr" suffix
  *
- * @param ore - Amount in ore (integer)
+ * @param ore - Amount in ore (branded Ore type)
  * @param options - Formatting options
  * @param options.showDecimals - Whether to show decimal places (default: false)
  * @returns Formatted currency string
  *
  * @example
- * formatCurrency(12345) // => "123 kr"
- * formatCurrency(12345, { showDecimals: true }) // => "123,45 kr"
- * formatCurrency(1234500) // => "12 345 kr"
- * formatCurrency(1234500, { showDecimals: true }) // => "12 345,00 kr"
+ * formatCurrency(12345 as Ore) // => "123 kr"
+ * formatCurrency(12345 as Ore, { showDecimals: true }) // => "123,45 kr"
+ * formatCurrency(1234500 as Ore) // => "12 345 kr"
+ * formatCurrency(1234500 as Ore, { showDecimals: true }) // => "12 345,00 kr"
  */
-export function formatCurrency(ore: number, options?: { showDecimals?: boolean }): string {
+export function formatCurrency(ore: Ore, options?: { showDecimals?: boolean }): string {
   const kr = toKronor(ore);
   const decimals = options?.showDecimals ? 2 : 0;
 
@@ -100,13 +132,13 @@ export function formatCurrency(ore: number, options?: { showDecimals?: boolean }
  * Returns null for invalid input (non-numeric, empty, etc.).
  *
  * @param input - User input string (e.g., "123,45" or "123.45")
- * @returns Amount in ore (integer), or null if invalid
+ * @returns Amount in ore (branded Ore type), or null if invalid
  *
  * @example
- * parseInputToOre("123,45") // => 12345
- * parseInputToOre("123.45") // => 12345
- * parseInputToOre("123") // => 12300
- * parseInputToOre("1 234,56") // => 123456 (handles thousand separator)
+ * parseInputToOre("123,45") // => 12345 as Ore
+ * parseInputToOre("123.45") // => 12345 as Ore
+ * parseInputToOre("123") // => 12300 as Ore
+ * parseInputToOre("1 234,56") // => 123456 as Ore (handles thousand separator)
  * parseInputToOre("abc") // => null
  * parseInputToOre("") // => null
  * parseInputToOre("1e10") // => null (rejects scientific notation)
@@ -118,7 +150,7 @@ const MAX_AMOUNT_KR = 1_000_000_000;
 // Minimum allowed amount: -1 billion kronor (for refunds/corrections)
 const MIN_AMOUNT_KR = -1_000_000_000;
 
-export function parseInputToOre(input: string): number | null {
+export function parseInputToOre(input: string): Ore | null {
   if (!input || typeof input !== 'string') {
     return null;
   }

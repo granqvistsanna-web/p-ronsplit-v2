@@ -22,8 +22,29 @@ export interface CategoryBarChartProps {
   onCategoryClick?: (category: SelectedCategory) => void;
 }
 
+// Category data shape from aggregation
+interface CategoryAggregation {
+  categoryId: string;
+  categoryName: string;
+  icon: string;
+  amount: number;
+  [key: string]: string | number; // For dynamic member user_id keys in stacked mode
+}
+
+// Recharts tooltip payload entry
+interface TooltipPayloadEntry {
+  payload: CategoryAggregation;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  stacked?: boolean;
+  members?: GroupMember[];
+}
+
 // Custom tooltip with refined styling matching TrendChart
-const CustomTooltip = ({ active, payload, stacked, members }: any) => {
+const CustomTooltip = ({ active, payload, stacked, members }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;
@@ -101,8 +122,20 @@ export function CategoryBarChart({ expenses, members, showAll = false, stacked =
     return aggregateByCategory(expenses);
   }, [expenses]);
 
+  // Bar click event data from Recharts
+  interface BarClickData {
+    categoryId?: string;
+    categoryName?: string;
+    icon?: string;
+    payload?: {
+      categoryId?: string;
+      categoryName?: string;
+      icon?: string;
+    };
+  }
+
   // Handle bar click to trigger drill-down
-  const handleBarClick = (data: any) => {
+  const handleBarClick = (data: BarClickData) => {
     if (!onCategoryClick) return;
 
     // Extract from payload (Recharts wraps data in payload for click events)

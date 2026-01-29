@@ -204,9 +204,10 @@ describe('getBalanceBreakdown', () => {
   });
 
   it('includes member names in breakdown', () => {
-    const members = [createMember('user-1', 'Alice')];
+    const members = [createMember('user-1', 'Alice'), createMember('user-2', 'Bob')];
     const result = getBalanceBreakdown([], members, [], []);
 
     expect(result[0].name).toBe('Alice');
+    expect(result[1].name).toBe('Bob');
   });
 });

@@ -6,6 +6,7 @@ import { queryKeys } from "./queries/queryKeys";
 import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { IncomeFilters } from "./queries/types";
 import type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
+import { oreFromDb } from "@/lib/currency";
 
 // Re-export types for backwards compatibility
 export type { Income, IncomeInput, IncomeType, IncomeRepeat } from "@/lib/types";
@@ -87,6 +88,7 @@ export function useIncomes(filters: IncomeFilters) {
       // Cast the database response to our Income type with validation
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
         ...row,
+        amount: oreFromDb(row.amount),
         type: toIncomeType(row.type),
         repeat: toIncomeRepeat(row.repeat),
       }));
@@ -134,6 +136,7 @@ export function useIncomes(filters: IncomeFilters) {
       const row = data as IncomeRow;
       const typedIncome: Income = {
         ...row,
+        amount: oreFromDb(row.amount),
         type: toIncomeType(row.type),
         repeat: toIncomeRepeat(row.repeat),
       };
@@ -188,6 +191,7 @@ export function useIncomes(filters: IncomeFilters) {
       // Cast to our typed Income interface with validation
       const typedIncomes: Income[] = ((data as IncomeRow[]) || []).map((row) => ({
         ...row,
+        amount: oreFromDb(row.amount),
         type: toIncomeType(row.type),
         repeat: toIncomeRepeat(row.repeat),
       }));
@@ -239,7 +243,7 @@ export function useIncomes(filters: IncomeFilters) {
       queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
       toast.success("Inkomst uppdaterad!");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error updating income:", error);
       toast.error(error.message || "Kunde inte uppdatera inkomst");
     },
@@ -314,7 +318,7 @@ export function useIncomes(filters: IncomeFilters) {
         },
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error deleting income:", error);
       toast.error(error.message || "Kunde inte ta bort inkomst");
     },

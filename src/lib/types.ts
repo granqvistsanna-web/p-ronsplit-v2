@@ -5,6 +5,7 @@
  */
 
 import type { Tables, TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import type { Ore } from "@/lib/currency";
 
 // ============================================================================
 // Database-derived types (from Supabase)
@@ -86,8 +87,8 @@ export type IncomeRepeat = "none" | "monthly";
 export interface Income {
   id: string;
   group_id: string;
-  /** Amount in öre (cents). Use toKronor() for display. */
-  amount: number;
+  /** Amount in öre (cents). Branded type ensures type safety. */
+  amount: Ore;
   recipient: string;
   type: IncomeType;
   note: string | null;
@@ -107,7 +108,7 @@ export interface Income {
 export interface IncomeInput {
   group_id: string;
   /** Amount in öre (cents). Use toOre() to convert from user input. */
-  amount: number;
+  amount: Ore;
   recipient: string;
   type: IncomeType;
   note?: string;

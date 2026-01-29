@@ -8,11 +8,12 @@ import {
   Sector,
 } from "recharts";
 import { ChartContainer, ChartConfig } from "@/components/ui/chart";
+import type { Expense } from "@/lib/types";
 
 interface CategoryData {
   category: string;
   amount: number;
-  expenses: any[];
+  expenses: Expense[];
 }
 
 interface CategoryDonutProps {
@@ -38,8 +39,24 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+// Chart data with computed fields
+interface ChartDataItem extends CategoryData {
+  percentage: number;
+  fill: string;
+}
+
+// Recharts tooltip payload entry
+interface TooltipPayloadEntry {
+  payload: ChartDataItem;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+}
+
 // Custom tooltip
-const CustomTooltip = ({ active, payload }: any) => {
+const CustomTooltip = ({ active, payload }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;
@@ -73,11 +90,24 @@ const CustomTooltip = ({ active, payload }: any) => {
   );
 };
 
+// Props for active shape rendering (from Recharts Sector)
+interface ActiveShapeProps {
+  cx: number;
+  cy: number;
+  innerRadius: number;
+  outerRadius: number;
+  startAngle: number;
+  endAngle: number;
+  fill: string;
+  payload: ChartDataItem;
+  percent: number;
+}
+
 // Active shape for hover effect
-const renderActiveShape = (props: any) => {
+const renderActiveShape = (props: ActiveShapeProps) => {
   const {
     cx, cy, innerRadius, outerRadius, startAngle, endAngle,
-    fill, payload, percent
+    fill,
   } = props;
 
   return (

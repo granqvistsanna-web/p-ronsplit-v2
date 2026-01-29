@@ -35,8 +35,27 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+// Extended chart data with computed fields
+interface ChartDataItem extends TrendData {
+  netto: number;
+  monthLabel: string;
+  isPositive: boolean;
+  isSelected: boolean;
+}
+
+// Recharts tooltip payload entry
+interface TooltipPayloadEntry {
+  payload: ChartDataItem;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
+
 // Custom tooltip
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
 
   const data = payload[0].payload;

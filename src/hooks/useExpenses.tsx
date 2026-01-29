@@ -283,7 +283,7 @@ export function useExpenses(filters: ExpenseFilters) {
       });
       toast.success("Utgift uppdaterad!");
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error updating expense:", error);
       toast.error(error.message || "Kunde inte uppdatera utgift");
     },
@@ -373,7 +373,7 @@ export function useExpenses(filters: ExpenseFilters) {
         },
       });
     },
-    onError: (error: any) => {
+    onError: (error: Error) => {
       console.error("Error deleting expense:", error);
       toast.error(error.message || "Kunde inte ta bort utgift");
     },

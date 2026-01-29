@@ -38,8 +38,22 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+// Recharts tooltip payload entry
+interface TooltipPayloadEntry {
+  dataKey: string;
+  value: number;
+  color: string;
+  payload: TrendData;
+}
+
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: TooltipPayloadEntry[];
+  label?: string;
+}
+
 // Custom tooltip with refined styling
-const CustomTooltip = ({ active, payload, label }: any) => {
+const CustomTooltip = ({ active, payload, label }: CustomTooltipProps) => {
   if (!active || !payload?.length) return null;
 
   const monthParts = label?.split("-");
@@ -51,7 +65,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2.5 shadow-notion-lg">
       <p className="text-label-mono mb-2">{monthName}</p>
       <div className="space-y-1.5">
-        {payload.map((entry: any, index: number) => (
+        {payload.map((entry: TooltipPayloadEntry, index: number) => (
           <div key={index} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
               <div
@@ -87,13 +101,24 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   );
 };
 
+// Recharts legend payload entry
+interface LegendPayloadEntry {
+  dataKey: string;
+  color: string;
+  value: string;
+}
+
+interface CustomLegendProps {
+  payload?: LegendPayloadEntry[];
+}
+
 // Custom legend with refined styling
-const CustomLegend = ({ payload }: any) => {
+const CustomLegend = ({ payload }: CustomLegendProps) => {
   if (!payload?.length) return null;
 
   return (
     <div className="flex items-center justify-center gap-6 pt-4">
-      {payload.map((entry: any, index: number) => (
+      {payload.map((entry: LegendPayloadEntry, index: number) => (
         <div key={index} className="flex items-center gap-2">
           <div
             className="w-3 h-3 rounded-sm"
