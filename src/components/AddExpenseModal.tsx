@@ -10,7 +10,7 @@ import { ExpenseSplit } from "@/hooks/useExpenses";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { DuplicateWarningDialog, PotentialDuplicate, NewEntryInfo } from "./DuplicateWarningDialog";
+import { DuplicateWarningDialog, PotentialDuplicate } from "./DuplicateWarningDialog";
 import { Loader2 } from "lucide-react";
 
 interface AddExpenseModalProps {
@@ -425,12 +425,6 @@ export function AddExpenseModal({ isOpen, onClose, onAdd, groupId, members }: Ad
         onEdit={handleEditAfterWarning}
         duplicates={potentialDuplicates}
         entryType="expense"
-        newEntry={{
-          amount: parseFloat(amount) || 0,
-          date,
-          description,
-          category,
-        }}
       />
     </>
   );

@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import type { Settlement } from "@/lib/types";
-import { toOre, toKronor } from "@/lib/currency";
+import { toOre, toKronor, oreFromDb } from "@/lib/currency";
 
 // Re-export type for backwards compatibility
 export type { Settlement } from "@/lib/types";
@@ -48,7 +48,7 @@ export function useSettlements(groupId?: string) {
       // Convert amounts from öre to kronor (with null-safety)
       const settlementsInKronor = (data || []).map((s) => ({
         ...s,
-        amount: s.amount != null ? toKronor(s.amount) : 0,
+        amount: s.amount != null ? toKronor(oreFromDb(s.amount)) : 0,
       }));
       if (isMounted) {
         setSettlements(settlementsInKronor);

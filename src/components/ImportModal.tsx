@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { parseFile, ParsedTransaction, ParseResult } from "@/lib/fileParser";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
-import { toOre } from "@/lib/currency";
+import { toOre, Ore } from "@/lib/currency";
 import { supabase } from "@/integrations/supabase/client";
 import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -34,7 +34,7 @@ interface ImportModalProps {
   }[]) => Promise<void>;
   onImportIncomes?: (incomes: {
     group_id: string;
-    amount: number;
+    amount: Ore;
     recipient: string;
     type: IncomeType;
     note: string;

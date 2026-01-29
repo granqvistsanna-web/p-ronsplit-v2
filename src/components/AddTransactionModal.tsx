@@ -12,6 +12,7 @@ import { IncomeType, IncomeRepeat, IncomeInput, Income } from "@/hooks/useIncome
 import { getIncomeTypeIcon, getIncomeTypeLabel } from "@/lib/incomeUtils";
 import { RecurringSection, RepeatInterval } from "@/components/RecurringSection";
 import { toast } from "sonner";
+import { toOre } from "@/lib/currency";
 import { useAuth } from "@/hooks/useAuth";
 
 interface AddTransactionModalProps {
@@ -270,8 +271,8 @@ export function AddTransactionModal({
       return false;
     }
 
-    // Convert to cents
-    const amountCents = Math.round(amountKr * 100);
+    // Convert to cents using toOre for branded type
+    const amountCents = toOre(amountKr);
 
     try {
       const result = await onAddIncome({
