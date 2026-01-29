@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleDatabaseError, handleAuthError } from "@/lib/errorHandling";
 import { format } from "date-fns";
 import { sv } from "date-fns/locale";
 import type { Settlement } from "@/lib/types";
@@ -54,8 +55,10 @@ export function useSettlements(groupId?: string) {
         setSettlements(settlementsInKronor);
       }
     } catch (error) {
-      console.error("Error fetching settlements:", error);
-      toast.error("Kunde inte hämta avräkningar");
+      handleDatabaseError(error, "Kunde inte hämta avräkningar", {
+        operation: "fetchSettlements",
+        groupId,
+      });
     } finally {
       if (isMounted) {
         setLoading(false);
@@ -86,7 +89,9 @@ export function useSettlements(groupId?: string) {
     date?: string;
   }) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "addSettlement",
+      });
       return null;
     }
 
@@ -132,7 +137,9 @@ export function useSettlements(groupId?: string) {
     }
   ) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "updateSettlement",
+      });
       return null;
     }
 
@@ -163,15 +170,19 @@ export function useSettlements(groupId?: string) {
       toast.success("Avräkning uppdaterad");
       return data;
     } catch (error) {
-      console.error("Error updating settlement:", error);
-      toast.error("Kunde inte uppdatera avräkning");
+      handleDatabaseError(error, "Kunde inte uppdatera avräkning", {
+        operation: "updateSettlement",
+        settlementId,
+      });
       return null;
     }
   };
 
   const deleteSettlement = async (settlementId: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "deleteSettlement",
+      });
       return false;
     }
 
@@ -187,8 +198,10 @@ export function useSettlements(groupId?: string) {
       toast.success("Avräkning borttagen");
       return true;
     } catch (error) {
-      console.error("Error deleting settlement:", error);
-      toast.error("Kunde inte ta bort avräkning");
+      handleDatabaseError(error, "Kunde inte ta bort avräkning", {
+        operation: "deleteSettlement",
+        settlementId,
+      });
       return false;
     }
   };

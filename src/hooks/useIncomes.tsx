@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandling";
 import { queryKeys } from "./queries/queryKeys";
 import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { IncomeFilters } from "./queries/types";
@@ -148,8 +149,9 @@ export function useIncomes(filters: IncomeFilters) {
       toast.success("Inkomst tillagd!");
     },
     onError: (error) => {
-      console.error("Error adding income:", error);
-      toast.error("Kunde inte lägga till inkomst");
+      handleDatabaseError(error, "Kunde inte lägga till inkomst", {
+        operation: "addIncome",
+      });
     },
   });
 
@@ -203,8 +205,9 @@ export function useIncomes(filters: IncomeFilters) {
       toast.success(`${data.length} inkomster tillagda!`);
     },
     onError: (error) => {
-      console.error("Error adding incomes:", error);
-      toast.error("Kunde inte lägga till inkomster");
+      handleDatabaseError(error, "Kunde inte lägga till inkomster", {
+        operation: "addIncomes",
+      });
     },
   });
 
@@ -244,8 +247,9 @@ export function useIncomes(filters: IncomeFilters) {
       toast.success("Inkomst uppdaterad!");
     },
     onError: (error: Error) => {
-      console.error("Error updating income:", error);
-      toast.error(error.message || "Kunde inte uppdatera inkomst");
+      handleDatabaseError(error, error.message || "Kunde inte uppdatera inkomst", {
+        operation: "updateIncome",
+      });
     },
   });
 
@@ -308,19 +312,19 @@ export function useIncomes(filters: IncomeFilters) {
               queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
               toast.success("Inkomst återställd!");
             } catch (restoreError) {
-              console.error("Error restoring income:", restoreError);
-              // Provide more context for debugging while keeping user message simple
-              const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
-              console.error("Restore error details:", errorDetail);
-              toast.error("Kunde inte återställa inkomst. Försök igen eller kontakta support.");
+              handleDatabaseError(restoreError, "Kunde inte återställa inkomst. Försök igen eller kontakta support.", {
+                operation: "restoreIncome",
+                incomeId: incomeToDelete.id,
+              });
             }
           },
         },
       });
     },
     onError: (error: Error) => {
-      console.error("Error deleting income:", error);
-      toast.error(error.message || "Kunde inte ta bort inkomst");
+      handleDatabaseError(error, error.message || "Kunde inte ta bort inkomst", {
+        operation: "deleteIncome",
+      });
     },
   });
 

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleDatabaseError } from "@/lib/errorHandling";
 import { queryKeys } from "./queries/queryKeys";
 import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { BudgetFilters } from "./queries/types";
@@ -129,8 +130,9 @@ export function useBudgets(filters: BudgetFilters) {
       toast.success("Budget sparad!");
     },
     onError: (error) => {
-      console.error("Error saving budget:", error);
-      toast.error("Kunde inte spara budget");
+      handleDatabaseError(error, "Kunde inte spara budget", {
+        operation: "saveBudget",
+      });
     },
   });
 
@@ -173,8 +175,9 @@ export function useBudgets(filters: BudgetFilters) {
       toast.success("Budget uppdaterad!");
     },
     onError: (error: unknown) => {
-      console.error("Error updating budget:", error);
-      toast.error("Kunde inte uppdatera budget");
+      handleDatabaseError(error, "Kunde inte uppdatera budget", {
+        operation: "updateBudget",
+      });
     },
   });
 
@@ -197,8 +200,9 @@ export function useBudgets(filters: BudgetFilters) {
       toast.success("Budget borttagen!");
     },
     onError: (error: unknown) => {
-      console.error("Error deleting budget:", error);
-      toast.error("Kunde inte ta bort budget");
+      handleDatabaseError(error, "Kunde inte ta bort budget", {
+        operation: "deleteBudget",
+      });
     },
   });
 

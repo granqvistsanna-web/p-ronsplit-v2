@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
-import { handleDatabaseError } from "@/lib/errorHandling";
+import { handleDatabaseError, handleAuthError, handleError, ErrorCategory, ErrorSeverity } from "@/lib/errorHandling";
 import type { SavingsProject, SavingsContribution } from "@/lib/types";
 
 // Re-export types for backwards compatibility
@@ -115,7 +115,9 @@ export function useSavingsProjects(groupId?: string) {
     target_amount: number;
   }) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "addProject",
+      });
       return null;
     }
 
@@ -151,26 +153,43 @@ export function useSavingsProjects(groupId?: string) {
     updates: Partial<Pick<SavingsProject, "name" | "description" | "target_amount">>
   ) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "updateProject",
+      });
       return;
     }
 
     try {
       const project = projects.find(p => p.id === projectId);
       if (!project) {
-        toast.error("Projektet hittades inte");
+        handleError(new Error("Projektet hittades inte"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Projektet hittades inte",
+          metadata: { operation: "updateProject", projectId },
+        });
         return;
       }
 
       // Security check: Verify user created this project
       if (project.created_by !== user.id) {
-        toast.error("Du har inte behörighet att uppdatera detta projekt");
+        handleError(new Error("Du har inte behörighet att uppdatera detta projekt"), {
+          category: ErrorCategory.PERMISSION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Du har inte behörighet att uppdatera detta projekt",
+          metadata: { operation: "updateProject", projectId },
+        });
         return;
       }
 
       // Verify project belongs to current group if groupId is set
       if (groupId && project.group_id !== groupId) {
-        toast.error("Projektet tillhör inte det valda hushållet");
+        handleError(new Error("Projektet tillhör inte det valda hushållet"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Projektet tillhör inte det valda hushållet",
+          metadata: { operation: "updateProject", projectId, groupId },
+        });
         return;
       }
 
@@ -194,26 +213,43 @@ export function useSavingsProjects(groupId?: string) {
 
   const deleteProject = async (projectId: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "deleteProject",
+      });
       return;
     }
 
     try {
       const projectToDelete = projects.find(p => p.id === projectId);
       if (!projectToDelete) {
-        toast.error("Projektet hittades inte");
+        handleError(new Error("Projektet hittades inte"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Projektet hittades inte",
+          metadata: { operation: "deleteProject", projectId },
+        });
         return;
       }
 
       // Security check: Verify user created this project
       if (projectToDelete.created_by !== user.id) {
-        toast.error("Du har inte behörighet att ta bort detta projekt");
+        handleError(new Error("Du har inte behörighet att ta bort detta projekt"), {
+          category: ErrorCategory.PERMISSION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Du har inte behörighet att ta bort detta projekt",
+          metadata: { operation: "deleteProject", projectId },
+        });
         return;
       }
 
       // Verify project belongs to current group if groupId is set
       if (groupId && projectToDelete.group_id !== groupId) {
-        toast.error("Projektet tillhör inte det valda hushållet");
+        handleError(new Error("Projektet tillhör inte det valda hushållet"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Projektet tillhör inte det valda hushållet",
+          metadata: { operation: "deleteProject", projectId, groupId },
+        });
         return;
       }
 
@@ -244,7 +280,9 @@ export function useSavingsProjects(groupId?: string) {
     note?: string;
   }) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "addContribution",
+      });
       return null;
     }
 
@@ -280,20 +318,32 @@ export function useSavingsProjects(groupId?: string) {
     updates: Partial<Pick<SavingsContribution, "amount" | "date" | "note">>
   ) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "updateContribution",
+      });
       return;
     }
 
     try {
       const contribution = contributions.find(c => c.id === contributionId);
       if (!contribution) {
-        toast.error("Insättningen hittades inte");
+        handleError(new Error("Insättningen hittades inte"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Insättningen hittades inte",
+          metadata: { operation: "updateContribution", contributionId },
+        });
         return;
       }
 
       // Security check: Verify user created this contribution
       if (contribution.user_id !== user.id) {
-        toast.error("Du har inte behörighet att uppdatera denna insättning");
+        handleError(new Error("Du har inte behörighet att uppdatera denna insättning"), {
+          category: ErrorCategory.PERMISSION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Du har inte behörighet att uppdatera denna insättning",
+          metadata: { operation: "updateContribution", contributionId },
+        });
         return;
       }
 
@@ -317,20 +367,32 @@ export function useSavingsProjects(groupId?: string) {
 
   const deleteContribution = async (contributionId: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "deleteContribution",
+      });
       return;
     }
 
     try {
       const contributionToDelete = contributions.find(c => c.id === contributionId);
       if (!contributionToDelete) {
-        toast.error("Insättningen hittades inte");
+        handleError(new Error("Insättningen hittades inte"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Insättningen hittades inte",
+          metadata: { operation: "deleteContribution", contributionId },
+        });
         return;
       }
 
       // Security check: Verify user created this contribution
       if (contributionToDelete.user_id !== user.id) {
-        toast.error("Du har inte behörighet att ta bort denna insättning");
+        handleError(new Error("Du har inte behörighet att ta bort denna insättning"), {
+          category: ErrorCategory.PERMISSION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Du har inte behörighet att ta bort denna insättning",
+          metadata: { operation: "deleteContribution", contributionId },
+        });
         return;
       }
 

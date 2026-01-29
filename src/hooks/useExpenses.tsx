@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleDatabaseError, handleAuthError } from "@/lib/errorHandling";
 import { queryKeys } from "./queries/queryKeys";
 import { STALE_TIME_FREQUENT } from "./queries/config";
 import type { ExpenseFilters } from "./queries/types";
@@ -153,8 +154,9 @@ export function useExpenses(filters: ExpenseFilters) {
       toast.success("Utgift tillagd!");
     },
     onError: (error) => {
-      console.error("Error adding expense:", error);
-      toast.error("Kunde inte lägga till utgift");
+      handleDatabaseError(error, "Kunde inte lägga till utgift", {
+        operation: "addExpense",
+      });
     },
   });
 
@@ -221,8 +223,9 @@ export function useExpenses(filters: ExpenseFilters) {
       toast.success(`${data.length} utgifter tillagda!`);
     },
     onError: (error) => {
-      console.error("Error adding expenses:", error);
-      toast.error("Kunde inte lägga till utgifter");
+      handleDatabaseError(error, "Kunde inte lägga till utgifter", {
+        operation: "addExpenses",
+      });
     },
   });
 
@@ -284,8 +287,9 @@ export function useExpenses(filters: ExpenseFilters) {
       toast.success("Utgift uppdaterad!");
     },
     onError: (error: Error) => {
-      console.error("Error updating expense:", error);
-      toast.error(error.message || "Kunde inte uppdatera utgift");
+      handleDatabaseError(error, error.message || "Kunde inte uppdatera utgift", {
+        operation: "updateExpense",
+      });
     },
   });
 
@@ -362,11 +366,10 @@ export function useExpenses(filters: ExpenseFilters) {
                 });
                 toast.success("Utgift återställd!");
               } catch (restoreError) {
-                console.error("Error restoring expense:", restoreError);
-                // Provide more context for debugging while keeping user message simple
-                const errorDetail = restoreError instanceof Error ? restoreError.message : String(restoreError);
-                console.error("Restore error details:", errorDetail);
-                toast.error("Kunde inte återställa utgift. Försök igen eller kontakta support.");
+                handleDatabaseError(restoreError, "Kunde inte återställa utgift. Försök igen eller kontakta support.", {
+                  operation: "restoreExpense",
+                  expenseId: expenseToDelete.id,
+                });
               }
             };
           })(),
@@ -374,8 +377,9 @@ export function useExpenses(filters: ExpenseFilters) {
       });
     },
     onError: (error: Error) => {
-      console.error("Error deleting expense:", error);
-      toast.error(error.message || "Kunde inte ta bort utgift");
+      handleDatabaseError(error, error.message || "Kunde inte ta bort utgift", {
+        operation: "deleteExpense",
+      });
     },
   });
 

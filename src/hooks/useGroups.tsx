@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
+import { handleDatabaseError, handleAuthError, handleError, ErrorCategory, ErrorSeverity } from "@/lib/errorHandling";
 import type { Group, GroupMember } from "@/lib/types";
 
 // Re-export types for backwards compatibility
@@ -234,8 +235,9 @@ export function useGroups() {
 
       setHousehold(selectedGroup || null);
     } catch (error) {
-      console.error("Error fetching groups:", error);
-      toast.error("Kunde inte hämta grupper");
+      handleDatabaseError(error, "Kunde inte hämta grupper", {
+        operation: "fetchGroups",
+      });
     } finally {
       setLoading(false);
     }
@@ -255,7 +257,12 @@ export function useGroups() {
 
   const addMembers = async (userIds: string[]) => {
     if (!household) {
-      toast.error("Hushåll finns inte");
+      handleError(new Error("Hushåll finns inte"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Hushåll finns inte",
+        metadata: { operation: "addMembers" },
+      });
       return;
     }
 
@@ -283,17 +290,21 @@ export function useGroups() {
       await fetchGroups();
       toast.success(`${userIds.length} ${userIds.length === 1 ? 'medlem' : 'medlemmar'} tillagd${userIds.length === 1 ? '' : 'a'}!`);
     } catch (error) {
-      console.error("Error adding members:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte lägga till medlemmar";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte lägga till medlemmar", {
+        operation: "addMembers",
+        memberCount: userIds.length,
+      });
     }
   };
 
   const removeMember = async (userId: string) => {
     if (!household) {
-      toast.error("Hushåll finns inte");
+      handleError(new Error("Hushåll finns inte"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Hushåll finns inte",
+        metadata: { operation: "removeMember" },
+      });
       return;
     }
 
@@ -313,17 +324,21 @@ export function useGroups() {
       await fetchGroups();
       toast.success("Medlem borttagen");
     } catch (error) {
-      console.error("Error removing member:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte ta bort medlem";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte ta bort medlem", {
+        operation: "removeMember",
+        userId,
+      });
     }
   };
 
   const regenerateInviteCode = async () => {
     if (!household) {
-      toast.error("Hushåll finns inte");
+      handleError(new Error("Hushåll finns inte"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Hushåll finns inte",
+        metadata: { operation: "regenerateInviteCode" },
+      });
       return null;
     }
 
@@ -345,18 +360,21 @@ export function useGroups() {
       toast.success("Ny inbjudningskod genererad");
       return newCode;
     } catch (error) {
-      console.error("Error regenerating invite code:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte generera ny kod";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte generera ny kod", {
+        operation: "regenerateInviteCode",
+      });
       return null;
     }
   };
 
   const updateHouseholdName = async (name: string) => {
     if (!household) {
-      toast.error("Hushåll finns inte");
+      handleError(new Error("Hushåll finns inte"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Hushåll finns inte",
+        metadata: { operation: "updateHouseholdName" },
+      });
       return;
     }
 
@@ -374,17 +392,17 @@ export function useGroups() {
       await fetchGroups();
       toast.success("Hushållsnamn uppdaterat");
     } catch (error) {
-      console.error("Error updating household:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte uppdatera hushållsnamn";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte uppdatera hushållsnamn", {
+        operation: "updateHouseholdName",
+      });
     }
   };
 
   const createGroup = async (name: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "createGroup",
+      });
       return null;
     }
 
@@ -444,19 +462,19 @@ export function useGroups() {
       toast.success("Ny grupp skapad");
       return groupData;
     } catch (error) {
-      console.error("Error creating group:", error);
-      const maybeMessage = (error as Error)?.message;
-      const errorMessage = typeof maybeMessage === "string" && maybeMessage.trim().length > 0
-        ? maybeMessage
-        : "Kunde inte skapa grupp";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte skapa grupp", {
+        operation: "createGroup",
+        groupName: name,
+      });
       return null;
     }
   };
 
   const deleteGroup = async (groupId: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "deleteGroup",
+      });
       return false;
     }
 
@@ -464,12 +482,22 @@ export function useGroups() {
       // Check if user is the creator of the group
       const groupToDelete = allGroups.find(g => g.id === groupId);
       if (!groupToDelete) {
-        toast.error("Gruppen finns inte");
+        handleError(new Error("Gruppen finns inte"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Gruppen finns inte",
+          metadata: { operation: "deleteGroup", groupId },
+        });
         return false;
       }
 
       if (groupToDelete.created_by !== user.id) {
-        toast.error("Endast gruppens skapare kan ta bort den");
+        handleError(new Error("Endast gruppens skapare kan ta bort den"), {
+          category: ErrorCategory.PERMISSION,
+          severity: ErrorSeverity.WARNING,
+          userMessage: "Endast gruppens skapare kan ta bort den",
+          metadata: { operation: "deleteGroup", groupId },
+        });
         return false;
       }
 
@@ -497,24 +525,30 @@ export function useGroups() {
       toast.success("Grupp borttagen");
       return true;
     } catch (error) {
-      console.error("Error deleting group:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte ta bort grupp";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte ta bort grupp", {
+        operation: "deleteGroup",
+        groupId,
+      });
       return false;
     }
   };
 
   const joinGroupByCode = async (inviteCode: string) => {
     if (!user) {
-      toast.error("Du måste vara inloggad");
+      handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
+        operation: "joinGroupByCode",
+      });
       return false;
     }
 
     const code = inviteCode.trim().toUpperCase();
     if (!code) {
-      toast.error("Ange en inbjudningskod");
+      handleError(new Error("Ange en inbjudningskod"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Ange en inbjudningskod",
+        metadata: { operation: "joinGroupByCode" },
+      });
       return false;
     }
 
@@ -532,13 +566,17 @@ export function useGroups() {
       const result = data as { success: boolean; error?: string; group_id?: string; group_name?: string };
 
       if (!result.success) {
-        if (result.error === "Already a member") {
-          toast.error("Du är redan medlem i den gruppen");
-        } else if (result.error === "No group found with that code") {
-          toast.error("Ingen grupp hittades med den koden");
-        } else {
-          toast.error(result.error || "Kunde inte gå med i gruppen");
-        }
+        const errorMessages: Record<string, string> = {
+          "Already a member": "Du är redan medlem i den gruppen",
+          "No group found with that code": "Ingen grupp hittades med den koden",
+        };
+        const userMessage = errorMessages[result.error || ""] || result.error || "Kunde inte gå med i gruppen";
+        handleError(new Error(result.error || "Join group failed"), {
+          category: ErrorCategory.VALIDATION,
+          severity: ErrorSeverity.WARNING,
+          userMessage,
+          metadata: { operation: "joinGroupByCode", errorCode: result.error },
+        });
         return false;
       }
 
@@ -552,11 +590,9 @@ export function useGroups() {
       toast.success(`Du gick med i "${result.group_name}"!`);
       return true;
     } catch (error) {
-      console.error("Error joining group by code:", error);
-      const errorMessage = error instanceof Error
-        ? error.message
-        : "Kunde inte gå med i gruppen";
-      toast.error(errorMessage);
+      handleDatabaseError(error, "Kunde inte gå med i gruppen", {
+        operation: "joinGroupByCode",
+      });
       return false;
     }
   };
