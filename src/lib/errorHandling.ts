@@ -111,10 +111,6 @@ export function handleError(
     }
   }
 
-  // Future: Send to external monitoring service (Sentry, LogRocket, etc.)
-  // if (severity === ErrorSeverity.CRITICAL || severity === ErrorSeverity.ERROR) {
-  //   sendToMonitoringService(logEntry);
-  // }
 }
 
 /**
@@ -202,70 +198,4 @@ export function handleValidationError(
     userMessage,
     metadata
   });
-}
-
-/**
- * Get recent error logs (for debugging or admin dashboard)
- */
-export function getErrorLog(): ErrorLog[] {
-  return [...errorLog];
-}
-
-/**
- * Clear error log
- */
-export function clearErrorLog(): void {
-  errorLog.length = 0;
-}
-
-/**
- * Export error log as JSON (for support/debugging)
- */
-export function exportErrorLog(): string {
-  return JSON.stringify(errorLog, null, 2);
-}
-
-/**
- * Check if there are recent critical errors
- */
-export function hasRecentCriticalErrors(timeWindowMs: number = 60000): boolean {
-  const cutoff = Date.now() - timeWindowMs;
-  return errorLog.some(log => {
-    const logTime = new Date(log.timestamp).getTime();
-    return log.severity === ErrorSeverity.CRITICAL && logTime > cutoff;
-  });
-}
-
-/**
- * Get error statistics
- */
-export function getErrorStats(): {
-  total: number;
-  byCategory: Record<ErrorCategory, number>;
-  bySeverity: Record<ErrorSeverity, number>;
-} {
-  const stats = {
-    total: errorLog.length,
-    byCategory: {
-      [ErrorCategory.AUTH]: 0,
-      [ErrorCategory.DATABASE]: 0,
-      [ErrorCategory.NETWORK]: 0,
-      [ErrorCategory.VALIDATION]: 0,
-      [ErrorCategory.PERMISSION]: 0,
-      [ErrorCategory.UNKNOWN]: 0
-    },
-    bySeverity: {
-      [ErrorSeverity.INFO]: 0,
-      [ErrorSeverity.WARNING]: 0,
-      [ErrorSeverity.ERROR]: 0,
-      [ErrorSeverity.CRITICAL]: 0
-    }
-  };
-
-  errorLog.forEach(log => {
-    stats.byCategory[log.category]++;
-    stats.bySeverity[log.severity]++;
-  });
-
-  return stats;
 }

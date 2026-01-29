@@ -34,10 +34,6 @@ export function useCelebration() {
     celebrate("success", message, 1200);
   }, [celebrate]);
 
-  const celebrateSparkles = useCallback((message?: string) => {
-    celebrate("sparkles", message, 1500);
-  }, [celebrate]);
-
   const celebrateParty = useCallback((message?: string) => {
     celebrate("party", message, 2000);
   }, [celebrate]);
@@ -47,7 +43,6 @@ export function useCelebration() {
     celebrate,
     celebrateConfetti,
     celebrateSuccess,
-    celebrateSparkles,
     celebrateParty,
   };
 }
