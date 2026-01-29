@@ -4,6 +4,7 @@ import type { Expense } from '@/lib/types';
 import type { Income } from '@/hooks/useIncomes';
 import type { GroupMember } from '@/hooks/useGroups';
 import type { Settlement } from '@/hooks/useSettlements';
+import { oreFromDb } from '@/lib/currency';
 
 const createMember = (id: string, name: string): GroupMember => ({
   id,
@@ -27,7 +28,7 @@ const createExpense = (paidBy: string, amount: number): Expense => ({
 const createIncome = (recipient: string, amountOre: number, includedInSplit = true): Income => ({
   id: crypto.randomUUID(),
   group_id: 'group-1',
-  amount: amountOre, // in öre
+  amount: oreFromDb(amountOre), // in öre
   recipient,
   type: 'salary',
   note: 'Test income',

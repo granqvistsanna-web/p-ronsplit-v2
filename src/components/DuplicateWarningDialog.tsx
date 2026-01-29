@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { toKronor } from "@/lib/currency";
+import { toKronor, oreFromDb } from "@/lib/currency";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle } from "lucide-react";
 
@@ -34,7 +34,7 @@ export function DuplicateWarningDialog({
 }: DuplicateWarningDialogProps) {
   const formatAmount = (amount: number, type: "expense" | "income") => {
     // Income amounts are in öre (cents), expenses are in kr
-    const amountKr = type === "income" ? toKronor(amount) : amount;
+    const amountKr = type === "income" ? toKronor(oreFromDb(amount)) : amount;
     return amountKr.toLocaleString("sv-SE", { minimumFractionDigits: 2 });
   };
 

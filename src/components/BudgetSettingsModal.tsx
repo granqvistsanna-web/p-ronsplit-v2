@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
-import { toOre, toKronor } from "@/lib/currency";
+import { toOre, toKronor, oreFromDb } from "@/lib/currency";
 import { getSuggestedBudget } from "@/lib/budgetUtils";
 import type { Budget, BudgetPeriod } from "@/hooks/useBudgets";
 import type { Expense } from "@/lib/types";
@@ -76,7 +76,7 @@ export function BudgetSettingsModal({
           categoryId: category.id,
           categoryName: category.name,
           icon: category.icon,
-          amount: existing ? toKronor(existing.amount).toString() : "",
+          amount: existing ? toKronor(oreFromDb(existing.amount)).toString() : "",
           enabled: existing?.enabled ?? true,
           isCustom: false,
         };
@@ -97,7 +97,7 @@ export function BudgetSettingsModal({
           categoryId: budget.category,
           categoryName: budget.category,
           icon: budget.icon || "📦", // Use stored icon or default to 📦
-          amount: toKronor(budget.amount).toString(),
+          amount: toKronor(oreFromDb(budget.amount)).toString(),
           enabled: budget.enabled,
           isCustom: true,
         });

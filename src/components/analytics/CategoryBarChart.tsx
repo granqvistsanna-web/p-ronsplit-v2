@@ -51,7 +51,7 @@ const CustomTooltip = ({ active, payload, stacked, members }: CustomTooltipProps
 
   // For stacked mode, show breakdown per member
   if (stacked && members) {
-    const total = members.reduce((sum: number, member: GroupMember) => sum + (data[member.user_id] || 0), 0);
+    const total = members.reduce((sum: number, member: GroupMember) => sum + (Number(data[member.user_id]) || 0), 0);
 
     return (
       <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2.5 shadow-notion-lg">
