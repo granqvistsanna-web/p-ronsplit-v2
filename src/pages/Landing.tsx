@@ -36,8 +36,8 @@ const Landing = () => {
       <section className="container max-w-3xl mx-auto px-6 pt-24 pb-20 md:pt-32 md:pb-28">
         <div className="space-y-6">
           <h1 className="text-4xl md:text-5xl font-medium text-foreground tracking-tight leading-tight">
-            Ordna upp hushållets     <br />
-            ekonomi med Päronsplit    
+            Ordna upp hushållets<br />
+            ekonomi med Päronsplit
           </h1>
           <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">Håll koll på gemensamma inkomster och utgifter med familjen, kompisarna eller sambon. Sätt budget, sparmål och mer.      </p>
           <div className="pt-4">
@@ -87,7 +87,7 @@ const Landing = () => {
       <footer className="border-t border-border/40">
         <div className="container max-w-5xl mx-auto px-6 py-8">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm text-muted-foreground">
-            <span>© 2025 Päronsplit</span>
+            <span>© 2026 Päronsplit</span>
             <span>Gjort i Sverige</span>
           </div>
         </div>
