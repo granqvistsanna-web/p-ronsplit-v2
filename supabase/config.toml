@@ -5,3 +5,6 @@ verify_jwt = true
 
 [functions.categorize-expenses]
 verify_jwt = true
+
+[functions.keep-alive]
+verify_jwt = false
