@@ -292,32 +292,37 @@ export function useIncomes(filters: IncomeFilters) {
         duration: 5000,
         action: {
           label: "Ångra",
-          onClick: async () => {
-            try {
-              // Restore the income
-              const { error: restoreError } = await supabase.from("incomes").insert({
-                id: incomeToDelete.id,
-                group_id: incomeToDelete.group_id,
-                amount: incomeToDelete.amount,
-                recipient: incomeToDelete.recipient,
-                type: incomeToDelete.type,
-                note: incomeToDelete.note,
-                date: incomeToDelete.date,
-                repeat: incomeToDelete.repeat,
-                included_in_split: incomeToDelete.included_in_split,
-              });
+          onClick: (() => {
+            let restored = false;
+            return async () => {
+              if (restored) return;
+              restored = true;
+              try {
+                const { error: restoreError } = await supabase.from("incomes").insert({
+                  id: incomeToDelete.id,
+                  group_id: incomeToDelete.group_id,
+                  amount: incomeToDelete.amount,
+                  recipient: incomeToDelete.recipient,
+                  type: incomeToDelete.type,
+                  note: incomeToDelete.note,
+                  date: incomeToDelete.date,
+                  repeat: incomeToDelete.repeat,
+                  included_in_split: incomeToDelete.included_in_split,
+                });
 
-              if (restoreError) throw restoreError;
+                if (restoreError) throw restoreError;
 
-              queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
-              toast.success("Inkomst återställd!");
-            } catch (restoreError) {
-              handleDatabaseError(restoreError, "Kunde inte återställa inkomst. Försök igen eller kontakta support.", {
-                operation: "restoreIncome",
-                incomeId: incomeToDelete.id,
-              });
-            }
-          },
+                queryClient.invalidateQueries({ queryKey: queryKeys.incomes.lists() });
+                toast.success("Inkomst återställd!");
+              } catch (restoreError) {
+                restored = false;
+                handleDatabaseError(restoreError, "Kunde inte återställa inkomst. Försök igen eller kontakta support.", {
+                  operation: "restoreIncome",
+                  incomeId: incomeToDelete.id,
+                });
+              }
+            };
+          })(),
         },
       });
     },
