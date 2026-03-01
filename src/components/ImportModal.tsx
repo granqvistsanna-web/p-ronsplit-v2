@@ -128,7 +128,7 @@ export function ImportModal({
         originalIndex: i,
       }));
 
-      const { data, error } = await supabase.functions.invoke("categorize-transactions", {
+      const { data, error } = await supabase.functions.invoke("categorize-expenses", {
         body: {
           transactions: unmatchedTransactions.map(t => ({
             date: t.date,
@@ -332,7 +332,7 @@ export function ImportModal({
           originalIndex: i,
         }));
 
-        const { data: catData, error: catError } = await supabase.functions.invoke("categorize-transactions", {
+        const { data: catData, error: catError } = await supabase.functions.invoke("categorize-expenses", {
           body: {
             transactions: unmatchedTransactions.map(t => ({
               date: t.date,
