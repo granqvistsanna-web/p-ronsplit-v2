@@ -128,16 +128,16 @@ export function ImportModal({
         originalIndex: i,
       }));
 
-      const { data, error } = await supabase.functions.invoke("categorize-expenses", {
-        body: {
-          transactions: unmatchedTransactions.map(t => ({
-            date: t.date,
-            description: t.description,
-            amount: t.amount,
-          })),
-          existingRules: [],
-        },
-      });
+        const { data, error } = await supabase.functions.invoke("categorize-expenses", {
+          body: {
+            expenses: unmatchedTransactions.map(t => ({
+              id: `unmatched-${t.originalIndex}`,
+              date: t.date,
+              description: t.description,
+              amount: t.amount,
+            })),
+          },
+        });
 
       if (error) {
         console.error("AI categorization error:", error);
@@ -145,15 +145,18 @@ export function ImportModal({
         for (const i of needsAi) {
           categories.set(i, { category: "ovrigt" as CategoryId, isShared: true });
         }
-      } else if (data?.categorizations) {
-        const response = data as CategorizationResponse;
-        for (let j = 0; j < unmatchedTransactions.length; j++) {
-          const originalIndex = unmatchedTransactions[j].originalIndex;
-          const cat = response.categorizations.find((c) => c.index === j);
-          categories.set(originalIndex, {
-            category: (cat?.category || "ovrigt") as CategoryId,
-            isShared: cat?.isShared ?? true,
-          });
+      } else if (data?.suggestions) {
+        for (const suggestion of data.suggestions) {
+          // Find original index from the expense id
+          const unmatchedEntry = unmatchedTransactions.find(
+            (t) => `unmatched-${t.originalIndex}` === suggestion.id
+          );
+          if (unmatchedEntry) {
+            categories.set(unmatchedEntry.originalIndex, {
+              category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
+              isShared: true,
+            });
+          }
         }
       }
     }
@@ -334,12 +337,12 @@ export function ImportModal({
 
         const { data: catData, error: catError } = await supabase.functions.invoke("categorize-expenses", {
           body: {
-            transactions: unmatchedTransactions.map(t => ({
+            expenses: unmatchedTransactions.map(t => ({
+              id: `unmatched-${t.originalIndex}`,
               date: t.date,
               description: t.description,
               amount: t.amount,
             })),
-            existingRules: [],
           },
         });
 
@@ -348,15 +351,17 @@ export function ImportModal({
           for (const i of needsAi) {
             categories.set(i, { category: "ovrigt" as CategoryId, isShared: true });
           }
-        } else if (catData?.categorizations) {
-          const response = catData as CategorizationResponse;
-          for (let j = 0; j < unmatchedTransactions.length; j++) {
-            const originalIndex = unmatchedTransactions[j].originalIndex;
-            const cat = response.categorizations.find((c) => c.index === j);
-            categories.set(originalIndex, {
-              category: (cat?.category || "ovrigt") as CategoryId,
-              isShared: cat?.isShared ?? true,
-            });
+        } else if (catData?.suggestions) {
+          for (const suggestion of catData.suggestions) {
+            const unmatchedEntry = unmatchedTransactions.find(
+              (t) => `unmatched-${t.originalIndex}` === suggestion.id
+            );
+            if (unmatchedEntry) {
+              categories.set(unmatchedEntry.originalIndex, {
+                category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
+                isShared: true,
+              });
+            }
           }
         }
       }
@@ -383,7 +388,7 @@ export function ImportModal({
       toast.error("Kunde inte bearbeta bilden. Försök igen.");
       setStep("upload");
     }
-  }, []);
+  }, [groupId]);
 
   const handleImageSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
