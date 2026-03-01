@@ -10,7 +10,6 @@ import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import type {
   ExtendedTransaction,
   TransactionType,
-  CategorizationResponse,
 } from "./types";
 
 interface UseCategorizeOptions {
@@ -69,15 +68,15 @@ export function useCategorization({
         }));
 
         const { data, error } = await supabase.functions.invoke(
-          "categorize-transactions",
+          "categorize-expenses",
           {
             body: {
-              transactions: unmatchedTransactions.map((t) => ({
+              expenses: unmatchedTransactions.map((t) => ({
+                id: `unmatched-${t.originalIndex}`,
                 date: t.date,
                 description: t.description,
                 amount: t.amount,
               })),
-              existingRules: [],
             },
           }
         );
@@ -91,15 +90,17 @@ export function useCategorization({
               isShared: true,
             });
           }
-        } else if (data?.categorizations) {
-          const response = data as CategorizationResponse;
-          for (let j = 0; j < unmatchedTransactions.length; j++) {
-            const originalIndex = unmatchedTransactions[j].originalIndex;
-            const cat = response.categorizations.find((c) => c.index === j);
-            categories.set(originalIndex, {
-              category: (cat?.category || "ovrigt") as CategoryId,
-              isShared: cat?.isShared ?? true,
-            });
+        } else if (data?.suggestions) {
+          for (const suggestion of data.suggestions) {
+            const unmatchedEntry = unmatchedTransactions.find(
+              (t) => `unmatched-${t.originalIndex}` === suggestion.id
+            );
+            if (unmatchedEntry) {
+              categories.set(unmatchedEntry.originalIndex, {
+                category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
+                isShared: true,
+              });
+            }
           }
         }
       }
@@ -191,15 +192,15 @@ export async function categorizeImageTransactions(
     }));
 
     const { data: catData, error: catError } = await supabase.functions.invoke(
-      "categorize-transactions",
+      "categorize-expenses",
       {
         body: {
-          transactions: unmatchedTransactions.map((t) => ({
+          expenses: unmatchedTransactions.map((t) => ({
+            id: `unmatched-${t.originalIndex}`,
             date: t.date,
             description: t.description,
             amount: t.amount,
           })),
-          existingRules: [],
         },
       }
     );
@@ -209,15 +210,17 @@ export async function categorizeImageTransactions(
       for (const i of needsAi) {
         categories.set(i, { category: "ovrigt" as CategoryId, isShared: true });
       }
-    } else if (catData?.categorizations) {
-      const response = catData as CategorizationResponse;
-      for (let j = 0; j < unmatchedTransactions.length; j++) {
-        const originalIndex = unmatchedTransactions[j].originalIndex;
-        const cat = response.categorizations.find((c) => c.index === j);
-        categories.set(originalIndex, {
-          category: (cat?.category || "ovrigt") as CategoryId,
-          isShared: cat?.isShared ?? true,
-        });
+    } else if (catData?.suggestions) {
+      for (const suggestion of catData.suggestions) {
+        const unmatchedEntry = unmatchedTransactions.find(
+          (t) => `unmatched-${t.originalIndex}` === suggestion.id
+        );
+        if (unmatchedEntry) {
+          categories.set(unmatchedEntry.originalIndex, {
+            category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
+            isShared: true,
+          });
+        }
       }
     }
   }

@@ -71,8 +71,8 @@ export async function validateFileMagicBytes(file: File): Promise<boolean> {
   if (file.name.endsWith(".csv")) {
     const textBuffer = await file.slice(0, 100).arrayBuffer();
     const textBytes = new Uint8Array(textBuffer);
-    // Check if mostly printable ASCII (allow some extended chars for Swedish)
-    return textBytes.every((b) => (b >= 0x09 && b <= 0x7e) || b >= 0xc0);
+    // Check if mostly printable ASCII or valid UTF-8 (allow continuation bytes for Swedish ä/å/ö)
+    return textBytes.every((b) => (b >= 0x09 && b <= 0x7e) || b >= 0x80);
   }
 
   return isXlsx || isXls;
