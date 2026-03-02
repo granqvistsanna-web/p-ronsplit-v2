@@ -75,6 +75,37 @@ async function validateFileMagicBytes(file: File): Promise<boolean> {
   return isXlsx || isXls;
 }
 
+function readFileAsDataUrl(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+      } else {
+        reject(new Error("Kunde inte läsa bildfilen"));
+      }
+    };
+    reader.onerror = () => reject(new Error("Kunde inte läsa bildfilen"));
+    reader.readAsDataURL(file);
+  });
+}
+
+function getInvokeErrorStatus(error: unknown): number | undefined {
+  if (
+    error &&
+    typeof error === "object" &&
+    "context" in error &&
+    error.context &&
+    typeof error.context === "object" &&
+    "status" in error.context &&
+    typeof error.context.status === "number"
+  ) {
+    return error.context.status;
+  }
+
+  return undefined;
+}
+
 export function ImportModal({
   isOpen,
   onClose,
@@ -258,23 +289,37 @@ export function ImportModal({
       setStep("categorizing");
       toast.info("Analyserar kontoutdrag med AI...");
 
-      // Convert to base64
-      const buffer = await file.arrayBuffer();
-      const base64 = btoa(
-        new Uint8Array(buffer).reduce((data, byte) => data + String.fromCharCode(byte), '')
-      );
+      // Convert to base64 via Data URL (more robust for binary image data)
+      const dataUrl = await readFileAsDataUrl(file);
+      const [header, base64] = dataUrl.split(",");
+
+      if (!base64) {
+        throw new Error("Ogiltig bilddata");
+      }
+
+      const mimeMatch = header.match(/^data:(.*?);base64$/);
+      const mimeType = mimeMatch?.[1] || file.type || "image/png";
 
       // Call the edge function to analyze the image
       const { data, error } = await supabase.functions.invoke("analyze-bank-image", {
         body: {
           imageBase64: base64,
-          mimeType: file.type,
+          mimeType,
         },
       });
 
       if (error) {
-        console.error("Image analysis error:", error);
-        toast.error("Kunde inte analysera bilden. Försök igen.");
+        const status = getInvokeErrorStatus(error);
+        console.error("Image analysis error:", { status, error });
+
+        if (status === 401) {
+          toast.error("Din session har gått ut. Logga in igen och försök igen.");
+        } else if (status === 413) {
+          toast.error("Bilden är för stor att analysera. Testa en mindre eller komprimerad bild.");
+        } else {
+          toast.error("Kunde inte analysera bilden. Försök igen.");
+        }
+
         setStep("upload");
         return;
       }
@@ -385,7 +430,7 @@ export function ImportModal({
 
     } catch (err) {
       console.error("Image upload error:", err);
-      toast.error("Kunde inte bearbeta bilden. Försök igen.");
+      toast.error((err as Error)?.message || "Kunde inte bearbeta bilden. Försök igen.");
       setStep("upload");
     }
   }, [groupId]);

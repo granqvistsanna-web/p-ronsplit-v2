@@ -1,10 +1,10 @@
 project_id = "qswvgfslsginwpqkbbki"
 
 [functions.analyze-bank-image]
-verify_jwt = true
+verify_jwt = false
 
 [functions.categorize-expenses]
-verify_jwt = true
+verify_jwt = false
 
 [functions.keep-alive]
 verify_jwt = false
