@@ -117,6 +117,7 @@ export type Database = {
           id: string | null
           invite_code: string | null
           is_temporary: boolean | null
+          month_start_day: number
           name: string | null
         }
         Insert: {
@@ -125,6 +126,7 @@ export type Database = {
           id?: string | null
           invite_code?: string | null
           is_temporary?: boolean | null
+          month_start_day?: number
           name?: string | null
         }
         Update: {
@@ -133,6 +135,7 @@ export type Database = {
           id?: string | null
           invite_code?: string | null
           is_temporary?: boolean | null
+          month_start_day?: number
           name?: string | null
         }
         Relationships: []

@@ -22,7 +22,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
-  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
+  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode, updateMonthStartDay } = useGroups();
   const { theme, setTheme } = useTheme();
   const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
   const { sidebarWidth } = useSidebar();
@@ -254,6 +254,8 @@ const Settings = () => {
               selectedMonth={selectedMonth}
               isCurrentMonth={isCurrentMonth}
               goToCurrentMonth={goToCurrentMonth}
+              monthStartDay={household?.month_start_day ?? 1}
+              onMonthStartDayChange={updateMonthStartDay}
             />
           </section>
 

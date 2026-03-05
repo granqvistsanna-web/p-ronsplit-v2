@@ -217,6 +217,7 @@ export function useGroups() {
           created_by: groupData.created_by,
           created_at: groupData.created_at,
           invite_code: groupData.invite_code,
+          month_start_day: (groupData as any).month_start_day ?? 1,
           members,
         };
       });
@@ -452,6 +453,7 @@ export function useGroups() {
       localStorage.setItem(SELECTED_GROUP_KEY, groupData.id);
       setHousehold({
         ...groupData,
+        month_start_day: (groupData as any).month_start_day ?? 1,
         members: [{
           id: user.id,
           user_id: user.id,
@@ -597,6 +599,23 @@ export function useGroups() {
     }
   };
 
+  const updateMonthStartDay = async (day: number) => {
+    if (!household) return;
+    try {
+      const { error } = await supabase
+        .from("groups")
+        .update({ month_start_day: day } as any)
+        .eq("id", household.id);
+      if (error) throw error;
+      await fetchGroups();
+      toast.success("Månadens startdag uppdaterad");
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte uppdatera startdag", {
+        operation: "updateMonthStartDay",
+      });
+    }
+  };
+
   return {
     household,
     allGroups,
@@ -606,6 +625,7 @@ export function useGroups() {
     removeMember,
     regenerateInviteCode,
     updateHouseholdName,
+    updateMonthStartDay,
     createGroup,
     deleteGroup,
     joinGroupByCode,
