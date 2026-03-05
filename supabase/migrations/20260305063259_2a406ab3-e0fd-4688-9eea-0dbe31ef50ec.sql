@@ -1,0 +1,1 @@
+ALTER TABLE public.groups ADD COLUMN IF NOT EXISTS month_start_day integer NOT NULL DEFAULT 1 CHECK (month_start_day >= 1 AND month_start_day <= 28);

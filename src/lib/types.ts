@@ -150,6 +150,7 @@ export interface Group {
   created_by: string;
   created_at: string;
   invite_code: string;
+  month_start_day: number;
   members: GroupMember[];
 }
 

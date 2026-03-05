@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { toKronor } from "@/lib/currency";
+import { getMonthRange, isDateInMonthRange } from "@/lib/monthRange";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { AddFab } from "@/components/AddFab";
 import { AddTransactionModal } from "@/components/AddTransactionModal";
@@ -71,22 +72,19 @@ const Index = () => {
 
   const loading = householdLoading || expensesLoading || incomesLoading || settlementsLoading;
 
-  // Filter expenses and incomes by selected month
+  // Compute custom month range based on group's month_start_day
+  const monthRange = useMemo(() => {
+    return getMonthRange(selectedYear, selectedMonth, household?.month_start_day ?? 1);
+  }, [selectedYear, selectedMonth, household?.month_start_day]);
+
+  // Filter expenses and incomes by custom month range
   const filteredExpenses = useMemo(() => {
-    return expenses.filter(expense => {
-      const expenseDate = new Date(expense.date);
-      return expenseDate.getFullYear() === selectedYear &&
-             expenseDate.getMonth() + 1 === selectedMonth;
-    });
-  }, [expenses, selectedYear, selectedMonth]);
+    return expenses.filter(expense => isDateInMonthRange(expense.date, monthRange));
+  }, [expenses, monthRange]);
 
   const filteredIncomes = useMemo(() => {
-    return incomes.filter(income => {
-      const incomeDate = new Date(income.date);
-      return incomeDate.getFullYear() === selectedYear &&
-             incomeDate.getMonth() + 1 === selectedMonth;
-    });
-  }, [incomes, selectedYear, selectedMonth]);
+    return incomes.filter(income => isDateInMonthRange(income.date, monthRange));
+  }, [incomes, monthRange]);
 
   // Calculate totals
   const totals = useMemo(() => {
