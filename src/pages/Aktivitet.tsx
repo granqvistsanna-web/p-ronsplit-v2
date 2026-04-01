@@ -251,11 +251,12 @@ export default function Aktivitet() {
     });
 
     if (!updated) {
-      throw new Error("Kunde inte uppdatera avräkning");
+      return false;
     }
 
     setIsEditSettlementModalOpen(false);
     setEditingSettlement(null);
+    return true;
   };
 
   const handleDeleteSettlement = async (settlementId: string) => {
