@@ -1,10 +1,4 @@
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { ChevronDown, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { ComputedPeriod } from "@/lib/periodUtils";
 
@@ -28,52 +22,63 @@ export function PeriodSelector({
   selectedPeriod,
   onSelectPeriod,
 }: PeriodSelectorProps) {
+  // Periods are newest-first, so "prev" (older) = higher index, "next" (newer) = lower index
+  const currentIndex = periods.findIndex((p) => p.id === selectedPeriod?.id);
+  const hasPrev = currentIndex < periods.length - 1;
+  const hasNext = currentIndex > 0;
+
+  const goPrev = () => {
+    if (hasPrev) onSelectPeriod(periods[currentIndex + 1].id);
+  };
+
+  const goNext = () => {
+    if (hasNext) onSelectPeriod(periods[currentIndex - 1].id);
+  };
+
   return (
-    <div className="flex items-center justify-center gap-1">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button
-            className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-              "text-foreground hover:bg-secondary/60 cursor-pointer"
-            )}
-          >
-            {selectedPeriod ? (
-              <span className="flex flex-col items-start leading-tight">
-                <span>{selectedPeriod.name}</span>
-                <span className="text-[11px] font-normal text-muted-foreground">
-                  {formatDateRange(selectedPeriod.start_date, selectedPeriod.end_date)}
-                </span>
-              </span>
-            ) : (
-              <span className="text-muted-foreground">Välj period</span>
-            )}
-            <ChevronDown size={14} className="text-muted-foreground" />
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="center" className="min-w-[180px]">
-          {periods.map((period) => (
-            <DropdownMenuItem
-              key={period.id}
-              onClick={() => onSelectPeriod(period.id)}
-              className="flex items-center justify-between gap-2"
-            >
-              <span className="flex flex-col leading-tight">
-                <span>{period.name}</span>
-                <span className="text-[11px] text-muted-foreground">
-                  {formatDateRange(period.start_date, period.end_date)}
-                </span>
-              </span>
-              {period.id === selectedPeriod?.id && <Check size={14} />}
-            </DropdownMenuItem>
-          ))}
-          {periods.length === 0 && (
-            <DropdownMenuItem disabled>
-              <span className="text-muted-foreground">Inga perioder</span>
-            </DropdownMenuItem>
-          )}
-        </DropdownMenuContent>
-      </DropdownMenu>
+    <div className="flex items-center justify-center gap-2">
+      <button
+        onClick={goPrev}
+        disabled={!hasPrev}
+        className={cn(
+          "p-1.5 rounded-md transition-colors",
+          hasPrev
+            ? "text-foreground hover:bg-secondary/60 cursor-pointer"
+            : "text-muted-foreground/30 cursor-default"
+        )}
+        aria-label="Föregående period"
+      >
+        <ChevronLeft size={18} />
+      </button>
+
+      <div className="flex flex-col items-center leading-tight min-w-[140px]">
+        {selectedPeriod ? (
+          <>
+            <span className="text-sm font-medium text-foreground">
+              {selectedPeriod.name}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              {formatDateRange(selectedPeriod.start_date, selectedPeriod.end_date)}
+            </span>
+          </>
+        ) : (
+          <span className="text-sm text-muted-foreground">Ingen period</span>
+        )}
+      </div>
+
+      <button
+        onClick={goNext}
+        disabled={!hasNext}
+        className={cn(
+          "p-1.5 rounded-md transition-colors",
+          hasNext
+            ? "text-foreground hover:bg-secondary/60 cursor-pointer"
+            : "text-muted-foreground/30 cursor-default"
+        )}
+        aria-label="Nästa period"
+      >
+        <ChevronRight size={18} />
+      </button>
     </div>
   );
 }
