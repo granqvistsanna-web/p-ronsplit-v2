@@ -180,15 +180,16 @@ Regler:
         
         // Map AI response to expense IDs and validate categories
         suggestions = rawSuggestions
-          .filter((s: { index: number; category: string; confidence: number }) => 
+          .filter((s: { index: number; category: string; confidence: number; isShared?: boolean }) => 
             s.index >= 0 && 
             s.index < expenses.length && 
             VALID_CATEGORIES.includes(s.category)
           )
-          .map((s: { index: number; category: string; confidence: number }) => ({
+          .map((s: { index: number; category: string; confidence: number; isShared?: boolean }) => ({
             id: (expenses as ExpenseInput[])[s.index].id,
             suggestedCategory: s.category,
             confidence: Math.min(1, Math.max(0, s.confidence || 0.5)),
+            isShared: s.isShared !== false,
           }));
       }
     } catch (parseError) {
