@@ -312,22 +312,10 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user created this contribution
-      if (contribution.user_id !== user.id) {
-        handleError(new Error("Du har inte behörighet att uppdatera denna insättning"), {
-          category: ErrorCategory.PERMISSION,
-          severity: ErrorSeverity.WARNING,
-          userMessage: "Du har inte behörighet att uppdatera denna insättning",
-          metadata: { operation: "updateContribution", contributionId },
-        });
-        return;
-      }
-
       const { error } = await supabase
         .from("savings_contributions")
         .update(updates)
-        .eq("id", contributionId)
-        .eq("user_id", user.id); // Server-side check
+        .eq("id", contributionId);
 
       if (error) throw error;
 
@@ -361,23 +349,11 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user created this contribution
-      if (contributionToDelete.user_id !== user.id) {
-        handleError(new Error("Du har inte behörighet att ta bort denna insättning"), {
-          category: ErrorCategory.PERMISSION,
-          severity: ErrorSeverity.WARNING,
-          userMessage: "Du har inte behörighet att ta bort denna insättning",
-          metadata: { operation: "deleteContribution", contributionId },
-        });
-        return;
-      }
-
       // Delete from database
       const { error } = await supabase
         .from("savings_contributions")
         .delete()
-        .eq("id", contributionId)
-        .eq("user_id", user.id); // Server-side check
+        .eq("id", contributionId);
 
       if (error) throw error;
 

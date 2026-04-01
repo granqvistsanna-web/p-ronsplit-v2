@@ -193,17 +193,22 @@ export function usePeriods(groupId?: string) {
       const nextStartDate = tomorrow.toISOString().split("T")[0];
       const nextName = monthName(tomorrow);
 
-      const { data: newPeriod } = await supabase
-        .from("periods")
-        .insert({
-          group_id: groupId,
-          name: nextName,
-          start_date: nextStartDate,
-          end_date: null,
-          created_by: user.id,
-        })
-        .select()
-        .single();
+      let newPeriod: typeof periods[number] | null = null;
+      const nextExists = periods.some(p => p.start_date === nextStartDate);
+      if (!nextExists) {
+        const { data } = await supabase
+          .from("periods")
+          .insert({
+            group_id: groupId,
+            name: nextName,
+            start_date: nextStartDate,
+            end_date: null,
+            created_by: user.id,
+          })
+          .select()
+          .single();
+        newPeriod = data;
+      }
 
       await fetchPeriods();
 
@@ -231,9 +236,25 @@ export function usePeriods(groupId?: string) {
     if (!user) return false;
 
     try {
+      const period = periods.find(p => p.id === periodId);
+      if (!period) return false;
+
+      // Find the next period (closest start_date after this one)
+      const nextPeriod = periods
+        .filter(p => p.id !== periodId && p.start_date > period.start_date)
+        .sort((a, b) => a.start_date.localeCompare(b.start_date))[0];
+
+      // Set end_date to day before next period starts, or null if no next period
+      let newEndDate: string | null = null;
+      if (nextPeriod) {
+        const dayBefore = new Date(nextPeriod.start_date + "T12:00:00");
+        dayBefore.setDate(dayBefore.getDate() - 1);
+        newEndDate = dayBefore.toISOString().split("T")[0];
+      }
+
       const { error } = await supabase
         .from("periods")
-        .update({ is_closed: false, closed_at: null, end_date: null })
+        .update({ is_closed: false, closed_at: null, end_date: newEndDate })
         .eq("id", periodId);
 
       if (error) throw error;
@@ -248,7 +269,7 @@ export function usePeriods(groupId?: string) {
       });
       return false;
     }
-  }, [user, fetchPeriods]);
+  }, [user, groupId, periods, fetchPeriods]);
 
   /**
    * Ensure at least one period exists for the group.
