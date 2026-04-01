@@ -14,7 +14,6 @@ interface HeroSummaryCardProps {
   onSelectPeriod: (periodId: string) => void;
   onClosePeriod: (periodId: string) => Promise<boolean>;
   onReopenPeriod: (periodId: string) => Promise<boolean>;
-  onCreatePeriod: (name?: string, startDate?: string) => Promise<any>;
 }
 
 export const HeroSummaryCard = ({
@@ -28,7 +27,6 @@ export const HeroSummaryCard = ({
   onSelectPeriod,
   onClosePeriod,
   onReopenPeriod,
-  onCreatePeriod,
 }: HeroSummaryCardProps) => {
   const animatedNetto = useCountAnimation(Math.abs(netto), { duration: 1000, delay: 100, animateOnChange: true });
   const animatedIncome = useCountAnimation(totalIncomes, { duration: 1000, delay: 200, animateOnChange: true });
@@ -45,7 +43,6 @@ export const HeroSummaryCard = ({
             onSelectPeriod={onSelectPeriod}
             onClosePeriod={onClosePeriod}
             onReopenPeriod={onReopenPeriod}
-            onCreatePeriod={onCreatePeriod}
           />
         </div>
 

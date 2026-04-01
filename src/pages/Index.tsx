@@ -283,7 +283,6 @@ const Index = () => {
           onSelectPeriod={selectPeriod}
           onClosePeriod={closePeriod}
           onReopenPeriod={reopenPeriod}
-          onCreatePeriod={createPeriod}
         />
 
         {/* Member summary */}

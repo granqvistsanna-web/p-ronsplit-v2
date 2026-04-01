@@ -4,14 +4,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
   ChevronDown,
   Check,
   Lock,
-  Plus,
   LockOpen,
   MoreHorizontal,
 } from "lucide-react";
@@ -24,7 +22,6 @@ interface PeriodSelectorProps {
   onSelectPeriod: (periodId: string) => void;
   onClosePeriod: (periodId: string) => Promise<boolean>;
   onReopenPeriod: (periodId: string) => Promise<boolean>;
-  onCreatePeriod: (name?: string, startDate?: string) => Promise<any>;
 }
 
 export function PeriodSelector({
@@ -33,7 +30,6 @@ export function PeriodSelector({
   onSelectPeriod,
   onClosePeriod,
   onReopenPeriod,
-  onCreatePeriod,
 }: PeriodSelectorProps) {
   const [loading, setLoading] = useState(false);
 
@@ -52,15 +48,6 @@ export function PeriodSelector({
     setLoading(true);
     try {
       await onReopenPeriod(selectedPeriod.id);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleCreatePeriod = async () => {
-    setLoading(true);
-    try {
-      await onCreatePeriod();
     } finally {
       setLoading(false);
     }
@@ -138,31 +125,24 @@ export function PeriodSelector({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-[180px]">
-          <DropdownMenuItem onClick={handleCreatePeriod} disabled={loading}>
-            <Plus size={14} className="mr-2" />
-            Ny period
-          </DropdownMenuItem>
           {selectedPeriod && (
-            <>
-              <DropdownMenuSeparator />
-              {selectedPeriod.is_closed ? (
-                <DropdownMenuItem
-                  onClick={handleReopenPeriod}
-                  disabled={loading}
-                >
-                  <LockOpen size={14} className="mr-2" />
-                  Öppna igen
-                </DropdownMenuItem>
-              ) : (
-                <DropdownMenuItem
-                  onClick={handleClosePeriod}
-                  disabled={loading}
-                >
-                  <Lock size={14} className="mr-2" />
-                  Stäng period
-                </DropdownMenuItem>
-              )}
-            </>
+            selectedPeriod.is_closed ? (
+              <DropdownMenuItem
+                onClick={handleReopenPeriod}
+                disabled={loading}
+              >
+                <LockOpen size={14} className="mr-2" />
+                Öppna igen
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem
+                onClick={handleClosePeriod}
+                disabled={loading}
+              >
+                <Lock size={14} className="mr-2" />
+                Stäng månad
+              </DropdownMenuItem>
+            )
           )}
         </DropdownMenuContent>
       </DropdownMenu>

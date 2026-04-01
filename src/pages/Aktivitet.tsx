@@ -372,7 +372,6 @@ export default function Aktivitet() {
                 onSelectPeriod={selectPeriod}
                 onClosePeriod={closePeriod}
                 onReopenPeriod={reopenPeriod}
-                onCreatePeriod={createPeriod}
               />
               {expenses.filter(e => e.category === "ovrigt").length > 0 && (
                 <Button
