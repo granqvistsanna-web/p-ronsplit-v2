@@ -18,6 +18,7 @@ interface CategorySuggestion {
   id: string;
   suggestedCategory: string;
   confidence: number;
+  isShared: boolean;
 }
 
 const VALID_CATEGORIES = [
