@@ -521,7 +521,14 @@ export function ImportModal({
         };
       });
 
-      setTransactions(categorized);
+      // Check for duplicates before showing review
+      const withDuplicates = await checkImportDuplicates(categorized, groupId);
+      const dupCount = withDuplicates.filter(t => t.duplicateInfo).length;
+      if (dupCount > 0) {
+        toast.warning(`${dupCount} möjliga dubletter hittades och har markerats`);
+      }
+
+      setTransactions(withDuplicates);
       setStep("review");
 
       if (smartMatchedCount > 0) {
