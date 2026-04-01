@@ -202,6 +202,7 @@ export async function smartCategorize(
 
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
+    const priv = isLikelyPrivate(t.description);
 
     // Try keyword match first (fast, high confidence)
     const keywordMatch = matchByKeyword(t.description);
@@ -209,7 +210,7 @@ export async function smartCategorize(
       matched.push({
         index: i,
         category: keywordMatch.category,
-        isShared: true,
+        isShared: !priv,
         confidence: keywordMatch.confidence,
         source: keywordMatch.source,
       });
@@ -222,9 +223,21 @@ export async function smartCategorize(
       matched.push({
         index: i,
         category: historyMatch.category,
-        isShared: true,
+        isShared: !priv,
         confidence: historyMatch.confidence,
         source: historyMatch.source,
+      });
+      continue;
+    }
+
+    // If clearly private but no category match, still mark it
+    if (priv) {
+      matched.push({
+        index: i,
+        category: "ovrigt" as CategoryId,
+        isShared: false,
+        confidence: "medium",
+        source: "keyword",
       });
       continue;
     }
