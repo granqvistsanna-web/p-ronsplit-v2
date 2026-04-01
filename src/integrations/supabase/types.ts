@@ -117,7 +117,6 @@ export type Database = {
           id: string | null
           invite_code: string | null
           is_temporary: boolean | null
-          month_start_day: number
           name: string | null
         }
         Insert: {
@@ -126,7 +125,6 @@ export type Database = {
           id?: string | null
           invite_code?: string | null
           is_temporary?: boolean | null
-          month_start_day?: number
           name?: string | null
         }
         Update: {
@@ -135,8 +133,43 @@ export type Database = {
           id?: string | null
           invite_code?: string | null
           is_temporary?: boolean | null
-          month_start_day?: number
           name?: string | null
+        }
+        Relationships: []
+      }
+      periods: {
+        Row: {
+          id: string
+          group_id: string
+          name: string
+          start_date: string
+          end_date: string | null
+          is_closed: boolean
+          closed_at: string | null
+          created_at: string
+          created_by: string
+        }
+        Insert: {
+          id?: string
+          group_id: string
+          name: string
+          start_date: string
+          end_date?: string | null
+          is_closed?: boolean
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+        }
+        Update: {
+          id?: string
+          group_id?: string
+          name?: string
+          start_date?: string
+          end_date?: string | null
+          is_closed?: boolean
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
         }
         Relationships: []
       }

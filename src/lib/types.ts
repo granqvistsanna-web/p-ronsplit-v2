@@ -20,6 +20,7 @@ export type ProfileRow = Tables<"profiles">;
 export type GroupMemberRow = Tables<"group_members">;
 export type SavingsProjectRow = Tables<"savings_projects">;
 export type SavingsContributionRow = Tables<"savings_contributions">;
+export type PeriodRow = Tables<"periods">;
 
 // Insert types
 export type ExpenseInsert = TablesInsert<"expenses">;
@@ -150,8 +151,23 @@ export interface Group {
   created_by: string;
   created_at: string;
   invite_code: string;
-  month_start_day: number;
   members: GroupMember[];
+}
+
+/**
+ * A user-controlled period (replaces auto month ranges).
+ * Expenses/incomes are matched to periods by date range.
+ */
+export interface Period {
+  id: string;
+  group_id: string;
+  name: string;
+  start_date: string;
+  end_date: string | null;
+  is_closed: boolean;
+  closed_at: string | null;
+  created_at: string;
+  created_by: string;
 }
 
 /**

@@ -39,7 +39,7 @@ const Landing = () => {
             Ordna upp hushållets<br />
             ekonomi med Päronsplit
           </h1>
-          <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">Håll koll på gemensamma inkomster och utgifter med familjen, kompisarna eller sambon. Sätt budget, sparmål och mer.      </p>
+          <p className="text-lg text-muted-foreground max-w-xl leading-relaxed">Håll koll på gemensamma inkomster och utgifter med familjen, kompisarna eller sambon. Sätt budget, sparmål och mer.</p>
           <div className="pt-4">
             <Button size="lg" onClick={() => navigate("/auth")} className="bg-foreground text-background hover:bg-foreground/90 h-11 px-6">
               Testa gratis
