@@ -220,12 +220,17 @@ export default function Aktivitet() {
   };
 
   const handleSaveSettlement = async (updatedSettlement: Settlement) => {
-    await updateSettlement(updatedSettlement.id, {
+    const updated = await updateSettlement(updatedSettlement.id, {
       from_user: updatedSettlement.from_user,
       to_user: updatedSettlement.to_user,
       amount: updatedSettlement.amount,
       date: updatedSettlement.date,
     });
+
+    if (!updated) {
+      throw new Error("Kunde inte uppdatera avräkning");
+    }
+
     setIsEditSettlementModalOpen(false);
     setEditingSettlement(null);
   };

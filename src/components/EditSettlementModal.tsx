@@ -19,7 +19,7 @@ import { toast } from "sonner";
 interface EditSettlementModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (settlement: Settlement) => Promise<void>;
+  onSave: (settlement: Settlement) => Promise<boolean>;
   onDelete: (settlementId: string) => Promise<void>;
   settlement: Settlement | null;
   members: GroupMember[];
@@ -78,14 +78,17 @@ export function EditSettlementModal({
 
     setIsSubmitting(true);
     try {
-      await onSave({
+      const saved = await onSave({
         ...settlement,
         from_user: fromUserId,
         to_user: toUserId,
         amount: numericAmount,
         date: date,
       });
-      handleClose();
+
+      if (saved) {
+        handleClose();
+      }
     } catch (error) {
       console.error("Error updating settlement:", error);
       toast.error("Kunde inte uppdatera");
