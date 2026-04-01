@@ -8,11 +8,21 @@ import type { Period } from "@/lib/types";
 const SELECTED_PERIOD_KEY = "selected_period_id";
 
 /**
- * Format a default period name from a date (e.g. "April 2026").
+ * Format a calendar-month period name (e.g. "April 2026").
  */
-function defaultPeriodName(date: Date): string {
+function monthName(date: Date): string {
   return date.toLocaleDateString("sv-SE", { month: "long", year: "numeric" })
     .replace(/^./, c => c.toUpperCase());
+}
+
+/** Get first day of a month as YYYY-MM-DD */
+function firstOfMonth(year: number, month: number): string {
+  return new Date(year, month, 1).toISOString().split("T")[0];
+}
+
+/** Get last day of a month as YYYY-MM-DD */
+function lastOfMonth(year: number, month: number): string {
+  return new Date(year, month + 1, 0).toISOString().split("T")[0];
 }
 
 /**
@@ -110,34 +120,31 @@ export function usePeriods(groupId?: string) {
   }, [periods]);
 
   /**
-   * Create a new period. Automatically sets end_date on the previous open-ended period.
+   * Create a calendar-month period for a given year/month.
    */
-  const createPeriod = useCallback(async (name?: string, startDate?: string) => {
+  const createPeriod = useCallback(async (year?: number, month?: number) => {
     if (!user || !groupId) return null;
 
-    const start = startDate || new Date().toISOString().split("T")[0];
-    const periodName = name || defaultPeriodName(new Date(start + "T12:00:00"));
+    const now = new Date();
+    const y = year ?? now.getFullYear();
+    const m = month ?? now.getMonth();
+
+    const start = firstOfMonth(y, m);
+    const end = lastOfMonth(y, m);
+    const name = monthName(new Date(y, m, 1));
+
+    // Don't create duplicates
+    const exists = periods.some(p => p.start_date === start);
+    if (exists) return periods.find(p => p.start_date === start) || null;
 
     try {
-      // Close the end_date of the previous open-ended period
-      const prevOpen = periods.find(p => !p.end_date);
-      if (prevOpen) {
-        const prevEnd = new Date(start + "T12:00:00");
-        prevEnd.setDate(prevEnd.getDate() - 1);
-        const prevEndStr = prevEnd.toISOString().split("T")[0];
-
-        await supabase
-          .from("periods")
-          .update({ end_date: prevEndStr })
-          .eq("id", prevOpen.id);
-      }
-
       const { data, error } = await supabase
         .from("periods")
         .insert({
           group_id: groupId,
-          name: periodName,
+          name,
           start_date: start,
+          end_date: end,
           created_by: user.id,
         })
         .select()
@@ -147,7 +154,6 @@ export function usePeriods(groupId?: string) {
 
       await fetchPeriods();
 
-      // Select the new period
       if (data) {
         setSelectedPeriodState(data);
         localStorage.setItem(SELECTED_PERIOD_KEY, data.id);
@@ -165,33 +171,62 @@ export function usePeriods(groupId?: string) {
   }, [user, groupId, periods, fetchPeriods]);
 
   /**
-   * Close a period (mark as closed, set end_date to today if not set).
+   * Close a period and auto-create the next calendar month.
    */
   const closePeriod = useCallback(async (periodId: string) => {
-    if (!user) return false;
+    if (!user || !groupId) return false;
 
     try {
       const period = periods.find(p => p.id === periodId);
       if (!period) return false;
 
-      const updates: Record<string, unknown> = {
-        is_closed: true,
-        closed_at: new Date().toISOString(),
-      };
-
-      // If no end_date, set to today
-      if (!period.end_date) {
-        updates.end_date = new Date().toISOString().split("T")[0];
-      }
-
+      // Close the period
       const { error } = await supabase
         .from("periods")
-        .update(updates)
+        .update({
+          is_closed: true,
+          closed_at: new Date().toISOString(),
+        })
         .eq("id", periodId);
 
       if (error) throw error;
 
-      await fetchPeriods();
+      // Auto-create next calendar month if it doesn't exist
+      const startDate = new Date(period.start_date + "T12:00:00");
+      const nextMonth = startDate.getMonth() + 1;
+      const nextYear = startDate.getFullYear() + (nextMonth > 11 ? 1 : 0);
+      const nextMonthNorm = nextMonth % 12;
+
+      const nextStart = firstOfMonth(nextYear, nextMonthNorm);
+      const nextEnd = lastOfMonth(nextYear, nextMonthNorm);
+      const nextName = monthName(new Date(nextYear, nextMonthNorm, 1));
+
+      // Check if next month already exists
+      const exists = periods.some(p => p.start_date === nextStart);
+      if (!exists) {
+        const { data: newPeriod } = await supabase
+          .from("periods")
+          .insert({
+            group_id: groupId,
+            name: nextName,
+            start_date: nextStart,
+            end_date: nextEnd,
+            created_by: user.id,
+          })
+          .select()
+          .single();
+
+        await fetchPeriods();
+
+        // Auto-select the new period
+        if (newPeriod) {
+          setSelectedPeriodState(newPeriod);
+          localStorage.setItem(SELECTED_PERIOD_KEY, newPeriod.id);
+        }
+      } else {
+        await fetchPeriods();
+      }
+
       toast.success("Period stängd");
       return true;
     } catch (error) {
@@ -201,7 +236,7 @@ export function usePeriods(groupId?: string) {
       });
       return false;
     }
-  }, [user, periods, fetchPeriods]);
+  }, [user, groupId, periods, fetchPeriods]);
 
   /**
    * Reopen a closed period.
@@ -231,13 +266,12 @@ export function usePeriods(groupId?: string) {
 
   /**
    * Ensure at least one period exists for the group.
-   * Called when switching to a group that has no periods yet.
+   * Creates current calendar month if none exist.
    */
   const ensurePeriodExists = useCallback(async () => {
     if (!user || !groupId) return;
     if (creatingPeriod.current) return;
 
-    // Check if already have periods (from state or fetch)
     if (periods.length > 0) return;
 
     // Double-check from DB
@@ -249,11 +283,9 @@ export function usePeriods(groupId?: string) {
 
     if (data && data.length > 0) return;
 
-    // Create first period starting from 1st of current month
     const now = new Date();
-    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const startDate = firstOfMonth.toISOString().split("T")[0];
-    const name = defaultPeriodName(now);
+    const y = now.getFullYear();
+    const m = now.getMonth();
 
     creatingPeriod.current = true;
     try {
@@ -261,8 +293,9 @@ export function usePeriods(groupId?: string) {
         .from("periods")
         .insert({
           group_id: groupId,
-          name,
-          start_date: startDate,
+          name: monthName(now),
+          start_date: firstOfMonth(y, m),
+          end_date: lastOfMonth(y, m),
           created_by: user.id,
         });
 

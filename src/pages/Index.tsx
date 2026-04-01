@@ -1,5 +1,6 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { toKronor } from "@/lib/currency";
+import { calculateBalance } from "@/lib/balanceUtils";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { AddFab } from "@/components/AddFab";
 import { AddTransactionModal } from "@/components/AddTransactionModal";
@@ -117,6 +118,15 @@ const Index = () => {
   // Animated percentages for bars
   const animatedIncomeWidth = useCountAnimation(visualPercentages.incomeWidth, { duration: 1200, delay: 150 });
   const animatedExpenseWidth = useCountAnimation(visualPercentages.expenseWidth, { duration: 1200, delay: 200 });
+
+  // Outstanding balance for close-period confirmation warning
+  const outstandingBalance = useMemo(() => {
+    if (!selectedPeriod || !household) return 0;
+    const periodSettlements = settlements.filter(s => isDateInPeriod(s.date, selectedPeriod));
+    const balances = calculateBalance(filteredExpenses, household.members, periodSettlements, filteredIncomes);
+    const posBalance = balances.find(b => b.balance > 0.5);
+    return posBalance ? Math.abs(posBalance.balance) : 0;
+  }, [selectedPeriod, household, settlements, filteredExpenses, filteredIncomes]);
 
   // Compute which transactions were added after period close or latest settlement
   const highlightedIds = useMemo(() => {
@@ -283,7 +293,7 @@ const Index = () => {
           onSelectPeriod={selectPeriod}
           onClosePeriod={closePeriod}
           onReopenPeriod={reopenPeriod}
-          onCreatePeriod={createPeriod}
+          outstandingBalance={outstandingBalance}
         />
 
         {/* Member summary */}
