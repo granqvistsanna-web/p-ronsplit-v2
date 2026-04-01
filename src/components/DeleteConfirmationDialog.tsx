@@ -28,7 +28,7 @@ export function DeleteConfirmationDialog({
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <AlertDialogContent className="max-w-[340px] sm:max-w-md">
-        <AlertDialogHeader>
+        <AlertDialogHeader className="text-center sm:text-center">
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-destructive/10">
             <Trash2 className="h-6 w-6 text-destructive" />
           </div>
@@ -44,7 +44,7 @@ export function DeleteConfirmationDialog({
             </span>
           </AlertDialogDescription>
         </AlertDialogHeader>
-        <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+        <AlertDialogFooter className="flex-col-reverse sm:flex-row sm:justify-center gap-2">
           <AlertDialogCancel className="w-full sm:w-auto">
             Avbryt
           </AlertDialogCancel>

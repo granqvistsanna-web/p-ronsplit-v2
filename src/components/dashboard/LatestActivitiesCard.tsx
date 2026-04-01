@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownLeft, ArrowUpRight, ArrowRight, Plus } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRight, Plus, AlertCircle } from "lucide-react";
 import type { Expense } from "@/lib/types";
 import type { Income } from "@/hooks/useIncomes";
 import type { GroupMember } from "@/hooks/useGroups";
@@ -19,6 +19,7 @@ interface LatestActivitiesCardProps {
   onEditExpense: (expense: Expense) => void;
   onEditIncome: (income: Income) => void;
   onAddClick: () => void;
+  highlightedIds?: Set<string>;
 }
 
 export const LatestActivitiesCard = ({
@@ -28,6 +29,7 @@ export const LatestActivitiesCard = ({
   onEditExpense,
   onEditIncome,
   onAddClick,
+  highlightedIds,
 }: LatestActivitiesCardProps) => {
   const navigate = useNavigate();
 
@@ -54,11 +56,12 @@ export const LatestActivitiesCard = ({
                 if (item.type === 'expense') {
                   const expense = item.data as Expense;
                   const canEdit = !!userId;
+                  const isHighlighted = highlightedIds?.has(expense.id);
 
                   return (
                     <div
                       key={`expense-${expense.id}`}
-                      className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
+                      className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"} ${isHighlighted ? "bg-amber-50 dark:bg-amber-950/20" : ""}`}
                       style={{ animationDelay: `${idx * 20}ms` }}
                       onClick={() => {
                         if (!canEdit) return;
@@ -71,9 +74,14 @@ export const LatestActivitiesCard = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground text-sm">{expense.description || expense.category}</p>
-                          <p className="text-caption">
+                          <p className="text-caption flex items-center gap-1">
                             {members.find(m => m.user_id === expense.paid_by)?.name} •{' '}
                             {new Date(expense.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                            {isHighlighted && (
+                              <span title="Tillagd efter avräkning eller stängning">
+                                <AlertCircle size={12} className="text-amber-500" />
+                              </span>
+                            )}
                           </p>
                         </div>
                         <div className="text-right flex items-center gap-2">
@@ -88,11 +96,12 @@ export const LatestActivitiesCard = ({
                 } else {
                   const income = item.data as Income;
                   const canEdit = !!userId;
+                  const isHighlighted = highlightedIds?.has(income.id);
 
                   return (
                     <div
                       key={`income-${income.id}`}
-                      className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"}`}
+                      className={`group p-3.5 list-hover rounded-lg ${canEdit ? "cursor-pointer" : "cursor-default opacity-90"} ${isHighlighted ? "bg-amber-50 dark:bg-amber-950/20" : ""}`}
                       style={{ animationDelay: `${idx * 20}ms` }}
                       onClick={() => {
                         if (!canEdit) return;
@@ -105,9 +114,14 @@ export const LatestActivitiesCard = ({
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-foreground text-sm">{income.note || 'Inkomst'}</p>
-                          <p className="text-caption">
+                          <p className="text-caption flex items-center gap-1">
                             {members.find(m => m.user_id === income.recipient)?.name} •{' '}
                             {new Date(income.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                            {isHighlighted && (
+                              <span title="Tillagd efter avräkning eller stängning">
+                                <AlertCircle size={12} className="text-amber-500" />
+                              </span>
+                            )}
                           </p>
                         </div>
                         <div className="text-right flex items-center gap-2">

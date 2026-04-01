@@ -1,5 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { MonthSelector } from "@/components/MonthSelector";
+import { PeriodSelector } from "@/components/PeriodSelector";
+import { useCountAnimation } from "@/hooks/useCountAnimation";
+import type { Period } from "@/lib/types";
 
 interface HeroSummaryCardProps {
   totalIncomes: number;
@@ -7,6 +9,12 @@ interface HeroSummaryCardProps {
   netto: number;
   animatedIncomeWidth: number;
   animatedExpenseWidth: number;
+  periods: Period[];
+  selectedPeriod: Period | null;
+  onSelectPeriod: (periodId: string) => void;
+  onClosePeriod: (periodId: string) => Promise<boolean>;
+  onReopenPeriod: (periodId: string) => Promise<boolean>;
+  onCreatePeriod: (name?: string, startDate?: string) => Promise<any>;
 }
 
 export const HeroSummaryCard = ({
@@ -15,20 +23,37 @@ export const HeroSummaryCard = ({
   netto,
   animatedIncomeWidth,
   animatedExpenseWidth,
+  periods,
+  selectedPeriod,
+  onSelectPeriod,
+  onClosePeriod,
+  onReopenPeriod,
+  onCreatePeriod,
 }: HeroSummaryCardProps) => {
+  const animatedNetto = useCountAnimation(Math.abs(netto), { duration: 1000, delay: 100, animateOnChange: true });
+  const animatedIncome = useCountAnimation(totalIncomes, { duration: 1000, delay: 200, animateOnChange: true });
+  const animatedExpense = useCountAnimation(totalExpenses, { duration: 1000, delay: 250, animateOnChange: true });
+
   return (
     <Card className="mb-8 animate-fade-in" style={{ animationDelay: '20ms' }}>
       <CardContent className="p-5 sm:p-6">
-        {/* Month selector - integrated */}
+        {/* Period selector - integrated */}
         <div className="mb-4">
-          <MonthSelector />
+          <PeriodSelector
+            periods={periods}
+            selectedPeriod={selectedPeriod}
+            onSelectPeriod={onSelectPeriod}
+            onClosePeriod={onClosePeriod}
+            onReopenPeriod={onReopenPeriod}
+            onCreatePeriod={onCreatePeriod}
+          />
         </div>
 
         {/* Netto - Hero focus */}
         <div className="text-center mb-5">
           <p className="text-label-mono mb-1">Netto</p>
           <p className={`text-3xl sm:text-4xl font-bold tracking-tight ${netto >= 0 ? 'text-income' : 'text-expense'}`}>
-            {netto >= 0 ? '+' : ''}{Math.round(netto).toLocaleString("sv-SE")} kr
+            {netto >= 0 ? '+' : '−'}{Math.round(animatedNetto).toLocaleString("sv-SE")} kr
           </p>
         </div>
 
@@ -60,7 +85,7 @@ export const HeroSummaryCard = ({
               <span className="text-caption text-xs">Inkomster</span>
             </div>
             <p className="text-lg sm:text-xl font-semibold text-foreground">
-              {Math.round(totalIncomes).toLocaleString("sv-SE")} kr
+              {Math.round(animatedIncome).toLocaleString("sv-SE")} kr
             </p>
           </div>
           <div className="text-right">
@@ -69,7 +94,7 @@ export const HeroSummaryCard = ({
               <span className="text-caption text-xs">Utgifter</span>
             </div>
             <p className="text-lg sm:text-xl font-semibold text-foreground">
-              {Math.round(totalExpenses).toLocaleString("sv-SE")} kr
+              {Math.round(animatedExpense).toLocaleString("sv-SE")} kr
             </p>
           </div>
         </div>

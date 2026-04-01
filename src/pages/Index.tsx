@@ -1,6 +1,5 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toKronor } from "@/lib/currency";
-import { getMonthRange, isDateInMonthRange } from "@/lib/monthRange";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { AddFab } from "@/components/AddFab";
 import { AddTransactionModal } from "@/components/AddTransactionModal";
@@ -24,7 +23,7 @@ import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useIncomes, Income, IncomeInput } from "@/hooks/useIncomes";
 import { useSettlements } from "@/hooks/useSettlements";
 import { useAuth } from "@/hooks/useAuth";
-import { useMonthSelection } from "@/hooks/useMonthSelection";
+import { usePeriods, isDateInPeriod, isAddedAfterCloseOrSettlement } from "@/hooks/usePeriods";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useCelebration } from "@/hooks/useCelebration";
@@ -33,7 +32,15 @@ import { toast } from "sonner";
 const Index = () => {
   const { user } = useAuth();
   const { household, allGroups, loading: householdLoading, selectGroup } = useGroups();
-  const { selectedYear, selectedMonth } = useMonthSelection();
+  const {
+    periods,
+    selectedPeriod,
+    selectPeriod,
+    createPeriod,
+    closePeriod,
+    reopenPeriod,
+    ensurePeriodExists,
+  } = usePeriods(household?.id);
   const { sidebarWidth } = useSidebar();
   const { celebration, celebrateConfetti, celebrateSuccess, celebrateParty } = useCelebration();
 
@@ -72,19 +79,23 @@ const Index = () => {
 
   const loading = householdLoading || expensesLoading || incomesLoading || settlementsLoading;
 
-  // Compute custom month range based on group's month_start_day
-  const monthRange = useMemo(() => {
-    return getMonthRange(selectedYear, selectedMonth, household?.month_start_day ?? 1);
-  }, [selectedYear, selectedMonth, household?.month_start_day]);
+  // Ensure at least one period exists when switching groups
+  useEffect(() => {
+    if (household?.id) {
+      ensurePeriodExists();
+    }
+  }, [household?.id, ensurePeriodExists]);
 
-  // Filter expenses and incomes by custom month range
+  // Filter expenses and incomes by selected period
   const filteredExpenses = useMemo(() => {
-    return expenses.filter(expense => isDateInMonthRange(expense.date, monthRange));
-  }, [expenses, monthRange]);
+    if (!selectedPeriod) return [];
+    return expenses.filter(expense => isDateInPeriod(expense.date, selectedPeriod));
+  }, [expenses, selectedPeriod]);
 
   const filteredIncomes = useMemo(() => {
-    return incomes.filter(income => isDateInMonthRange(income.date, monthRange));
-  }, [incomes, monthRange]);
+    if (!selectedPeriod) return [];
+    return incomes.filter(income => isDateInPeriod(income.date, selectedPeriod));
+  }, [incomes, selectedPeriod]);
 
   // Calculate totals
   const totals = useMemo(() => {
@@ -106,6 +117,28 @@ const Index = () => {
   // Animated percentages for bars
   const animatedIncomeWidth = useCountAnimation(visualPercentages.incomeWidth, { duration: 1200, delay: 150 });
   const animatedExpenseWidth = useCountAnimation(visualPercentages.expenseWidth, { duration: 1200, delay: 200 });
+
+  // Compute which transactions were added after period close or latest settlement
+  const highlightedIds = useMemo(() => {
+    if (!selectedPeriod) return new Set<string>();
+    const periodSettlements = settlements.filter(s => isDateInPeriod(s.date, selectedPeriod));
+    const latestSettlementAt = periodSettlements.length > 0
+      ? periodSettlements.reduce((latest, s) => s.created_at > latest ? s.created_at : latest, periodSettlements[0].created_at)
+      : null;
+
+    const ids = new Set<string>();
+    for (const e of filteredExpenses) {
+      if (isAddedAfterCloseOrSettlement(e.created_at, selectedPeriod, latestSettlementAt)) {
+        ids.add(e.id);
+      }
+    }
+    for (const i of filteredIncomes) {
+      if (isAddedAfterCloseOrSettlement(i.created_at, selectedPeriod, latestSettlementAt)) {
+        ids.add(i.id);
+      }
+    }
+    return ids;
+  }, [selectedPeriod, settlements, filteredExpenses, filteredIncomes]);
 
   // Combine and sort latest activities
   const latestActivities = useMemo(() => {
@@ -245,6 +278,12 @@ const Index = () => {
           netto={totals.netto}
           animatedIncomeWidth={animatedIncomeWidth}
           animatedExpenseWidth={animatedExpenseWidth}
+          periods={periods}
+          selectedPeriod={selectedPeriod}
+          onSelectPeriod={selectPeriod}
+          onClosePeriod={closePeriod}
+          onReopenPeriod={reopenPeriod}
+          onCreatePeriod={createPeriod}
         />
 
         {/* Member summary */}
@@ -263,8 +302,7 @@ const Index = () => {
             incomes={filteredIncomes}
             members={household.members}
             settlements={settlements}
-            selectedYear={selectedYear}
-            selectedMonth={selectedMonth}
+            selectedPeriod={selectedPeriod}
             onSettle={handleSettle}
             isSettling={isSettling}
           />
@@ -278,6 +316,7 @@ const Index = () => {
           onEditExpense={handleEditExpense}
           onEditIncome={handleEditIncome}
           onAddClick={() => setIsAddModalOpen(true)}
+          highlightedIds={highlightedIds}
         />
       </main>
 

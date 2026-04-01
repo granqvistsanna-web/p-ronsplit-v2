@@ -1,34 +1,21 @@
-import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Palette, Sun, Moon, Monitor, Calendar } from "lucide-react";
+
+import { Palette, Sun, Moon, Monitor } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
 
 type Theme = "light" | "dark" | "system";
 
 export interface ThemeSettingsProps {
   theme: Theme;
   setTheme: (theme: Theme) => void;
-  selectedYear: number;
-  selectedMonth: number;
-  isCurrentMonth: boolean;
-  goToCurrentMonth: () => void;
-  monthStartDay: number;
-  onMonthStartDayChange: (day: number) => void;
 }
 
 export const ThemeSettings = ({
   theme,
   setTheme,
-  selectedYear,
-  selectedMonth,
-  isCurrentMonth,
-  goToCurrentMonth,
-  monthStartDay,
-  onMonthStartDayChange,
 }: ThemeSettingsProps) => {
   return (
     <div className="space-y-4">
@@ -86,77 +73,6 @@ export const ThemeSettings = ({
             </div>
             <p className="text-xs text-muted-foreground mt-2">
               Systemläget matchar ditt operativsystems inställningar
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Month Settings Card */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-muted-foreground" />
-            <CardTitle>Månadsvisning</CardTitle>
-          </div>
-          <CardDescription>Anpassa när en månad börjar och slutar</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {/* Month start day setting */}
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background">
-              <div>
-                <p className="text-sm font-medium text-foreground">Månadens startdag</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {monthStartDay === 1
-                    ? "Standard (1:a till sista)"
-                    : `Den ${monthStartDay}:e → den ${monthStartDay - 1}:e nästa månad`}
-                </p>
-              </div>
-              <Select
-                value={String(monthStartDay)}
-                onValueChange={(val) => onMonthStartDayChange(Number(val))}
-              >
-                <SelectTrigger className="w-[80px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                    <SelectItem key={day} value={String(day)}>
-                      {day}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Current month display */}
-            <div className="flex items-center justify-between p-4 rounded-lg border border-border/50 bg-background">
-              <div>
-                <p className="text-sm font-medium text-foreground">Aktuell visad månad</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  {new Date(selectedYear, selectedMonth - 1).toLocaleDateString('sv-SE', {
-                    month: 'long',
-                    year: 'numeric'
-                  })}
-                </p>
-              </div>
-              {!isCurrentMonth && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    goToCurrentMonth();
-                    toast.success("Återställd till aktuell månad");
-                  }}
-                >
-                  Återställ
-                </Button>
-              )}
-            </div>
-
-            <p className="text-xs text-muted-foreground">
-              Startdagen gäller för hela gruppen. T.ex. om du sätter den till 25 så räknas
-              "mars" som 25 feb – 24 mar. Perfekt om lönen kommer den 25:e.
             </p>
           </div>
         </CardContent>
