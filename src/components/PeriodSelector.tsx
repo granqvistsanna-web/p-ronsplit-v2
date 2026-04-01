@@ -18,6 +18,16 @@ import {
 import { cn } from "@/lib/utils";
 import type { Period } from "@/lib/types";
 
+/** Format a short date range like "1 apr – 20 apr" or "1 apr –" if open */
+function formatDateRange(startDate: string, endDate: string | null): string {
+  const fmt = (d: string) => {
+    const date = new Date(d + "T12:00:00");
+    return date.toLocaleDateString("sv-SE", { day: "numeric", month: "short" });
+  };
+  if (!endDate) return `${fmt(startDate)} –`;
+  return `${fmt(startDate)} – ${fmt(endDate)}`;
+}
+
 interface PeriodSelectorProps {
   periods: Period[];
   selectedPeriod: Period | null;
@@ -89,7 +99,12 @@ export function PeriodSelector({
                   {selectedPeriod.is_closed && (
                     <Lock size={14} className="text-muted-foreground" />
                   )}
-                  <span>{selectedPeriod.name}</span>
+                  <span className="flex flex-col items-start leading-tight">
+                    <span>{selectedPeriod.name}</span>
+                    <span className="text-[11px] font-normal text-muted-foreground">
+                      {formatDateRange(selectedPeriod.start_date, selectedPeriod.end_date)}
+                    </span>
+                  </span>
                 </>
               ) : (
                 <span className="text-muted-foreground">Välj period</span>
@@ -104,12 +119,17 @@ export function PeriodSelector({
                 onClick={() => onSelectPeriod(period.id)}
                 className="flex items-center justify-between gap-2"
               >
-                <span
-                  className={cn(
-                    period.is_closed && "text-muted-foreground"
-                  )}
-                >
-                  {period.name}
+                <span className="flex flex-col leading-tight">
+                  <span
+                    className={cn(
+                      period.is_closed && "text-muted-foreground"
+                    )}
+                  >
+                    {period.name}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatDateRange(period.start_date, period.end_date)}
+                  </span>
                 </span>
                 {period.is_closed ? (
                   <Lock size={14} className="text-muted-foreground" />
