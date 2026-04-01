@@ -278,7 +278,7 @@ export function ImportModal({
           if (unmatchedEntry) {
             categories.set(unmatchedEntry.originalIndex, {
               category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
-              isShared: true,
+              isShared: suggestion.isShared !== false,
             });
           }
         }
@@ -504,7 +504,7 @@ export function ImportModal({
             if (unmatchedEntry) {
               categories.set(unmatchedEntry.originalIndex, {
                 category: (suggestion.suggestedCategory || "ovrigt") as CategoryId,
-                isShared: true,
+                isShared: suggestion.isShared !== false,
               });
             }
           }

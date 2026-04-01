@@ -66,6 +66,30 @@ const KEYWORD_RULES: { pattern: RegExp; category: CategoryId }[] = [
   { pattern: /\b(interrail|eurolines|flixbus|vy\s*buss|swebus)\b/i, category: "resor" },
 ];
 
+// Patterns that indicate a PRIVATE (non-shared) transaction
+const PRIVATE_PATTERNS: RegExp[] = [
+  // Salary & income
+  /\b(lön|löneinsättning|salary|löneutbetalning)\b/i,
+  // Internal transfers
+  /\b(överföring|övf|eget\s*konto|sparande|spar\s*konto|intern\s*övf|autogiro\s*spar)\b/i,
+  // Personal finance
+  /\b(amortering|avbetalning|lån\s*betalning|csn|studielån|kronofogden)\b/i,
+  // Swish to/from self, generic transfers
+  /\b(swish|insättning|uttag\s*bankomat|kontantuttag)\b/i,
+  // Tax & government personal
+  /\b(skatteverket|skatteåterbäring|deklaration|a-kassa|fackavgift|fackförbund)\b/i,
+  // Insurance payouts, refunds to self
+  /\b(återbetalning|refund|kreditering|cashback)\b/i,
+];
+
+/**
+ * Check if a transaction description looks like a private (non-shared) transaction
+ */
+export function isLikelyPrivate(description: string): boolean {
+  const normalized = description.toLowerCase().trim();
+  return PRIVATE_PATTERNS.some(p => p.test(normalized));
+}
+
 /**
  * Match transaction description against keyword rules
  */
@@ -178,6 +202,7 @@ export async function smartCategorize(
 
   for (let i = 0; i < transactions.length; i++) {
     const t = transactions[i];
+    const priv = isLikelyPrivate(t.description);
 
     // Try keyword match first (fast, high confidence)
     const keywordMatch = matchByKeyword(t.description);
@@ -185,7 +210,7 @@ export async function smartCategorize(
       matched.push({
         index: i,
         category: keywordMatch.category,
-        isShared: true,
+        isShared: !priv,
         confidence: keywordMatch.confidence,
         source: keywordMatch.source,
       });
@@ -198,9 +223,21 @@ export async function smartCategorize(
       matched.push({
         index: i,
         category: historyMatch.category,
-        isShared: true,
+        isShared: !priv,
         confidence: historyMatch.confidence,
         source: historyMatch.source,
+      });
+      continue;
+    }
+
+    // If clearly private but no category match, still mark it
+    if (priv) {
+      matched.push({
+        index: i,
+        category: "ovrigt" as CategoryId,
+        isShared: false,
+        confidence: "medium",
+        source: "keyword",
       });
       continue;
     }

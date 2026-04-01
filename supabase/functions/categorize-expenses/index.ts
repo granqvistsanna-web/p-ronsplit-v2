@@ -18,6 +18,7 @@ interface CategorySuggestion {
   id: string;
   suggestedCategory: string;
   confidence: number;
+  isShared: boolean;
 }
 
 const VALID_CATEGORIES = [
@@ -111,27 +112,33 @@ Deno.serve(async (req) => {
       `${i}. "${e.description}" - ${e.amount} kr (${e.date})`
     ).join("\n");
 
-    const prompt = `Du är en svensk kategoriseringsassistent för hushållsutgifter.
+    const prompt = `Du är en svensk kategoriseringsassistent för hushållsutgifter i en delad ekonomi-app.
 
-Kategorisera följande utgifter till EN av dessa kategorier:
+Kategorisera följande transaktioner till EN av dessa kategorier:
 ${categoryDescriptions}
 
-Utgifter att kategorisera:
+Avgör också om varje transaktion är DELAD (gemensam hushållskostnad) eller PRIVAT (personlig):
+- DELAD: matinköp, hyra, el, gemensamma restaurangbesök, hushållsartiklar
+- PRIVAT: löneinsättningar, överföringar mellan egna konton, personliga prenumerationer, Swish-överföringar, amorteringar, CSN, skatteåterbetalningar, fackavgifter, uttag, insättningar, återbetalningar
+
+Transaktioner att kategorisera:
 ${expensesList}
 
 Svara ENDAST med JSON i detta format (ingen annan text):
 {
   "suggestions": [
-    {"index": 0, "category": "mat", "confidence": 0.95},
-    {"index": 1, "category": "transport", "confidence": 0.8}
+    {"index": 0, "category": "mat", "confidence": 0.95, "isShared": true},
+    {"index": 1, "category": "ovrigt", "confidence": 0.8, "isShared": false}
   ]
 }
 
 Regler:
-- "index" matchar utgiftens nummer ovan
+- "index" matchar transaktionens nummer ovan
 - "category" måste vara exakt ett av: ${VALID_CATEGORIES.join(", ")}
 - "confidence" är 0.0-1.0 hur säker du är
-- Om osäker, välj "ovrigt" med låg confidence
+- "isShared" är true om det är en gemensam hushållskostnad, false om privat
+- Om osäker på kategori, välj "ovrigt" med låg confidence
+- Om osäker på delad/privat, anta delad (true)
 - Svenska butiksnamn: ICA/Coop/Hemköp = mat, Systembolaget = alkohol, etc.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
@@ -173,15 +180,16 @@ Regler:
         
         // Map AI response to expense IDs and validate categories
         suggestions = rawSuggestions
-          .filter((s: { index: number; category: string; confidence: number }) => 
+          .filter((s: { index: number; category: string; confidence: number; isShared?: boolean }) => 
             s.index >= 0 && 
             s.index < expenses.length && 
             VALID_CATEGORIES.includes(s.category)
           )
-          .map((s: { index: number; category: string; confidence: number }) => ({
+          .map((s: { index: number; category: string; confidence: number; isShared?: boolean }) => ({
             id: (expenses as ExpenseInput[])[s.index].id,
             suggestedCategory: s.category,
             confidence: Math.min(1, Math.max(0, s.confidence || 0.5)),
+            isShared: s.isShared !== false,
           }));
       }
     } catch (parseError) {
