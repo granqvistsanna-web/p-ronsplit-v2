@@ -2,7 +2,7 @@
  * Individual transaction row component for the review step
  */
 
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, AlertTriangle } from "lucide-react";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import type { ExtendedTransaction } from "./types";
 
