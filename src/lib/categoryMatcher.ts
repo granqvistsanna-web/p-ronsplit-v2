@@ -83,6 +83,14 @@ const PRIVATE_PATTERNS: RegExp[] = [
 ];
 
 /**
+ * Check if a transaction description looks like a private (non-shared) transaction
+ */
+export function isLikelyPrivate(description: string): boolean {
+  const normalized = description.toLowerCase().trim();
+  return PRIVATE_PATTERNS.some(p => p.test(normalized));
+}
+
+/**
  * Match transaction description against keyword rules
  */
 export function matchByKeyword(description: string): CategoryMatch | null {
