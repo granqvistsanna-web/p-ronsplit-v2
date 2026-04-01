@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowDownLeft, ArrowUpRight, ArrowRight, Plus, AlertCircle } from "lucide-react";
+import { toKronor } from "@/lib/currency";
 import type { Expense } from "@/lib/types";
 import type { Income } from "@/hooks/useIncomes";
 import type { GroupMember } from "@/hooks/useGroups";
@@ -126,7 +127,7 @@ export const LatestActivitiesCard = ({
                         </div>
                         <div className="text-right flex items-center gap-2">
                           <p className="font-semibold text-income text-money-sm">
-                            +{(income.amount / 100).toLocaleString('sv-SE')} kr
+                            +{toKronor(income.amount).toLocaleString('sv-SE')} kr
                           </p>
                           {canEdit && <span className="text-muted-foreground/40 group-hover:text-muted-foreground text-lg transition-all group-hover:translate-x-0.5">›</span>}
                         </div>

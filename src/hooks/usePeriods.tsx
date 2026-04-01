@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./useAuth";
 import { toast } from "sonner";
@@ -47,6 +47,7 @@ export function isAddedAfterCloseOrSettlement(
 
 export function usePeriods(groupId?: string) {
   const { user } = useAuth();
+  const creatingPeriod = useRef(false);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriod, setSelectedPeriodState] = useState<Period | null>(null);
   const [loading, setLoading] = useState(true);
@@ -234,6 +235,7 @@ export function usePeriods(groupId?: string) {
    */
   const ensurePeriodExists = useCallback(async () => {
     if (!user || !groupId) return;
+    if (creatingPeriod.current) return;
 
     // Check if already have periods (from state or fetch)
     if (periods.length > 0) return;
@@ -253,16 +255,21 @@ export function usePeriods(groupId?: string) {
     const startDate = firstOfMonth.toISOString().split("T")[0];
     const name = defaultPeriodName(now);
 
-    await supabase
-      .from("periods")
-      .insert({
-        group_id: groupId,
-        name,
-        start_date: startDate,
-        created_by: user.id,
-      });
+    creatingPeriod.current = true;
+    try {
+      await supabase
+        .from("periods")
+        .insert({
+          group_id: groupId,
+          name,
+          start_date: startDate,
+          created_by: user.id,
+        });
 
-    await fetchPeriods();
+      await fetchPeriods();
+    } finally {
+      creatingPeriod.current = false;
+    }
   }, [user, groupId, periods.length, fetchPeriods]);
 
   return {

@@ -169,12 +169,16 @@ export function useSettlements(groupId?: string) {
         Object.entries(updateData).filter(([, value]) => value !== undefined)
       );
 
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("settlements")
         .update(cleanUpdates)
-        .eq("id", settlementId);
+        .eq("id", settlementId)
+        .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Avräkningen kunde inte uppdateras – inga rader påverkades");
+      }
 
       await fetchSettlements();
       toast.success("Avräkning uppdaterad");
@@ -197,12 +201,16 @@ export function useSettlements(groupId?: string) {
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("settlements")
         .delete()
-        .eq("id", settlementId);
+        .eq("id", settlementId)
+        .select();
 
       if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("Avräkningen kunde inte tas bort – inga rader påverkades");
+      }
 
       await fetchSettlements();
       toast.success("Avräkning borttagen");
