@@ -53,6 +53,7 @@ export function isAddedAfterCloseOrSettlement(
 export function usePeriods(groupId?: string) {
   const { user } = useAuth();
   const creatingPeriod = useRef(false);
+  const creatingBackfill = useRef(false);
   const [periods, setPeriods] = useState<Period[]>([]);
   const [selectedPeriod, setSelectedPeriodState] = useState<Period | null>(null);
   const [loading, setLoading] = useState(true);
@@ -312,6 +313,83 @@ export function usePeriods(groupId?: string) {
     }
   }, [user, groupId, periods.length, fetchPeriods]);
 
+  /**
+   * Create periods for all months back to the given date string (YYYY-MM-DD).
+   * This ensures transactions from older months are visible in the period selector.
+   */
+  const ensurePeriodsBack = useCallback(async (earliestDate: string) => {
+    if (!user || !groupId || !earliestDate) return;
+    if (creatingBackfill.current) return;
+    creatingBackfill.current = true;
+
+    const earliest = new Date(earliestDate + "T12:00:00");
+    const earliestYear = earliest.getFullYear();
+    const earliestMonth = earliest.getMonth();
+
+    // Track which months already have a period (by YYYY-MM of start_date)
+    const coveredMonths = new Set(
+      periods.map(p => p.start_date.slice(0, 7)) // "YYYY-MM"
+    );
+
+    // Collect months that need periods
+    const missing: { year: number; month: number }[] = [];
+    const now = new Date();
+    let y = earliestYear;
+    let m = earliestMonth;
+    while (y < now.getFullYear() || (y === now.getFullYear() && m <= now.getMonth())) {
+      const key = `${y}-${String(m + 1).padStart(2, "0")}`;
+      if (!coveredMonths.has(key)) {
+        missing.push({ year: y, month: m });
+      }
+      m++;
+      if (m > 11) { m = 0; y++; }
+    }
+
+    if (missing.length === 0) {
+      creatingBackfill.current = false;
+      return;
+    }
+
+    // Batch insert missing periods (past months as closed, current month skipped if open period exists)
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const rows = missing
+      .filter(({ year, month }) => {
+        const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+        return key !== currentMonth;
+      })
+      .map(({ year, month }) => {
+        const start = firstOfMonth(year, month);
+        const lastDay = new Date(year, month + 1, 0);
+        const end = lastDay.toISOString().split("T")[0];
+        return {
+          group_id: groupId,
+          name: monthName(new Date(year, month, 1)),
+          start_date: start,
+          end_date: end,
+          is_closed: true,
+          closed_at: new Date().toISOString(),
+          created_by: user.id,
+        };
+      });
+
+    if (rows.length === 0) {
+      creatingBackfill.current = false;
+      return;
+    }
+
+    try {
+      await supabase.from("periods").insert(rows);
+      await fetchPeriods();
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte skapa gamla perioder", {
+        operation: "ensurePeriodsBack",
+        groupId,
+      });
+    } finally {
+      creatingBackfill.current = false;
+    }
+  }, [user, groupId, periods, fetchPeriods]);
+
   return {
     periods,
     selectedPeriod,
@@ -321,6 +399,7 @@ export function usePeriods(groupId?: string) {
     closePeriod,
     reopenPeriod,
     ensurePeriodExists,
+    ensurePeriodsBack,
     refetch: fetchPeriods,
   };
 }

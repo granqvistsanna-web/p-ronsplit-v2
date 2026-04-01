@@ -41,6 +41,7 @@ const Index = () => {
     closePeriod,
     reopenPeriod,
     ensurePeriodExists,
+    ensurePeriodsBack,
   } = usePeriods(household?.id);
   const { sidebarWidth } = useSidebar();
   const { celebration, celebrateConfetti, celebrateSuccess, celebrateParty } = useCelebration();
@@ -86,6 +87,19 @@ const Index = () => {
       ensurePeriodExists();
     }
   }, [household?.id, ensurePeriodExists]);
+
+  // Auto-create periods for months with transactions
+  useEffect(() => {
+    if (!household?.id || periods.length === 0) return;
+    const allDates = [
+      ...expenses.map(e => e.date),
+      ...incomes.map(i => i.date),
+      ...settlements.map(s => s.date),
+    ].filter(Boolean);
+    if (allDates.length === 0) return;
+    const earliest = allDates.sort()[0];
+    ensurePeriodsBack(earliest);
+  }, [household?.id, expenses, incomes, settlements, periods.length, ensurePeriodsBack]);
 
   // Filter expenses and incomes by selected period
   const filteredExpenses = useMemo(() => {
