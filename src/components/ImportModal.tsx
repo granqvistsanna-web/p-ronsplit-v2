@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
+import type { DuplicateInfo } from "@/components/import/types";
 
 interface Categorization {
   index: number;
@@ -51,7 +52,9 @@ type TransactionType = "expense" | "income";
 
 interface ExtendedTransaction extends ParsedTransaction {
   transactionType: TransactionType;
+  duplicateInfo?: DuplicateInfo;
 }
+
 
 // Magic bytes for common file formats
 const XLSX_MAGIC = [0x50, 0x4B, 0x03, 0x04]; // PK.. (ZIP format)
