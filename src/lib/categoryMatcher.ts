@@ -66,6 +66,22 @@ const KEYWORD_RULES: { pattern: RegExp; category: CategoryId }[] = [
   { pattern: /\b(interrail|eurolines|flixbus|vy\s*buss|swebus)\b/i, category: "resor" },
 ];
 
+// Patterns that indicate a PRIVATE (non-shared) transaction
+const PRIVATE_PATTERNS: RegExp[] = [
+  // Salary & income
+  /\b(lön|löneinsättning|salary|löneutbetalning)\b/i,
+  // Internal transfers
+  /\b(överföring|övf|eget\s*konto|sparande|spar\s*konto|intern\s*övf|autogiro\s*spar)\b/i,
+  // Personal finance
+  /\b(amortering|avbetalning|lån\s*betalning|csn|studielån|kronofogden)\b/i,
+  // Swish to/from self, generic transfers
+  /\b(swish|insättning|uttag\s*bankomat|kontantuttag)\b/i,
+  // Tax & government personal
+  /\b(skatteverket|skatteåterbäring|deklaration|a-kassa|fackavgift|fackförbund)\b/i,
+  // Insurance payouts, refunds to self
+  /\b(återbetalning|refund|kreditering|cashback)\b/i,
+];
+
 /**
  * Match transaction description against keyword rules
  */
