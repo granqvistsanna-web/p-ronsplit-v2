@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { toKronor } from "@/lib/currency";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import { useGroups } from "@/hooks/useGroups";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useIncomes, Income, IncomeInput, IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
 import { useSettlements, Settlement } from "@/hooks/useSettlements";
+import { usePeriods, isDateInPeriod } from "@/hooks/usePeriods";
+import { PeriodSelector } from "@/components/PeriodSelector";
 import { ExpenseItem } from "@/components/ExpenseItem";
 import { IncomeItem } from "@/components/IncomeItem";
 import { SettlementItem } from "@/components/SettlementItem";
@@ -46,6 +48,22 @@ export default function Aktivitet() {
   const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses({ groupId: household?.id || '' });
   const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, addIncomes, refetch: refetchIncomes } = useIncomes({ groupId: household?.id || '' });
   const { settlements, loading: settlementsLoading, addSettlement, updateSettlement, deleteSettlement, refetch: refetchSettlements } = useSettlements(household?.id);
+  const {
+    periods,
+    selectedPeriod,
+    selectPeriod,
+    createPeriod,
+    closePeriod,
+    reopenPeriod,
+    ensurePeriodExists,
+  } = usePeriods(household?.id);
+
+  // Ensure at least one period exists when switching groups
+  useEffect(() => {
+    if (household?.id) {
+      ensurePeriodExists();
+    }
+  }, [household?.id, ensurePeriodExists]);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("date");
@@ -63,8 +81,10 @@ export default function Aktivitet() {
 
   const loading = householdLoading || expensesLoading || incomesLoading || settlementsLoading;
 
-  // Combine expenses, incomes and settlements
+  // Combine expenses, incomes and settlements (filtered by selected period)
   const combinedItems = useMemo(() => {
+    if (!selectedPeriod) return [];
+
     const items: Array<{
       type: 'expense' | 'income' | 'settlement';
       data: Expense | Income | Settlement;
@@ -75,6 +95,7 @@ export default function Aktivitet() {
     }> = [];
 
     expenses.forEach(expense => {
+      if (!isDateInPeriod(expense.date, selectedPeriod)) return;
       items.push({
         type: 'expense',
         data: expense,
@@ -86,6 +107,7 @@ export default function Aktivitet() {
     });
 
     incomes.forEach(income => {
+      if (!isDateInPeriod(income.date, selectedPeriod)) return;
       items.push({
         type: 'income',
         data: income,
@@ -96,6 +118,7 @@ export default function Aktivitet() {
     });
 
     settlements.forEach(settlement => {
+      if (!isDateInPeriod(settlement.date, selectedPeriod)) return;
       items.push({
         type: 'settlement',
         data: settlement,
@@ -106,7 +129,7 @@ export default function Aktivitet() {
     });
 
     return items;
-  }, [expenses, incomes, settlements]);
+  }, [expenses, incomes, settlements, selectedPeriod]);
 
   // Filter by search query
   const filteredItems = useMemo(() => {
@@ -342,6 +365,14 @@ export default function Aktivitet() {
           <div className="flex items-center justify-between gap-3">
             <h1 className="text-heading text-2xl">Aktivitet</h1>
             <div className="flex items-center gap-2">
+              <PeriodSelector
+                periods={periods}
+                selectedPeriod={selectedPeriod}
+                onSelectPeriod={selectPeriod}
+                onClosePeriod={closePeriod}
+                onReopenPeriod={reopenPeriod}
+                onCreatePeriod={createPeriod}
+              />
               {expenses.filter(e => e.category === "ovrigt").length > 0 && (
                 <Button
                   variant="outline"

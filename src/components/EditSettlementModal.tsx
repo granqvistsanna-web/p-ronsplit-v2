@@ -292,15 +292,15 @@ export function EditSettlementModal({
               </div>
             </div>
           </motion.div>
+          <DeleteConfirmationDialog
+            isOpen={showDeleteConfirm}
+            onClose={() => setShowDeleteConfirm(false)}
+            onConfirm={handleDelete}
+            itemName={`${fromMember?.name || ''} → ${toMember?.name || ''}`}
+            itemType="avräkningen"
+          />
         </>
       )}
-      <DeleteConfirmationDialog
-        isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
-        onConfirm={handleDelete}
-        itemName={`${fromMember?.name || ''} → ${toMember?.name || ''}`}
-        itemType="avräkningen"
-      />
     </AnimatePresence>
   );
 }
