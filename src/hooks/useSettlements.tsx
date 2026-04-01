@@ -140,10 +140,19 @@ export function useSettlements(groupId?: string) {
       handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
         operation: "updateSettlement",
       });
-      return null;
+      return false;
     }
 
     try {
+      const settlement = settlements.find((item) => item.id === settlementId);
+      if (!settlement) {
+        throw new Error("Avräkningen hittades inte");
+      }
+
+      if (groupId && settlement.group_id !== groupId) {
+        throw new Error("Avräkningen tillhör inte det valda hushållet");
+      }
+
       // Recalculate month if date is updated
       let month: string | undefined;
       if (updates.date) {
@@ -156,25 +165,26 @@ export function useSettlements(groupId?: string) {
         ...(updates.amount !== undefined ? { amount: toOre(updates.amount) } : {}),
         ...(month ? { month } : {}),
       };
+      const cleanUpdates = Object.fromEntries(
+        Object.entries(updateData).filter(([, value]) => value !== undefined)
+      );
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("settlements")
-        .update(updateData)
-        .eq("id", settlementId)
-        .select()
-        .single();
+        .update(cleanUpdates)
+        .eq("id", settlementId);
 
       if (error) throw error;
 
       await fetchSettlements();
       toast.success("Avräkning uppdaterad");
-      return data;
+      return true;
     } catch (error) {
       handleDatabaseError(error, "Kunde inte uppdatera avräkning", {
         operation: "updateSettlement",
         settlementId,
       });
-      return null;
+      return false;
     }
   };
 
