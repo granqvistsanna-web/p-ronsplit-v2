@@ -218,6 +218,7 @@ export function useGroups() {
           created_by: groupData.created_by,
           created_at: groupData.created_at,
           invite_code: groupData.invite_code,
+          month_start_day: groupData.month_start_day ?? 1,
           members,
         };
       });
@@ -399,6 +400,39 @@ export function useGroups() {
     }
   };
 
+  const updateMonthStartDay = async (day: number) => {
+    if (!household) {
+      handleError(new Error("Hushåll finns inte"), {
+        category: ErrorCategory.VALIDATION,
+        severity: ErrorSeverity.WARNING,
+        userMessage: "Hushåll finns inte",
+        metadata: { operation: "updateMonthStartDay" },
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from("groups")
+        .update({ month_start_day: day })
+        .eq("id", household.id);
+
+      if (error) {
+        console.error("Error updating month start day:", error);
+        throw error;
+      }
+
+      // Update local state
+      setHousehold(prev => prev ? { ...prev, month_start_day: day } : prev);
+      setAllGroups(prev => prev.map(g => g.id === household.id ? { ...g, month_start_day: day } : g));
+      toast.success("Periodstart uppdaterad");
+    } catch (error) {
+      handleDatabaseError(error, "Kunde inte uppdatera periodstart", {
+        operation: "updateMonthStartDay",
+      });
+    }
+  };
+
   const createGroup = async (name: string) => {
     if (!user) {
       handleAuthError(new Error("Du måste vara inloggad"), "Du måste vara inloggad", {
@@ -453,6 +487,7 @@ export function useGroups() {
       localStorage.setItem(SELECTED_GROUP_KEY, groupData.id);
       setHousehold({
         ...groupData,
+        month_start_day: groupData.month_start_day ?? 1,
         members: [{
           id: user.id,
           user_id: user.id,
@@ -607,6 +642,7 @@ export function useGroups() {
     removeMember,
     regenerateInviteCode,
     updateHouseholdName,
+    updateMonthStartDay,
     createGroup,
     deleteGroup,
     joinGroupByCode,

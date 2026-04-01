@@ -54,6 +54,10 @@ export interface GroupSettingsProps {
 
   // Member settings props (for active group)
   memberSettingsProps: Omit<MemberSettingsProps, 'group' | 'profile'>;
+
+  // Month start day
+  monthStartDay: number;
+  onMonthStartDayChange: (day: number) => void;
 }
 
 export const GroupSettings = ({
@@ -73,6 +77,8 @@ export const GroupSettings = ({
   onSelectGroup,
   onDeleteGroup,
   memberSettingsProps,
+  monthStartDay,
+  onMonthStartDayChange,
 }: GroupSettingsProps) => {
   return (
     <Card>
@@ -260,11 +266,36 @@ export const GroupSettings = ({
 
                   {/* Show members for active group */}
                   {group.id === household?.id && (
-                    <MemberSettings
-                      group={group}
-                      profile={profile}
-                      {...memberSettingsProps}
-                    />
+                    <>
+                      <MemberSettings
+                        group={group}
+                        profile={profile}
+                        {...memberSettingsProps}
+                      />
+
+                      {/* Month start day setting */}
+                      <div className="mt-4 pt-4 border-t border-border/50">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium text-foreground">Månadsstart</p>
+                            <p className="text-xs text-muted-foreground">
+                              Perioder räknas från dag {monthStartDay} varje månad
+                            </p>
+                          </div>
+                          <select
+                            value={monthStartDay}
+                            onChange={(e) => onMonthStartDayChange(Number(e.target.value))}
+                            className="h-9 rounded-md border border-input bg-background px-3 text-sm"
+                          >
+                            {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                              <option key={day} value={day}>
+                                {day}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               ))}

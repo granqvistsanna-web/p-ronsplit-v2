@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { PeriodSelector } from "@/components/PeriodSelector";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
-import type { Period } from "@/lib/types";
+import type { ComputedPeriod } from "@/lib/periodUtils";
 
 interface HeroSummaryCardProps {
   totalIncomes: number;
@@ -9,12 +9,9 @@ interface HeroSummaryCardProps {
   netto: number;
   animatedIncomeWidth: number;
   animatedExpenseWidth: number;
-  periods: Period[];
-  selectedPeriod: Period | null;
+  periods: ComputedPeriod[];
+  selectedPeriod: ComputedPeriod | null;
   onSelectPeriod: (periodId: string) => void;
-  onClosePeriod: (periodId: string) => Promise<boolean>;
-  onReopenPeriod: (periodId: string) => Promise<boolean>;
-  outstandingBalance?: number;
 }
 
 export const HeroSummaryCard = ({
@@ -26,9 +23,6 @@ export const HeroSummaryCard = ({
   periods,
   selectedPeriod,
   onSelectPeriod,
-  onClosePeriod,
-  onReopenPeriod,
-  outstandingBalance,
 }: HeroSummaryCardProps) => {
   const animatedNetto = useCountAnimation(Math.abs(netto), { duration: 1000, delay: 100, animateOnChange: true });
   const animatedIncome = useCountAnimation(totalIncomes, { duration: 1000, delay: 200, animateOnChange: true });
@@ -43,9 +37,6 @@ export const HeroSummaryCard = ({
             periods={periods}
             selectedPeriod={selectedPeriod}
             onSelectPeriod={onSelectPeriod}
-            onClosePeriod={onClosePeriod}
-            onReopenPeriod={onReopenPeriod}
-            outstandingBalance={outstandingBalance}
           />
         </div>
 

@@ -1,6 +1,5 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { toKronor } from "@/lib/currency";
-import { calculateBalance } from "@/lib/balanceUtils";
 import { HeaderMenu } from "@/components/HeaderMenu";
 import { AddFab } from "@/components/AddFab";
 import { AddTransactionModal } from "@/components/AddTransactionModal";
@@ -24,7 +23,7 @@ import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useIncomes, Income, IncomeInput } from "@/hooks/useIncomes";
 import { useSettlements } from "@/hooks/useSettlements";
 import { useAuth } from "@/hooks/useAuth";
-import { usePeriods, isDateInPeriod, isAddedAfterCloseOrSettlement } from "@/hooks/usePeriods";
+import { usePeriods, isDateInPeriod } from "@/hooks/usePeriods";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useCelebration } from "@/hooks/useCelebration";
@@ -33,16 +32,6 @@ import { toast } from "sonner";
 const Index = () => {
   const { user } = useAuth();
   const { household, allGroups, loading: householdLoading, selectGroup } = useGroups();
-  const {
-    periods,
-    selectedPeriod,
-    selectPeriod,
-    createPeriod,
-    closePeriod,
-    reopenPeriod,
-    ensurePeriodExists,
-    ensurePeriodsBack,
-  } = usePeriods(household?.id);
   const { sidebarWidth } = useSidebar();
   const { celebration, celebrateConfetti, celebrateSuccess, celebrateParty } = useCelebration();
 
@@ -70,6 +59,22 @@ const Index = () => {
     addSettlement,
   } = useSettlements(household?.id);
 
+  // Collect all transaction dates for period computation
+  const transactionDates = useMemo(() => [
+    ...expenses.map(e => e.date),
+    ...incomes.map(i => i.date),
+    ...settlements.map(s => s.date),
+  ], [expenses, incomes, settlements]);
+
+  const {
+    periods,
+    selectedPeriod,
+    selectPeriod,
+  } = usePeriods({
+    transactionDates,
+    monthStartDay: household?.month_start_day,
+  });
+
   const [isSettling, setIsSettling] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -80,26 +85,6 @@ const Index = () => {
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
 
   const loading = householdLoading || expensesLoading || incomesLoading || settlementsLoading;
-
-  // Ensure at least one period exists when switching groups
-  useEffect(() => {
-    if (household?.id) {
-      ensurePeriodExists();
-    }
-  }, [household?.id, ensurePeriodExists]);
-
-  // Auto-create periods for months with transactions
-  useEffect(() => {
-    if (!household?.id || periods.length === 0) return;
-    const allDates = [
-      ...expenses.map(e => e.date),
-      ...incomes.map(i => i.date),
-      ...settlements.map(s => s.date),
-    ].filter(Boolean);
-    if (allDates.length === 0) return;
-    const earliest = allDates.sort()[0];
-    ensurePeriodsBack(earliest);
-  }, [household?.id, expenses, incomes, settlements, periods.length, ensurePeriodsBack]);
 
   // Filter expenses and incomes by selected period
   const filteredExpenses = useMemo(() => {
@@ -132,37 +117,6 @@ const Index = () => {
   // Animated percentages for bars
   const animatedIncomeWidth = useCountAnimation(visualPercentages.incomeWidth, { duration: 1200, delay: 150 });
   const animatedExpenseWidth = useCountAnimation(visualPercentages.expenseWidth, { duration: 1200, delay: 200 });
-
-  // Outstanding balance for close-period confirmation warning
-  const outstandingBalance = useMemo(() => {
-    if (!selectedPeriod || !household) return 0;
-    const periodSettlements = settlements.filter(s => isDateInPeriod(s.date, selectedPeriod));
-    const balances = calculateBalance(filteredExpenses, household.members, periodSettlements, filteredIncomes);
-    const posBalance = balances.find(b => b.balance > 0.5);
-    return posBalance ? Math.abs(posBalance.balance) : 0;
-  }, [selectedPeriod, household, settlements, filteredExpenses, filteredIncomes]);
-
-  // Compute which transactions were added after period close or latest settlement
-  const highlightedIds = useMemo(() => {
-    if (!selectedPeriod) return new Set<string>();
-    const periodSettlements = settlements.filter(s => isDateInPeriod(s.date, selectedPeriod));
-    const latestSettlementAt = periodSettlements.length > 0
-      ? periodSettlements.reduce((latest, s) => s.created_at > latest ? s.created_at : latest, periodSettlements[0].created_at)
-      : null;
-
-    const ids = new Set<string>();
-    for (const e of filteredExpenses) {
-      if (isAddedAfterCloseOrSettlement(e.created_at, selectedPeriod, latestSettlementAt)) {
-        ids.add(e.id);
-      }
-    }
-    for (const i of filteredIncomes) {
-      if (isAddedAfterCloseOrSettlement(i.created_at, selectedPeriod, latestSettlementAt)) {
-        ids.add(i.id);
-      }
-    }
-    return ids;
-  }, [selectedPeriod, settlements, filteredExpenses, filteredIncomes]);
 
   // Combine and sort latest activities
   const latestActivities = useMemo(() => {
@@ -305,9 +259,6 @@ const Index = () => {
           periods={periods}
           selectedPeriod={selectedPeriod}
           onSelectPeriod={selectPeriod}
-          onClosePeriod={closePeriod}
-          onReopenPeriod={reopenPeriod}
-          outstandingBalance={outstandingBalance}
         />
 
         {/* Member summary */}
@@ -340,7 +291,6 @@ const Index = () => {
           onEditExpense={handleEditExpense}
           onEditIncome={handleEditIncome}
           onAddClick={() => setIsAddModalOpen(true)}
-          highlightedIds={highlightedIds}
         />
       </main>
 

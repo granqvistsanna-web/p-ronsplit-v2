@@ -22,7 +22,7 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
-  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
+  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode, updateMonthStartDay } = useGroups();
   const { theme, setTheme } = useTheme();
 
   const { sidebarWidth } = useSidebar();
@@ -231,6 +231,8 @@ const Settings = () => {
               onCreateGroup={handleCreateGroup}
               onSelectGroup={selectGroup}
               onDeleteGroup={handleDeleteGroup}
+              monthStartDay={household?.month_start_day ?? 1}
+              onMonthStartDayChange={updateMonthStartDay}
               memberSettingsProps={{
                 isEditingHouseholdName,
                 editingHouseholdName,

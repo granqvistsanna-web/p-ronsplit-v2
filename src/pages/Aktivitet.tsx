@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { toKronor } from "@/lib/currency";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -48,36 +48,20 @@ export default function Aktivitet() {
   const { expenses, loading: expensesLoading, updateExpense, deleteExpense, addExpense, addExpenses, refetch: refetchExpenses } = useExpenses({ groupId: household?.id || '' });
   const { incomes, loading: incomesLoading, updateIncome, deleteIncome, addIncome, addIncomes, refetch: refetchIncomes } = useIncomes({ groupId: household?.id || '' });
   const { settlements, loading: settlementsLoading, addSettlement, updateSettlement, deleteSettlement, refetch: refetchSettlements } = useSettlements(household?.id);
+  const transactionDates = useMemo(() => [
+    ...expenses.map(e => e.date),
+    ...incomes.map(i => i.date),
+    ...settlements.map(s => s.date),
+  ], [expenses, incomes, settlements]);
+
   const {
     periods,
     selectedPeriod,
     selectPeriod,
-    createPeriod,
-    closePeriod,
-    reopenPeriod,
-    ensurePeriodExists,
-    ensurePeriodsBack,
-  } = usePeriods(household?.id);
-
-  // Ensure at least one period exists when switching groups
-  useEffect(() => {
-    if (household?.id) {
-      ensurePeriodExists();
-    }
-  }, [household?.id, ensurePeriodExists]);
-
-  // Auto-create periods for months with transactions
-  useEffect(() => {
-    if (!household?.id || periods.length === 0) return;
-    const allDates = [
-      ...expenses.map(e => e.date),
-      ...incomes.map(i => i.date),
-      ...settlements.map(s => s.date),
-    ].filter(Boolean);
-    if (allDates.length === 0) return;
-    const earliest = allDates.sort()[0];
-    ensurePeriodsBack(earliest);
-  }, [household?.id, expenses, incomes, settlements, periods.length, ensurePeriodsBack]);
+  } = usePeriods({
+    transactionDates,
+    monthStartDay: household?.month_start_day,
+  });
 
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("date");
@@ -384,8 +368,6 @@ export default function Aktivitet() {
                 periods={periods}
                 selectedPeriod={selectedPeriod}
                 onSelectPeriod={selectPeriod}
-                onClosePeriod={closePeriod}
-                onReopenPeriod={reopenPeriod}
               />
               {expenses.filter(e => e.category === "ovrigt").length > 0 && (
                 <Button
