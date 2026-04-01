@@ -10,8 +10,14 @@ export type ImportStep = "upload" | "categorizing" | "review";
 export type TransactionType = "expense" | "income";
 export type UploadType = "file" | "image";
 
+export interface DuplicateInfo {
+  existingId: string;
+  matchReasons: string[];
+}
+
 export interface ExtendedTransaction extends ParsedTransaction {
   transactionType: TransactionType;
+  duplicateInfo?: DuplicateInfo;
 }
 
 export interface Categorization {

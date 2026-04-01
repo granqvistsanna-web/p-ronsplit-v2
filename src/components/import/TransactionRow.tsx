@@ -2,7 +2,7 @@
  * Individual transaction row component for the review step
  */
 
-import { ArrowUpRight, ArrowDownLeft } from "lucide-react";
+import { ArrowUpRight, ArrowDownLeft, AlertTriangle } from "lucide-react";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import type { ExtendedTransaction } from "./types";
 
@@ -83,7 +83,15 @@ export function TransactionRow({
           <p className="font-medium text-foreground truncate leading-tight">
             {transaction.description}
           </p>
-          <p className="text-xs text-muted-foreground mt-0.5">{formattedDate}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className="text-xs text-muted-foreground">{formattedDate}</p>
+            {transaction.duplicateInfo && (
+              <span className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300">
+                <AlertTriangle size={10} />
+                Möjlig dubblett
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Amount */}

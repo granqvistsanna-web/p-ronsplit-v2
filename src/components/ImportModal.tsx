@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { smartCategorize, CategoryId } from "@/lib/categoryMatcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { IncomeType, IncomeRepeat } from "@/hooks/useIncomes";
+import type { DuplicateInfo } from "@/components/import/types";
 
 interface Categorization {
   index: number;
@@ -51,7 +52,9 @@ type TransactionType = "expense" | "income";
 
 interface ExtendedTransaction extends ParsedTransaction {
   transactionType: TransactionType;
+  duplicateInfo?: DuplicateInfo;
 }
+
 
 // Magic bytes for common file formats
 const XLSX_MAGIC = [0x50, 0x4B, 0x03, 0x04]; // PK.. (ZIP format)
@@ -104,6 +107,96 @@ function getInvokeErrorStatus(error: unknown): number | undefined {
   }
 
   return undefined;
+}
+
+/**
+ * Check imported transactions against existing ones for duplicates.
+ * Client-side matching by fetching existing data for the date range.
+ */
+async function checkImportDuplicates(
+  transactions: ExtendedTransaction[],
+  groupId: string,
+): Promise<ExtendedTransaction[]> {
+  if (transactions.length === 0) return transactions;
+
+  // Get date range from transactions
+  const dates = transactions.map(t => t.date).filter(Boolean).sort();
+  if (dates.length === 0) return transactions;
+
+  const minDate = shiftDate(dates[0], -2);
+  const maxDate = shiftDate(dates[dates.length - 1], 2);
+
+  // Fetch existing expenses and incomes in parallel
+  const [expRes, incRes] = await Promise.all([
+    supabase.from("expenses").select("id, amount, date, description, category")
+      .eq("group_id", groupId).gte("date", minDate).lte("date", maxDate),
+    supabase.from("incomes").select("id, amount, date, type, note")
+      .eq("group_id", groupId).gte("date", minDate).lte("date", maxDate),
+  ]);
+
+  const existingExpenses = expRes.data || [];
+  const existingIncomes = incRes.data || [];
+
+  return transactions.map(t => {
+    const reasons: string[] = [];
+    let matchId: string | undefined;
+
+    if (t.transactionType === "expense") {
+      for (const ex of existingExpenses) {
+        const amountMatch = ex.amount != null && Math.abs(ex.amount - t.amount) < 0.01;
+        const dateMatch = ex.date === t.date;
+        const descMatch = ex.description && t.description &&
+          stringSim(ex.description.toLowerCase(), t.description.toLowerCase()) > 0.6;
+
+        if (amountMatch && dateMatch) {
+          reasons.push("Samma belopp", "Samma datum");
+          if (descMatch) reasons.push("Liknande beskrivning");
+          matchId = ex.id;
+          break;
+        }
+        if (amountMatch && descMatch) {
+          reasons.push("Samma belopp", "Liknande beskrivning");
+          matchId = ex.id;
+          break;
+        }
+      }
+    } else {
+      const amountOre = toOre(t.amount);
+      for (const inc of existingIncomes) {
+        const amountMatch = Math.abs(inc.amount - amountOre) < 1;
+        const dateMatch = inc.date === t.date;
+
+        if (amountMatch && dateMatch) {
+          reasons.push("Samma belopp", "Samma datum");
+          matchId = inc.id;
+          break;
+        }
+      }
+    }
+
+    if (matchId && reasons.length > 0) {
+      return { ...t, duplicateInfo: { existingId: matchId, matchReasons: reasons }, isShared: false };
+    }
+    return t;
+  });
+}
+
+function shiftDate(dateStr: string, days: number): string {
+  const d = new Date(dateStr);
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+function stringSim(a: string, b: string): number {
+  if (a === b) return 1;
+  if (a.length < 2 || b.length < 2) return 0;
+  const bigramsA = new Set<string>();
+  for (let i = 0; i < a.length - 1; i++) bigramsA.add(a.substring(i, i + 2));
+  let matches = 0;
+  for (let i = 0; i < b.length - 1; i++) {
+    if (bigramsA.has(b.substring(i, i + 2))) matches++;
+  }
+  return (2 * matches) / (a.length - 1 + b.length - 1);
 }
 
 export function ImportModal({
@@ -202,7 +295,14 @@ export function ImportModal({
       };
     });
 
-    setTransactions(categorized);
+    // Check for duplicates before showing review
+    const withDuplicates = await checkImportDuplicates(categorized, groupId);
+    const dupCount = withDuplicates.filter(t => t.duplicateInfo).length;
+    if (dupCount > 0) {
+      toast.warning(`${dupCount} möjliga dubletter hittades och har markerats`);
+    }
+
+    setTransactions(withDuplicates);
     setStep("review");
 
     // Show toast with summary
@@ -421,7 +521,14 @@ export function ImportModal({
         };
       });
 
-      setTransactions(categorized);
+      // Check for duplicates before showing review
+      const withDuplicates = await checkImportDuplicates(categorized, groupId);
+      const dupCount = withDuplicates.filter(t => t.duplicateInfo).length;
+      if (dupCount > 0) {
+        toast.warning(`${dupCount} möjliga dubletter hittades och har markerats`);
+      }
+
+      setTransactions(withDuplicates);
       setStep("review");
 
       if (smartMatchedCount > 0) {
