@@ -199,7 +199,7 @@ function stringSim(a: string, b: string): number {
   return (2 * matches) / (a.length - 1 + b.length - 1);
 }
 
-
+export function ImportModal({
   isOpen,
   onClose,
   onImportExpenses,
