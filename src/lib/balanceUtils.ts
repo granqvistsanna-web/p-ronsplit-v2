@@ -58,7 +58,7 @@ export function calculateBalance(
   // Sum expenses paid by each member
   // NOTE: Expenses are stored in kr (kronor) in the database
   expenses.forEach((expense) => {
-    if (!expense.amount || expense.amount <= 0 || !Number.isFinite(expense.amount)) {
+    if (!expense.amount || !Number.isFinite(expense.amount)) {
       return;
     }
     if (memberData[expense.paid_by] !== undefined) {
@@ -66,12 +66,33 @@ export function calculateBalance(
     }
   });
 
+  // Adjust for custom splits: redistribute expense responsibility by percentage
+  expenses.forEach((expense) => {
+    if (!expense.splits || !expense.amount || expense.amount <= 0) return;
+
+    const splitEntries = Object.entries(expense.splits);
+    const totalPercent = splitEntries.reduce((sum, [, pct]) => sum + (pct as number), 0);
+    if (totalPercent === 0) return;
+
+    // Remove the full amount from the payer (it was added above)
+    if (memberData[expense.paid_by] !== undefined) {
+      memberData[expense.paid_by].expenses -= expense.amount;
+    }
+
+    // Distribute according to split percentages
+    splitEntries.forEach(([userId, percent]) => {
+      if (memberData[userId] !== undefined) {
+        memberData[userId].expenses += expense.amount * ((percent as number) / totalPercent);
+      }
+    });
+  });
+
   // Sum incomes received by each member (only included_in_split)
   // NOTE: Incomes are stored in öre (cents) in the database, so we convert to kr
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
     const amountKr = toKronor(income.amount); // öre -> kr
-    if (!amountKr || amountKr <= 0 || !Number.isFinite(amountKr)) {
+    if (!amountKr || !Number.isFinite(amountKr)) {
       return;
     }
     if (memberData[income.recipient] !== undefined) {
@@ -157,10 +178,31 @@ export function getBalanceBreakdown(
   // Sum expenses
   // NOTE: Expenses are stored in kr (kronor) in the database
   expenses.forEach((expense) => {
-    if (!expense.amount || expense.amount <= 0) return;
+    if (!expense.amount || !Number.isFinite(expense.amount)) return;
     if (memberData[expense.paid_by]) {
       memberData[expense.paid_by].expensesPaid += expense.amount;
     }
+  });
+
+  // Adjust for custom splits: redistribute expense responsibility by percentage
+  expenses.forEach((expense) => {
+    if (!expense.splits || !expense.amount || expense.amount <= 0) return;
+
+    const splitEntries = Object.entries(expense.splits);
+    const totalPercent = splitEntries.reduce((sum, [, pct]) => sum + (pct as number), 0);
+    if (totalPercent === 0) return;
+
+    // Remove the full amount from the payer (it was added above)
+    if (memberData[expense.paid_by]) {
+      memberData[expense.paid_by].expensesPaid -= expense.amount;
+    }
+
+    // Distribute according to split percentages
+    splitEntries.forEach(([userId, percent]) => {
+      if (memberData[userId]) {
+        memberData[userId].expensesPaid += expense.amount * ((percent as number) / totalPercent);
+      }
+    });
   });
 
   // Sum incomes
@@ -168,7 +210,7 @@ export function getBalanceBreakdown(
   const includedIncomes = incomes.filter((i) => i.included_in_split);
   includedIncomes.forEach((income) => {
     const amountKr = toKronor(income.amount); // öre -> kr
-    if (!amountKr || amountKr <= 0) return;
+    if (!amountKr || !Number.isFinite(amountKr)) return;
     if (memberData[income.recipient]) {
       memberData[income.recipient].incomeReceived += amountKr;
     }

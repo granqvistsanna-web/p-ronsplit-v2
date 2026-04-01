@@ -27,7 +27,7 @@ export const MemberSummaryCard = ({
 
     // Pre-aggregate incomes by user (O(n)) - amount is in öre
     const incomesByUser = new Map<string, number>();
-    incomes.forEach((i) => {
+    incomes.filter(i => i.included_in_split).forEach((i) => {
       incomesByUser.set(i.recipient, (incomesByUser.get(i.recipient) || 0) + toKronor(i.amount));
     });
 

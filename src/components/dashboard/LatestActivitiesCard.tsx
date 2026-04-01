@@ -1,15 +1,15 @@
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowDownLeft, ArrowUpRight, ArrowRight, Plus, AlertCircle } from "lucide-react";
+import { ArrowDownLeft, ArrowUpRight, ArrowRight, Smartphone, Plus, AlertCircle } from "lucide-react";
 import { toKronor } from "@/lib/currency";
-import type { Expense } from "@/lib/types";
+import type { Expense, Settlement } from "@/lib/types";
 import type { Income } from "@/hooks/useIncomes";
 import type { GroupMember } from "@/hooks/useGroups";
 
 interface ActivityItem {
-  type: 'expense' | 'income';
-  data: Expense | Income;
+  type: 'expense' | 'income' | 'settlement';
+  data: Expense | Income | Settlement;
   date: string;
 }
 
@@ -94,7 +94,7 @@ export const LatestActivitiesCard = ({
                       </div>
                     </div>
                   );
-                } else {
+                } else if (item.type === 'income') {
                   const income = item.data as Income;
                   const canEdit = !!userId;
                   const isHighlighted = highlightedIds?.has(income.id);
@@ -130,6 +130,36 @@ export const LatestActivitiesCard = ({
                             +{toKronor(income.amount).toLocaleString('sv-SE')} kr
                           </p>
                           {canEdit && <span className="text-muted-foreground/40 group-hover:text-muted-foreground text-lg transition-all group-hover:translate-x-0.5">›</span>}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                } else {
+                  const settlement = item.data as Settlement;
+                  const fromName = members.find(m => m.user_id === settlement.from_user)?.name || 'Okänd';
+                  const toName = members.find(m => m.user_id === settlement.to_user)?.name || 'Okänd';
+
+                  return (
+                    <div
+                      key={`settlement-${settlement.id}`}
+                      className="p-3.5 list-hover rounded-lg cursor-default"
+                      style={{ animationDelay: `${idx * 20}ms` }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 rounded-md bg-muted shrink-0">
+                          <Smartphone size={16} className="text-muted-foreground" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground text-sm">{fromName} &rarr; {toName}</p>
+                          <p className="text-caption">
+                            Avräkning •{' '}
+                            {new Date(settlement.date).toLocaleDateString('sv-SE', { day: 'numeric', month: 'short' })}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-muted-foreground text-money-sm">
+                            {settlement.amount.toLocaleString('sv-SE')} kr
+                          </p>
                         </div>
                       </div>
                     </div>

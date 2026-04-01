@@ -81,8 +81,6 @@ export default function Aktivitet() {
 
   // Combine expenses, incomes and settlements (filtered by selected period)
   const combinedItems = useMemo(() => {
-    if (!selectedPeriod) return [];
-
     const items: Array<{
       type: 'expense' | 'income' | 'settlement';
       data: Expense | Income | Settlement;
@@ -93,7 +91,7 @@ export default function Aktivitet() {
     }> = [];
 
     expenses.forEach(expense => {
-      if (!isDateInPeriod(expense.date, selectedPeriod)) return;
+      if (selectedPeriod && !isDateInPeriod(expense.date, selectedPeriod)) return;
       items.push({
         type: 'expense',
         data: expense,
@@ -105,7 +103,7 @@ export default function Aktivitet() {
     });
 
     incomes.forEach(income => {
-      if (!isDateInPeriod(income.date, selectedPeriod)) return;
+      if (selectedPeriod && !isDateInPeriod(income.date, selectedPeriod)) return;
       items.push({
         type: 'income',
         data: income,
@@ -116,7 +114,7 @@ export default function Aktivitet() {
     });
 
     settlements.forEach(settlement => {
-      if (!isDateInPeriod(settlement.date, selectedPeriod)) return;
+      if (selectedPeriod && !isDateInPeriod(settlement.date, selectedPeriod)) return;
       items.push({
         type: 'settlement',
         data: settlement,

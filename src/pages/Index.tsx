@@ -21,7 +21,7 @@ import {
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses, Expense } from "@/hooks/useExpenses";
 import { useIncomes, Income, IncomeInput } from "@/hooks/useIncomes";
-import { useSettlements } from "@/hooks/useSettlements";
+import { useSettlements, Settlement } from "@/hooks/useSettlements";
 import { useAuth } from "@/hooks/useAuth";
 import { usePeriods, isDateInPeriod } from "@/hooks/usePeriods";
 import { useCountAnimation } from "@/hooks/useCountAnimation";
@@ -88,19 +88,19 @@ const Index = () => {
 
   // Filter expenses and incomes by selected period
   const filteredExpenses = useMemo(() => {
-    if (!selectedPeriod) return [];
+    if (!selectedPeriod) return expenses;
     return expenses.filter(expense => isDateInPeriod(expense.date, selectedPeriod));
   }, [expenses, selectedPeriod]);
 
   const filteredIncomes = useMemo(() => {
-    if (!selectedPeriod) return [];
+    if (!selectedPeriod) return incomes;
     return incomes.filter(income => isDateInPeriod(income.date, selectedPeriod));
   }, [incomes, selectedPeriod]);
 
   // Calculate totals
   const totals = useMemo(() => {
     const totalExpenses = filteredExpenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = filteredIncomes.reduce((sum, i) => sum + toKronor(i.amount), 0);
+    const totalIncomes = filteredIncomes.filter(i => i.included_in_split).reduce((sum, i) => sum + toKronor(i.amount), 0);
     const netto = totalIncomes - totalExpenses;
     return { totalExpenses, totalIncomes, netto };
   }, [filteredExpenses, filteredIncomes]);
@@ -120,7 +120,7 @@ const Index = () => {
 
   // Combine and sort latest activities
   const latestActivities = useMemo(() => {
-    const items: Array<{ type: 'expense' | 'income'; data: Expense | Income; date: string }> = [];
+    const items: Array<{ type: 'expense' | 'income' | 'settlement'; data: Expense | Income | Settlement; date: string }> = [];
 
     filteredExpenses.forEach(expense => {
       items.push({ type: 'expense', data: expense, date: expense.date });
@@ -130,10 +130,14 @@ const Index = () => {
       items.push({ type: 'income', data: income, date: income.date });
     });
 
+    settlements.filter(s => selectedPeriod ? isDateInPeriod(s.date, selectedPeriod) : true).forEach(settlement => {
+      items.push({ type: 'settlement', data: settlement, date: settlement.date });
+    });
+
     return items
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
       .slice(0, 5);
-  }, [filteredExpenses, filteredIncomes]);
+  }, [filteredExpenses, filteredIncomes, settlements, selectedPeriod]);
 
   // Handlers
   const handleAddExpense = useCallback(async (newExpense: {

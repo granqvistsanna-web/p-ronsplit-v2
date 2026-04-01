@@ -29,7 +29,6 @@ export default function Analys() {
   });
   const { budgets, loading: budgetsLoading, saveBudget } = useBudgets({
     groupId: household?.id || '',
-    period: 'yearly',
   });
   const { sidebarWidth } = useSidebar();
 
@@ -45,7 +44,7 @@ export default function Analys() {
   // Calculate totals (server-side filtered data)
   const totals = useMemo(() => {
     const totalExpenses = expenses.reduce((sum, e) => sum + e.amount, 0);
-    const totalIncomes = incomes.reduce((sum, i) => sum + toKronor(i.amount), 0);
+    const totalIncomes = incomes.filter(i => i.included_in_split).reduce((sum, i) => sum + toKronor(i.amount), 0);
     const netto = totalIncomes - totalExpenses;
 
     return { totalExpenses, totalIncomes, netto };
@@ -91,6 +90,7 @@ export default function Analys() {
 
     // Single pass through incomes
     incomes.forEach(i => {
+      if (!i.included_in_split) return;
       const matchesMember = memberIds.length === 0 || memberIds.includes(i.recipient);
       if (!matchesMember) return;
 

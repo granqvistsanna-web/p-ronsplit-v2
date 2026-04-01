@@ -120,7 +120,7 @@ export function useExpenses(filters: ExpenseFilters) {
       const insertData: TablesInsert<'expenses'> = {
         group_id: expense.group_id,
         amount: expense.amount,
-        paid_by: user.id, // Always use current user
+        paid_by: expense.paid_by || user.id,
         category: expense.category,
         description: expense.description,
         date: expense.date,
@@ -192,7 +192,7 @@ export function useExpenses(filters: ExpenseFilters) {
         description: expense.description,
         date: expense.date,
         repeat: expense.repeat || "none",
-        paid_by: user.id, // Always use current user
+        paid_by: expense.paid_by || user.id,
         splits: expense.splits ? JSON.stringify(expense.splits) : null,
       }));
 
