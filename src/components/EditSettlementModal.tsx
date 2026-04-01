@@ -149,7 +149,7 @@ export function EditSettlementModal({
             transition={{ duration: 0.15 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
           >
-            <div className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden">
+            <div className="bg-card border border-border rounded-md p-6 w-full max-w-sm overflow-x-hidden" onClick={(e) => e.stopPropagation()}>
               {/* Header */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2">

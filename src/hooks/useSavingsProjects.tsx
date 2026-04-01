@@ -171,17 +171,6 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user created this project
-      if (project.created_by !== user.id) {
-        handleError(new Error("Du har inte behörighet att uppdatera detta projekt"), {
-          category: ErrorCategory.PERMISSION,
-          severity: ErrorSeverity.WARNING,
-          userMessage: "Du har inte behörighet att uppdatera detta projekt",
-          metadata: { operation: "updateProject", projectId },
-        });
-        return;
-      }
-
       // Verify project belongs to current group if groupId is set
       if (groupId && project.group_id !== groupId) {
         handleError(new Error("Projektet tillhör inte det valda hushållet"), {
@@ -196,8 +185,7 @@ export function useSavingsProjects(groupId?: string) {
       const { error } = await supabase
         .from("savings_projects")
         .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq("id", projectId)
-        .eq("created_by", user.id); // Server-side check
+        .eq("id", projectId);
 
       if (error) throw error;
 
@@ -231,17 +219,6 @@ export function useSavingsProjects(groupId?: string) {
         return;
       }
 
-      // Security check: Verify user created this project
-      if (projectToDelete.created_by !== user.id) {
-        handleError(new Error("Du har inte behörighet att ta bort detta projekt"), {
-          category: ErrorCategory.PERMISSION,
-          severity: ErrorSeverity.WARNING,
-          userMessage: "Du har inte behörighet att ta bort detta projekt",
-          metadata: { operation: "deleteProject", projectId },
-        });
-        return;
-      }
-
       // Verify project belongs to current group if groupId is set
       if (groupId && projectToDelete.group_id !== groupId) {
         handleError(new Error("Projektet tillhör inte det valda hushållet"), {
@@ -257,8 +234,7 @@ export function useSavingsProjects(groupId?: string) {
       const { error } = await supabase
         .from("savings_projects")
         .delete()
-        .eq("id", projectId)
-        .eq("created_by", user.id); // Server-side check
+        .eq("id", projectId);
 
       if (error) throw error;
 

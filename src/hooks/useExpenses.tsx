@@ -306,22 +306,16 @@ export function useExpenses(filters: ExpenseFilters) {
         throw new Error("Utgiften hittades inte");
       }
 
-      // Security check: Verify user created this expense or it belongs to current group
-      if (expenseToDelete.paid_by !== user.id) {
-        throw new Error("Du har inte behörighet att ta bort denna utgift");
-      }
-
-      // Additional check: Verify expense belongs to current group if groupId is set
+      // Verify expense belongs to current group if groupId is set
       if (filters.groupId && expenseToDelete.group_id !== filters.groupId) {
         throw new Error("Utgiften tillhör inte det valda hushållet");
       }
 
-      // Delete from database - only if user is creator
+      // Delete from database - any group member can delete
       const { error } = await supabase
         .from("expenses")
         .delete()
-        .eq("id", expenseId)
-        .eq("paid_by", user.id); // Server-side check: only delete if user is creator
+        .eq("id", expenseId);
 
       if (error) throw error;
 

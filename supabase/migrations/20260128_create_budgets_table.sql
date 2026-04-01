@@ -1,7 +1,7 @@
 -- Create budgets table for storing category budget limits per group
 -- Budgets are synced between household members via Supabase (not localStorage)
 
-CREATE TABLE public.budgets (
+CREATE TABLE IF NOT EXISTS public.budgets (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   group_id TEXT NOT NULL,
   category TEXT NOT NULL,
@@ -14,8 +14,8 @@ CREATE TABLE public.budgets (
 );
 
 -- Indexes for efficient querying
-CREATE INDEX idx_budgets_group_id ON public.budgets(group_id);
-CREATE INDEX idx_budgets_category ON public.budgets(category);
+CREATE INDEX IF NOT EXISTS idx_budgets_group_id ON public.budgets(group_id);
+CREATE INDEX IF NOT EXISTS idx_budgets_category ON public.budgets(category);
 
 -- Column documentation
 COMMENT ON COLUMN public.budgets.amount IS 'Budget amount stored in ore (1/100 of SEK) to prevent floating-point errors';
@@ -29,46 +29,30 @@ ALTER TABLE public.budgets ENABLE ROW LEVEL SECURITY;
 -- RLS Policies: Users can only access budgets for groups they belong to
 -- Following the existing expenses/incomes/settlements pattern
 
-CREATE POLICY "Users can view budgets for their groups"
-ON public.budgets
-FOR SELECT
-USING (
-  EXISTS (
-    SELECT 1 FROM public.group_members gm
-    WHERE gm.group_id::text = budgets.group_id
-    AND gm.user_id = auth.uid()::text
-  )
-);
+DO $$ BEGIN
+  CREATE POLICY "Users can view budgets for their groups"
+  ON public.budgets FOR SELECT
+  USING (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id::text = budgets.group_id AND gm.user_id = auth.uid()::text));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Users can create budgets for their groups"
-ON public.budgets
-FOR INSERT
-WITH CHECK (
-  EXISTS (
-    SELECT 1 FROM public.group_members gm
-    WHERE gm.group_id::text = budgets.group_id
-    AND gm.user_id = auth.uid()::text
-  )
-);
+DO $$ BEGIN
+  CREATE POLICY "Users can create budgets for their groups"
+  ON public.budgets FOR INSERT
+  WITH CHECK (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id::text = budgets.group_id AND gm.user_id = auth.uid()::text));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Users can update budgets for their groups"
-ON public.budgets
-FOR UPDATE
-USING (
-  EXISTS (
-    SELECT 1 FROM public.group_members gm
-    WHERE gm.group_id::text = budgets.group_id
-    AND gm.user_id = auth.uid()::text
-  )
-);
+DO $$ BEGIN
+  CREATE POLICY "Users can update budgets for their groups"
+  ON public.budgets FOR UPDATE
+  USING (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id::text = budgets.group_id AND gm.user_id = auth.uid()::text));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
-CREATE POLICY "Users can delete budgets for their groups"
-ON public.budgets
-FOR DELETE
-USING (
-  EXISTS (
-    SELECT 1 FROM public.group_members gm
-    WHERE gm.group_id::text = budgets.group_id
-    AND gm.user_id = auth.uid()::text
-  )
-);
+DO $$ BEGIN
+  CREATE POLICY "Users can delete budgets for their groups"
+  ON public.budgets FOR DELETE
+  USING (EXISTS (SELECT 1 FROM public.group_members gm WHERE gm.group_id::text = budgets.group_id AND gm.user_id = auth.uid()::text));
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
