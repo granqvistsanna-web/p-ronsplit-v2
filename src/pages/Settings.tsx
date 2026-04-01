@@ -6,7 +6,7 @@ import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useGroups } from "@/hooks/useGroups";
 import { useTheme } from "@/hooks/useTheme";
-import { useMonthSelection } from "@/hooks/useMonthSelection";
+
 import { useSidebar } from "@/hooks/useSidebar";
 import { toast } from "sonner";
 import { Tag } from "lucide-react";
@@ -22,9 +22,9 @@ import {
 const Settings = () => {
   const navigate = useNavigate();
   const { profile, signOut, updatePassword, updateProfile, deleteAccount } = useAuth();
-  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode, updateMonthStartDay } = useGroups();
+  const { household, allGroups, loading: householdLoading, updateHouseholdName, addMembers, removeMember, createGroup, deleteGroup, selectGroup, joinGroupByCode } = useGroups();
   const { theme, setTheme } = useTheme();
-  const { selectedYear, selectedMonth, goToCurrentMonth, isCurrentMonth } = useMonthSelection();
+
   const { sidebarWidth } = useSidebar();
 
   // Profile state
@@ -250,12 +250,6 @@ const Settings = () => {
             <ThemeSettings
               theme={theme}
               setTheme={setTheme}
-              selectedYear={selectedYear}
-              selectedMonth={selectedMonth}
-              isCurrentMonth={isCurrentMonth}
-              goToCurrentMonth={goToCurrentMonth}
-              monthStartDay={household?.month_start_day ?? 1}
-              onMonthStartDayChange={updateMonthStartDay}
             />
           </section>
 

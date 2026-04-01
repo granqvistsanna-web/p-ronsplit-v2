@@ -101,19 +101,19 @@ const Sparande = () => {
     return (
       <div className={`pt-14 lg:pt-0 ${sidebarWidth}`}>
         <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
-          <div className="mb-6 animate-fade-in">
+          <div className="mb-6">
             <div className="flex items-center justify-between gap-2">
-              <div className="h-8 w-32 bg-muted rounded animate-pulse" />
-              <div className="h-10 w-48 bg-muted rounded animate-pulse" />
+              <div className="h-8 w-32 rounded-md skeleton-shimmer" />
+              <div className="h-10 w-48 rounded-md skeleton-shimmer" />
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {[1, 2].map(i => (
-              <Card key={i} className="animate-pulse">
+              <Card key={i}>
                 <CardContent className="p-6">
-                  <div className="h-6 w-3/4 bg-muted rounded mb-4" />
-                  <div className="h-4 w-full bg-muted rounded mb-2" />
-                  <div className="h-4 w-2/3 bg-muted rounded" />
+                  <div className="h-6 w-3/4 rounded-md skeleton-shimmer mb-4" />
+                  <div className="h-4 w-full rounded-md skeleton-shimmer mb-2" style={{ animationDelay: `${i * 100}ms` }} />
+                  <div className="h-4 w-2/3 rounded-md skeleton-shimmer" style={{ animationDelay: `${i * 150}ms` }} />
                 </CardContent>
               </Card>
             ))}

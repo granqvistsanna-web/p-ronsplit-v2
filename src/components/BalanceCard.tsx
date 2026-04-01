@@ -8,14 +8,15 @@ import { Settlement } from "@/hooks/useSettlements";
 import { calculateBalance, getBalanceBreakdown } from "@/lib/balanceUtils";
 import { SettlementModal } from "@/components/SettlementModal";
 import { Check, Users, Loader2, ChevronDown, ChevronUp, Smartphone } from "lucide-react";
+import type { Period } from "@/lib/types";
+import { isDateInPeriod } from "@/hooks/usePeriods";
 
 interface BalanceCardProps {
   expenses: Expense[];
   incomes: Income[];
   members: GroupMember[];
   settlements: Settlement[];
-  selectedYear: number;
-  selectedMonth: number;
+  selectedPeriod: Period | null;
   onSettle: (fromUser: string, toUser: string, amount: number) => Promise<void>;
   isSettling?: boolean;
 }
@@ -25,8 +26,7 @@ export function BalanceCard({
   incomes,
   members,
   settlements,
-  selectedYear,
-  selectedMonth,
+  selectedPeriod,
   onSettle,
   isSettling = false,
 }: BalanceCardProps) {
@@ -38,27 +38,22 @@ export function BalanceCard({
     return new Map(members.map((m) => [m.user_id, m]));
   }, [members]);
 
-  // Filter settlements for the selected month
-  const monthlySettlements = useMemo(() => {
-    return settlements.filter((s) => {
-      // Parse date string directly to avoid timezone issues
-      // s.date format: "YYYY-MM-DD" or "YYYY-MM-DDTHH:mm:ss"
-      const [datePart] = s.date.split('T');
-      const [year, month] = datePart.split('-').map(Number);
-      return year === selectedYear && month === selectedMonth;
-    });
-  }, [settlements, selectedYear, selectedMonth]);
+  // Filter settlements for the selected period
+  const periodSettlements = useMemo(() => {
+    if (!selectedPeriod) return [];
+    return settlements.filter((s) => isDateInPeriod(s.date, selectedPeriod));
+  }, [settlements, selectedPeriod]);
 
   // Calculate balances from expenses, incomes, and settlements
   const adjustedBalances = useMemo(
-    () => calculateBalance(expenses, members, monthlySettlements, incomes),
-    [expenses, members, monthlySettlements, incomes]
+    () => calculateBalance(expenses, members, periodSettlements, incomes),
+    [expenses, members, periodSettlements, incomes]
   );
 
   // Get detailed breakdown for display
   const breakdown = useMemo(
-    () => getBalanceBreakdown(expenses, members, monthlySettlements, incomes),
-    [expenses, members, monthlySettlements, incomes]
+    () => getBalanceBreakdown(expenses, members, periodSettlements, incomes),
+    [expenses, members, periodSettlements, incomes]
   );
 
   // Find who owes whom based on final balance
@@ -117,18 +112,18 @@ export function BalanceCard({
               <div className="min-w-0 flex-1">
                 <p className="font-medium text-foreground text-sm sm:text-base">Ni är jämna!</p>
                 <p className="text-xs sm:text-sm text-muted-foreground">
-                  Inga utestående skulder denna månad.
+                  Inga utestående skulder denna period.
                 </p>
               </div>
             </div>
 
-            {monthlySettlements.length > 0 && (
+            {periodSettlements.length > 0 && (
               <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-border/60">
                 <p className="text-label-mono mb-2">
-                  Avräkningar denna månad
+                  Avräkningar denna period
                 </p>
                 <div className="space-y-1.5">
-                  {monthlySettlements.map((s) => {
+                  {periodSettlements.map((s) => {
                     const from = memberMap.get(s.from_user);
                     const to = memberMap.get(s.to_user);
                     return (
@@ -229,7 +224,7 @@ export function BalanceCard({
                   ) : (
                     <div className="text-center py-4">
                       <p className="text-sm text-muted-foreground">
-                        Ingen data att visa för denna månad
+                        Ingen data att visa för denna period
                       </p>
                     </div>
                   )}
@@ -278,13 +273,13 @@ export function BalanceCard({
             </div>
 
             {/* Settlement history for this month */}
-            {monthlySettlements.length > 0 && (
+            {periodSettlements.length > 0 && (
               <div className="pt-3 sm:pt-4 border-t border-border/60">
                 <p className="text-label-mono mb-2">
-                  Avräkningar denna månad
+                  Avräkningar denna period
                 </p>
                 <div className="space-y-1.5">
-                  {monthlySettlements.map((s) => {
+                  {periodSettlements.map((s) => {
                     const from = memberMap.get(s.from_user);
                     const to = memberMap.get(s.to_user);
                     return (

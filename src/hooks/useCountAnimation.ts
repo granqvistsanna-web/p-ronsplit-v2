@@ -4,6 +4,8 @@ interface UseCountAnimationOptions {
   duration?: number;
   delay?: number;
   easing?: (t: number) => number;
+  /** If true, re-animates from the previous value when endValue changes */
+  animateOnChange?: boolean;
 }
 
 // Notion-style easing function (ease-out-cubic)
@@ -15,20 +17,28 @@ export const useCountAnimation = (
   endValue: number,
   options: UseCountAnimationOptions = {}
 ): number => {
-  const { duration = 1200, delay = 0, easing = defaultEasing } = options;
+  const { duration = 1200, delay = 0, easing = defaultEasing, animateOnChange = false } = options;
   const [count, setCount] = useState(0);
   const frameRef = useRef<number>();
   const startTimeRef = useRef<number>();
   const hasAnimatedRef = useRef(false);
+  const previousValueRef = useRef(0);
 
   useEffect(() => {
-    // Only animate once on mount
-    if (hasAnimatedRef.current) {
+    // After initial animation, snap unless animateOnChange is true
+    if (hasAnimatedRef.current && !animateOnChange) {
       setCount(endValue);
       return;
     }
 
+    const startValue = hasAnimatedRef.current ? previousValueRef.current : 0;
     hasAnimatedRef.current = true;
+
+    // Clean up previous animation
+    if (frameRef.current) {
+      cancelAnimationFrame(frameRef.current);
+    }
+    startTimeRef.current = undefined;
 
     const animate = (currentTime: number) => {
       if (!startTimeRef.current) {
@@ -44,12 +54,14 @@ export const useCountAnimation = (
 
       const progress = Math.min(elapsed / duration, 1);
       const easedProgress = easing(progress);
-      const currentCount = easedProgress * endValue;
+      const currentCount = startValue + (endValue - startValue) * easedProgress;
 
       setCount(currentCount);
 
       if (progress < 1) {
         frameRef.current = requestAnimationFrame(animate);
+      } else {
+        previousValueRef.current = endValue;
       }
     };
 
@@ -60,7 +72,7 @@ export const useCountAnimation = (
         cancelAnimationFrame(frameRef.current);
       }
     };
-  }, [endValue, duration, delay, easing]);
+  }, [endValue, duration, delay, easing, animateOnChange]);
 
   return count;
 };
