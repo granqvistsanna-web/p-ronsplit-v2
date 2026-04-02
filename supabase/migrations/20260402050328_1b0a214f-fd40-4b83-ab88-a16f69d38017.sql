@@ -1,0 +1,1 @@
+SELECT id, group_id, from_user, to_user, amount, date, month, created_at FROM public.settlements ORDER BY created_at DESC LIMIT 20
