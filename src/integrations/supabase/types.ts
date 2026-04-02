@@ -397,31 +397,31 @@ export type Database = {
       settlements: {
         Row: {
           amount: number | null
-          created_at: string | null
+          created_at: string
           date: string | null
           from_user: string | null
           group_id: string | null
-          id: string | null
+          id: string
           month: string | null
           to_user: string | null
         }
         Insert: {
           amount?: number | null
-          created_at?: string | null
+          created_at?: string
           date?: string | null
           from_user?: string | null
           group_id?: string | null
-          id?: string | null
+          id?: string
           month?: string | null
           to_user?: string | null
         }
         Update: {
           amount?: number | null
-          created_at?: string | null
+          created_at?: string
           date?: string | null
           from_user?: string | null
           group_id?: string | null
-          id?: string | null
+          id?: string
           month?: string | null
           to_user?: string | null
         }
