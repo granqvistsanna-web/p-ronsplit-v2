@@ -412,19 +412,26 @@ export function useGroups() {
     }
 
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("groups")
         .update({ month_start_day: day })
-        .eq("id", household.id);
+        .eq("id", household.id)
+        .select("month_start_day")
+        .single();
 
       if (error) {
         console.error("Error updating month start day:", error);
         throw error;
       }
 
-      // Update local state
-      setHousehold(prev => prev ? { ...prev, month_start_day: day } : prev);
-      setAllGroups(prev => prev.map(g => g.id === household.id ? { ...g, month_start_day: day } : g));
+      if (!data) {
+        throw new Error("Uppdateringen sparades inte — du kanske inte har behörighet att ändra gruppen.");
+      }
+
+      // Update local state with the confirmed value from DB
+      const confirmedDay = data.month_start_day;
+      setHousehold(prev => prev ? { ...prev, month_start_day: confirmedDay } : prev);
+      setAllGroups(prev => prev.map(g => g.id === household.id ? { ...g, month_start_day: confirmedDay } : g));
       toast.success("Periodstart uppdaterad");
     } catch (error) {
       handleDatabaseError(error, "Kunde inte uppdatera periodstart", {
