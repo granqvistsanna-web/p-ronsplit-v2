@@ -417,7 +417,7 @@ export function useGroups() {
         .update({ month_start_day: day })
         .eq("id", household.id)
         .select("month_start_day")
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error("Error updating month start day:", error);
