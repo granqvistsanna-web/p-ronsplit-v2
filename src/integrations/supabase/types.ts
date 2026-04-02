@@ -140,42 +140,6 @@ export type Database = {
         }
         Relationships: []
       }
-      periods: {
-        Row: {
-          id: string
-          group_id: string
-          name: string
-          start_date: string
-          end_date: string | null
-          is_closed: boolean
-          closed_at: string | null
-          created_at: string
-          created_by: string
-        }
-        Insert: {
-          id?: string
-          group_id: string
-          name: string
-          start_date: string
-          end_date?: string | null
-          is_closed?: boolean
-          closed_at?: string | null
-          created_at?: string
-          created_by: string
-        }
-        Update: {
-          id?: string
-          group_id?: string
-          name?: string
-          start_date?: string
-          end_date?: string | null
-          is_closed?: boolean
-          closed_at?: string | null
-          created_at?: string
-          created_by?: string
-        }
-        Relationships: []
-      }
       incomes: {
         Row: {
           amount: number
@@ -245,6 +209,42 @@ export type Database = {
           id?: string | null
           inviter_id?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      periods: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          created_by: string
+          end_date: string | null
+          group_id: string
+          id: string
+          is_closed: boolean
+          name: string
+          start_date: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          created_by: string
+          end_date?: string | null
+          group_id: string
+          id?: string
+          is_closed?: boolean
+          name: string
+          start_date: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          created_by?: string
+          end_date?: string | null
+          group_id?: string
+          id?: string
+          is_closed?: boolean
+          name?: string
+          start_date?: string
         }
         Relationships: []
       }
