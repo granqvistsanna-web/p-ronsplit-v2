@@ -1,6 +1,5 @@
 import type { Expense } from "@/hooks/useExpenses";
 import type { Income } from "@/hooks/useIncomes";
-import { toKronor } from "@/lib/currency";
 
 export type DuplicateGroup =
   | { type: "expense"; key: string; items: Expense[] }
@@ -116,6 +115,6 @@ export function findDuplicateGroups(
 }
 
 export function formatAmount(value: number, isIncomeOre: boolean): string {
-  const kr = isIncomeOre ? toKronor(value) : value;
+  const kr = isIncomeOre ? value / 100 : value;
   return `${kr.toLocaleString("sv-SE")} kr`;
 }
