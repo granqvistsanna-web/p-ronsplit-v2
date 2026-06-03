@@ -271,6 +271,9 @@ const Index = () => {
             expenses={filteredExpenses}
             incomes={filteredIncomes}
             members={household.members}
+            onEditExpense={handleEditExpense}
+            onEditIncome={handleEditIncome}
+            currentUserId={user?.id}
           />
         </div>
 
