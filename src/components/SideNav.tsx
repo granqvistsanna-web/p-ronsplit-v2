@@ -163,9 +163,7 @@ export function SideNav() {
           )}>
             <Link to="/dashboard" className="flex items-center hover:opacity-70 transition-opacity">
               {isCollapsed ? (
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <span className="text-xl font-bold text-primary">P</span>
-                </div>
+                <img src="/favicon.svg" alt="Päronsplit" className="h-10 w-10 rounded-lg" />
               ) : (
                 <img src={logo} alt="Päronsplit" className="h-14 w-auto object-contain" />
               )}
