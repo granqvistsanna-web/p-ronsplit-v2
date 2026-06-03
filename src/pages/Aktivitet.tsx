@@ -22,9 +22,10 @@ import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
 import { EditSettlementModal } from "@/components/EditSettlementModal";
 import { RecategorizeModal } from "@/components/RecategorizeModal";
+import { DuplicatesModal } from "@/components/DuplicatesModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/useSidebar";
-import { Search, ArrowUpDown, Plus, FileText, Sparkles } from "lucide-react";
+import { Search, ArrowUpDown, Plus, FileText, Sparkles, Copy } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -73,6 +74,7 @@ export default function Aktivitet() {
   const [isEditIncomeModalOpen, setIsEditIncomeModalOpen] = useState(false);
   const [isEditSettlementModalOpen, setIsEditSettlementModalOpen] = useState(false);
   const [isRecategorizeModalOpen, setIsRecategorizeModalOpen] = useState(false);
+  const [isDuplicatesModalOpen, setIsDuplicatesModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
   const [editingSettlement, setEditingSettlement] = useState<Settlement | null>(null);
@@ -379,6 +381,16 @@ export default function Aktivitet() {
                   <span className="sm:hidden">AI</span>
                 </Button>
               )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsDuplicatesModalOpen(true)}
+                className="gap-1.5"
+              >
+                <Copy size={14} />
+                <span className="hidden sm:inline">Hitta dubletter</span>
+                <span className="sm:hidden">Dubletter</span>
+              </Button>
               <HeaderMenu
                 onImportClick={() => setIsImportModalOpen(true)}
                 onSwishClick={() => setIsSwishModalOpen(true)}
@@ -602,6 +614,17 @@ export default function Aktivitet() {
         onClose={() => setIsRecategorizeModalOpen(false)}
         expenses={expenses}
         onApply={handleRecategorize}
+      />
+
+      {/* Duplicates modal */}
+      <DuplicatesModal
+        isOpen={isDuplicatesModalOpen}
+        onClose={() => setIsDuplicatesModalOpen(false)}
+        expenses={expenses}
+        incomes={incomes}
+        members={household.members}
+        onDeleteExpense={handleDeleteExpense}
+        onDeleteIncome={handleDeleteIncome}
       />
     </div>
   );
