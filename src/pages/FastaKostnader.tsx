@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { RecurringSummaryCard, RecurringItemCard } from "@/components/recurring";
 import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
+import { AddTransactionModal } from "@/components/AddTransactionModal";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { toKronor } from "@/lib/currency";
 import { getIncomeTypeLabel, getIncomeTypeIcon } from "@/lib/incomeUtils";
-import { Repeat } from "lucide-react";
+import { Repeat, Plus } from "lucide-react";
 
 type RecurringItem =
   | { type: "expense"; data: Expense }
@@ -25,14 +27,16 @@ interface CategoryGroup {
 export default function FastaKostnader() {
   const { user } = useAuth();
   const { household, loading: householdLoading } = useGroups();
-  const { expenses, loading: expensesLoading, updateExpense, deleteExpense } = useExpenses({ groupId: household?.id || '' });
-  const { incomes, loading: incomesLoading, updateIncome, deleteIncome } = useIncomes({ groupId: household?.id || '' });
+  const { expenses, loading: expensesLoading, addExpense, updateExpense, deleteExpense } = useExpenses({ groupId: household?.id || '' });
+  const { incomes, loading: incomesLoading, addIncome, updateIncome, deleteIncome } = useIncomes({ groupId: household?.id || '' });
   const { sidebarWidth } = useSidebar();
 
   const [isEditExpenseModalOpen, setIsEditExpenseModalOpen] = useState(false);
   const [isEditIncomeModalOpen, setIsEditIncomeModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addType, setAddType] = useState<"expense" | "income">("expense");
 
   const loading = householdLoading || expensesLoading || incomesLoading;
 
@@ -216,10 +220,29 @@ export default function FastaKostnader() {
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <h1 className="text-2xl font-semibold tracking-tight">Återkommande</h1>
-          <p className="text-muted-foreground mt-1">
-            Översikt över dina återkommande utgifter och inkomster
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Återkommande</h1>
+              <p className="text-muted-foreground mt-1">
+                Översikt över dina återkommande utgifter och inkomster
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setAddType("income"); setIsAddModalOpen(true); }}
+              >
+                <Plus size={16} className="mr-1" /> Inkomst
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => { setAddType("expense"); setIsAddModalOpen(true); }}
+              >
+                <Plus size={16} className="mr-1" /> Utgift
+              </Button>
+            </div>
+          </div>
         </div>
 
         {!hasRecurring ? (
@@ -315,6 +338,22 @@ export default function FastaKostnader() {
         onDelete={handleDeleteIncome}
         income={editingIncome}
         members={household?.members || []}
+      />
+
+      {/* Add Recurring Transaction Modal */}
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddExpense={async (expense) => {
+          await addExpense(expense);
+        }}
+        onAddIncome={async (income) => {
+          return await addIncome(income);
+        }}
+        groupId={household?.id || ''}
+        members={household?.members || []}
+        defaultType={addType}
+        defaultRepeat="monthly"
       />
     </div>
   );

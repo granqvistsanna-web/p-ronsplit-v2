@@ -4,12 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
-import { useBudgets } from "@/hooks/useBudgets";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useFilterParams } from "@/hooks/useFilterParams";
 import { ChevronRight } from "lucide-react";
-import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection, BudgetOverviewSection, BudgetCategoryList } from "@/components/analytics";
-import { BudgetSettingsModal } from "@/components/BudgetSettingsModal";
+import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection } from "@/components/analytics";
 import { FilterBar } from "@/components/filters";
 import { format, subMonths } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -27,19 +25,11 @@ export default function Analys() {
     dateRange,
     memberIds,
   });
-  const { budgets, loading: budgetsLoading, saveBudget } = useBudgets({
-    groupId: household?.id || '',
-  });
   const { sidebarWidth } = useSidebar();
 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [showBudgetSettings, setShowBudgetSettings] = useState(false);
 
   const loading = householdLoading || expensesLoading || incomesLoading;
-
-  // Current year and month for budget calculations
-  const currentYear = dateRange.end.getFullYear();
-  const currentMonth = dateRange.end.getMonth();
 
   // Calculate totals (server-side filtered data)
   const totals = useMemo(() => {
@@ -335,7 +325,7 @@ export default function Analys() {
                       <p className="text-xs text-muted-foreground mt-3">
                         {totals.netto >= 0
                           ? `Sparar ${((totals.netto / totals.totalIncomes) * 100).toFixed(0)}% av inkomsten`
-                          : `Överskrider budget med ${((-totals.netto / totals.totalIncomes) * 100).toFixed(0)}%`
+                          : `Underskott på ${((-totals.netto / totals.totalIncomes) * 100).toFixed(0)}% av inkomsten`
                         }
                       </p>
                     </div>
@@ -422,49 +412,7 @@ export default function Analys() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Budget Section */}
-        <div className="mt-12 animate-fade-in" style={{ animationDelay: '160ms' }}>
-          <h2 className="text-xl font-semibold tracking-tight mb-6">Budget</h2>
-
-          {/* Budget Overview */}
-          <div className="mb-6">
-            <BudgetOverviewSection
-              budgets={budgets}
-              expenses={expenses}
-              year={currentYear}
-              period="yearly"
-              onEditBudgets={() => setShowBudgetSettings(true)}
-              loading={budgetsLoading}
-            />
-          </div>
-
-          {/* Budget by Category */}
-          {budgets.length > 0 && (
-            <BudgetCategoryList
-              budgets={budgets}
-              expenses={expenses}
-              year={currentYear}
-              loading={budgetsLoading}
-            />
-          )}
-        </div>
       </main>
-
-      {/* Budget Settings Modal */}
-      <BudgetSettingsModal
-        isOpen={showBudgetSettings}
-        onClose={() => setShowBudgetSettings(false)}
-        onSave={async (budgetsToSave) => {
-          for (const budget of budgetsToSave) {
-            await saveBudget(budget);
-          }
-        }}
-        groupId={household?.id || ''}
-        existingBudgets={budgets}
-        expenses={expenses}
-        period="yearly"
-      />
     </div>
   );
 }
