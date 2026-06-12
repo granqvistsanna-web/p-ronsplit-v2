@@ -32,6 +32,7 @@ interface AddTransactionModalProps {
   groupId: string;
   members: GroupMember[];
   defaultType?: "expense" | "income";
+  defaultRepeat?: RepeatInterval;
 }
 
 const INCOME_TYPES: IncomeType[] = ["salary", "bonus", "benefit", "fkassa", "bidrag", "other"];
@@ -44,6 +45,7 @@ export function AddTransactionModal({
   groupId,
   members,
   defaultType = "expense",
+  defaultRepeat = "none",
 }: AddTransactionModalProps) {
   const { user } = useAuth();
 
@@ -53,7 +55,15 @@ export function AddTransactionModal({
   // Common fields
   const [amount, setAmount] = useState("");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [repeat, setRepeat] = useState<RepeatInterval>("none");
+  const [repeat, setRepeat] = useState<RepeatInterval>(defaultRepeat);
+
+  // Sync repeat with defaultRepeat whenever the modal is opened
+  useEffect(() => {
+    if (isOpen) {
+      setRepeat(defaultRepeat);
+      setTransactionType(defaultType);
+    }
+  }, [isOpen, defaultRepeat, defaultType]);
 
   // Expense-specific fields
   const [category, setCategory] = useState(DEFAULT_CATEGORIES[0].id);
@@ -142,7 +152,7 @@ export function AddTransactionModal({
   const resetForm = () => {
     setAmount("");
     setDate(new Date().toISOString().split("T")[0]);
-    setRepeat("none");
+    setRepeat(defaultRepeat);
     setCategory(DEFAULT_CATEGORIES[0].id);
     setDescription("");
     setDistributionMode("equal");
