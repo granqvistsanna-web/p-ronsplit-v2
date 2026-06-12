@@ -138,19 +138,48 @@ export default function Aktivitet() {
     return items;
   }, [expenses, incomes, settlements, selectedPeriod]);
 
-  // Filter by search query
+  // Filter by search query, member, and type
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return combinedItems;
+    let result = combinedItems;
 
-    const query = searchQuery.toLowerCase();
-    return combinedItems.filter(item => {
-      const description = item.description.toLowerCase();
-      const category = item.category?.toLowerCase() || '';
-      const amount = item.amount.toString();
+    // Type filter
+    if (selectedTypes.length < 3) {
+      result = result.filter(item => selectedTypes.includes(item.type));
+    }
 
-      return description.includes(query) || category.includes(query) || amount.includes(query);
-    });
-  }, [combinedItems, searchQuery]);
+    // Member filter
+    if (selectedMemberIds.length > 0 && household) {
+      result = result.filter(item => {
+        if (item.type === 'expense') {
+          const expense = item.data as Expense;
+          return selectedMemberIds.includes(expense.paid_by);
+        }
+        if (item.type === 'income') {
+          const income = item.data as Income;
+          return selectedMemberIds.includes(income.recipient);
+        }
+        if (item.type === 'settlement') {
+          const settlement = item.data as Settlement;
+          return selectedMemberIds.includes(settlement.from_user) || selectedMemberIds.includes(settlement.to_user);
+        }
+        return false;
+      });
+    }
+
+    // Search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(item => {
+        const description = item.description.toLowerCase();
+        const category = item.category?.toLowerCase() || '';
+        const amount = item.amount.toString();
+
+        return description.includes(query) || category.includes(query) || amount.includes(query);
+      });
+    }
+
+    return result;
+  }, [combinedItems, searchQuery, selectedMemberIds, selectedTypes, household]);
 
   // Sort items
   const sortedItems = useMemo(() => {
