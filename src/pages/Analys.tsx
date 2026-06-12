@@ -325,7 +325,7 @@ export default function Analys() {
                       <p className="text-xs text-muted-foreground mt-3">
                         {totals.netto >= 0
                           ? `Sparar ${((totals.netto / totals.totalIncomes) * 100).toFixed(0)}% av inkomsten`
-                          : `Överskrider budget med ${((-totals.netto / totals.totalIncomes) * 100).toFixed(0)}%`
+                          : `Underskott på ${((-totals.netto / totals.totalIncomes) * 100).toFixed(0)}% av inkomsten`
                         }
                       </p>
                     </div>
