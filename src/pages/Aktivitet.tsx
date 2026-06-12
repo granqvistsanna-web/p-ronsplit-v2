@@ -185,6 +185,22 @@ export default function Aktivitet() {
   const sortedItems = useMemo(() => {
     const sorted = [...filteredItems];
 
+    const getMemberName = (item: typeof sorted[0]) => {
+      if (!household) return '';
+      if (item.type === 'expense') {
+        return household.members.find(m => m.user_id === (item.data as Expense).paid_by)?.name || '';
+      }
+      if (item.type === 'income') {
+        return household.members.find(m => m.user_id === (item.data as Income).recipient)?.name || '';
+      }
+      if (item.type === 'settlement') {
+        const s = item.data as Settlement;
+        const from = household.members.find(m => m.user_id === s.from_user)?.name || '';
+        return from;
+      }
+      return '';
+    };
+
     sorted.sort((a, b) => {
       let comparison = 0;
 
@@ -198,13 +214,16 @@ export default function Aktivitet() {
         case "category":
           comparison = (a.category || '').localeCompare(b.category || '');
           break;
+        case "member":
+          comparison = getMemberName(a).localeCompare(getMemberName(b));
+          break;
       }
 
       return sortDirection === "asc" ? comparison : -comparison;
     });
 
     return sorted;
-  }, [filteredItems, sortBy, sortDirection]);
+  }, [filteredItems, sortBy, sortDirection, household]);
 
   // Group by month
   const groupedByMonth = useMemo(() => {
