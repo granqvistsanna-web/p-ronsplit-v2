@@ -470,16 +470,93 @@ export default function Aktivitet() {
               />
             </div>
 
+            {/* Type filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 gap-1.5">
+                  <Filter size={14} />
+                  <span className="hidden sm:inline">Typ</span>
+                  {selectedTypes.length < 3 && (
+                    <span className="ml-0.5 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                      {selectedTypes.length}
+                    </span>
+                  )}
+                  <ChevronDown size={14} className="opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-48 p-2" align="end">
+                <div className="space-y-1">
+                  {[
+                    { value: 'expense' as TransactionType, label: 'Utgift' },
+                    { value: 'income' as TransactionType, label: 'Inkomst' },
+                    { value: 'settlement' as TransactionType, label: 'Avräkning' },
+                  ].map((t) => (
+                    <label
+                      key={t.value}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent cursor-pointer text-sm"
+                    >
+                      <Checkbox
+                        checked={selectedTypes.includes(t.value)}
+                        onCheckedChange={(checked) => {
+                          setSelectedTypes(prev =>
+                            checked ? [...prev, t.value] : prev.filter(v => v !== t.value)
+                          );
+                        }}
+                      />
+                      {t.label}
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {/* Member filter */}
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-9 gap-1.5">
+                  <Users size={14} />
+                  <span className="hidden sm:inline">Medlem</span>
+                  {selectedMemberIds.length > 0 && (
+                    <span className="ml-0.5 h-4 w-4 rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center">
+                      {selectedMemberIds.length}
+                    </span>
+                  )}
+                  <ChevronDown size={14} className="opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-56 p-2" align="end">
+                <div className="space-y-1">
+                  {household.members.map((member) => (
+                    <label
+                      key={member.user_id}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md hover:bg-accent cursor-pointer text-sm"
+                    >
+                      <Checkbox
+                        checked={selectedMemberIds.includes(member.user_id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedMemberIds(prev =>
+                            checked ? [...prev, member.user_id] : prev.filter(id => id !== member.user_id)
+                          );
+                        }}
+                      />
+                      {member.name}
+                    </label>
+                  ))}
+                </div>
+              </PopoverContent>
+            </Popover>
+
             {/* Sort options */}
             <div className="flex gap-2">
               <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-                <SelectTrigger className="h-9 w-full sm:w-[120px]">
+                <SelectTrigger className="h-9 w-full sm:w-[130px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="date">Datum</SelectItem>
                   <SelectItem value="amount">Summa</SelectItem>
                   <SelectItem value="category">Kategori</SelectItem>
+                  <SelectItem value="member">Medlem</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="icon" onClick={toggleSortDirection} className="h-9 w-9 shrink-0">
@@ -488,10 +565,54 @@ export default function Aktivitet() {
             </div>
           </div>
 
+          {/* Active filter chips */}
+          {(selectedMemberIds.length > 0 || selectedTypes.length < 3 || searchQuery) && (
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  "{searchQuery}" <X size={12} />
+                </button>
+              )}
+              {selectedTypes.length < 3 && selectedTypes.map(t => (
+                <button
+                  key={t}
+                  onClick={() => setSelectedTypes(prev => prev.filter(v => v !== t))}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {t === 'expense' ? 'Utgift' : t === 'income' ? 'Inkomst' : 'Avräkning'} <X size={12} />
+                </button>
+              ))}
+              {selectedMemberIds.map(id => {
+                const member = household.members.find(m => m.user_id === id);
+                return member ? (
+                  <button
+                    key={id}
+                    onClick={() => setSelectedMemberIds(prev => prev.filter(mId => mId !== id))}
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    {member.name} <X size={12} />
+                  </button>
+                ) : null;
+              })}
+              <button
+                onClick={() => {
+                  setSearchQuery('');
+                  setSelectedMemberIds([]);
+                  setSelectedTypes(['expense', 'income', 'settlement']);
+                }}
+                className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2"
+              >
+                Återställ filter
+              </button>
+            </div>
+          )}
+
           {/* Results count */}
           <div className="mt-2 text-caption text-xs">
             {filteredItems.length} {filteredItems.length === 1 ? 'aktivitet' : 'aktiviteter'}
-            {searchQuery && ` för "${searchQuery}"`}
           </div>
         </div>
 
