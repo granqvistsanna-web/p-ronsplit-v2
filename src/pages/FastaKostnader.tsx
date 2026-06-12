@@ -7,10 +7,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { RecurringSummaryCard, RecurringItemCard } from "@/components/recurring";
 import { EditExpenseModal } from "@/components/EditExpenseModal";
 import { EditIncomeModal } from "@/components/EditIncomeModal";
+import { AddTransactionModal } from "@/components/AddTransactionModal";
+import { Button } from "@/components/ui/button";
 import { DEFAULT_CATEGORIES } from "@/lib/types";
 import { toKronor } from "@/lib/currency";
 import { getIncomeTypeLabel, getIncomeTypeIcon } from "@/lib/incomeUtils";
-import { Repeat } from "lucide-react";
+import { Repeat, Plus } from "lucide-react";
 
 type RecurringItem =
   | { type: "expense"; data: Expense }
@@ -25,14 +27,16 @@ interface CategoryGroup {
 export default function FastaKostnader() {
   const { user } = useAuth();
   const { household, loading: householdLoading } = useGroups();
-  const { expenses, loading: expensesLoading, updateExpense, deleteExpense } = useExpenses({ groupId: household?.id || '' });
-  const { incomes, loading: incomesLoading, updateIncome, deleteIncome } = useIncomes({ groupId: household?.id || '' });
+  const { expenses, loading: expensesLoading, addExpense, updateExpense, deleteExpense } = useExpenses({ groupId: household?.id || '' });
+  const { incomes, loading: incomesLoading, addIncome, updateIncome, deleteIncome } = useIncomes({ groupId: household?.id || '' });
   const { sidebarWidth } = useSidebar();
 
   const [isEditExpenseModalOpen, setIsEditExpenseModalOpen] = useState(false);
   const [isEditIncomeModalOpen, setIsEditIncomeModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [editingIncome, setEditingIncome] = useState<Income | null>(null);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addType, setAddType] = useState<"expense" | "income">("expense");
 
   const loading = householdLoading || expensesLoading || incomesLoading;
 
