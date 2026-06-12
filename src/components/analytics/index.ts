@@ -6,5 +6,3 @@ export { CategoryChartSection } from "./CategoryChartSection";
 export { TransactionList } from "./TransactionList";
 export { CategoryDrillDown } from "./CategoryDrillDown";
 export type { SelectedCategory } from "./CategoryDrillDown";
-export { BudgetOverviewSection } from "./BudgetOverviewSection";
-export { BudgetCategoryList } from "./BudgetCategoryList";
