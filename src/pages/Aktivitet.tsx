@@ -3,6 +3,7 @@ import { toKronor } from "@/lib/currency";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AddFab } from "@/components/AddFab";
 import { PullToRefresh } from "@/components/PullToRefresh";
 import { HeaderMenu } from "@/components/HeaderMenu";
@@ -25,7 +26,7 @@ import { RecategorizeModal } from "@/components/RecategorizeModal";
 import { DuplicatesModal } from "@/components/DuplicatesModal";
 import { useAuth } from "@/hooks/useAuth";
 import { useSidebar } from "@/hooks/useSidebar";
-import { Search, ArrowUpDown, Plus, FileText, Sparkles, Copy } from "lucide-react";
+import { Search, ArrowUpDown, Plus, FileText, Sparkles, Copy, Users, Filter, ChevronDown, X } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -33,8 +34,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-type SortOption = "date" | "amount" | "category";
+type SortOption = "date" | "amount" | "category" | "member";
+type TransactionType = "expense" | "income" | "settlement";
 type SortDirection = "asc" | "desc";
 
 const MONTHS = [
