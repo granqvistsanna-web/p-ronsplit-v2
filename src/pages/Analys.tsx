@@ -4,12 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useGroups } from "@/hooks/useGroups";
 import { useExpenses } from "@/hooks/useExpenses";
 import { useIncomes } from "@/hooks/useIncomes";
-import { useBudgets } from "@/hooks/useBudgets";
 import { useSidebar } from "@/hooks/useSidebar";
 import { useFilterParams } from "@/hooks/useFilterParams";
 import { ChevronRight } from "lucide-react";
-import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection, BudgetOverviewSection, BudgetCategoryList } from "@/components/analytics";
-import { BudgetSettingsModal } from "@/components/BudgetSettingsModal";
+import { TrendChart, CategoryDonut, CategoryLegend, ComparisonBar, CategoryChartSection } from "@/components/analytics";
 import { FilterBar } from "@/components/filters";
 import { format, subMonths } from "date-fns";
 import { sv } from "date-fns/locale";
@@ -27,19 +25,11 @@ export default function Analys() {
     dateRange,
     memberIds,
   });
-  const { budgets, loading: budgetsLoading, saveBudget } = useBudgets({
-    groupId: household?.id || '',
-  });
   const { sidebarWidth } = useSidebar();
 
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
-  const [showBudgetSettings, setShowBudgetSettings] = useState(false);
 
   const loading = householdLoading || expensesLoading || incomesLoading;
-
-  // Current year and month for budget calculations
-  const currentYear = dateRange.end.getFullYear();
-  const currentMonth = dateRange.end.getMonth();
 
   // Calculate totals (server-side filtered data)
   const totals = useMemo(() => {
