@@ -220,10 +220,29 @@ export default function FastaKostnader() {
       <main className="container max-w-6xl py-6 px-4 sm:px-6 pb-6 lg:pb-8">
         {/* Header */}
         <div className="mb-8 animate-fade-in">
-          <h1 className="text-2xl font-semibold tracking-tight">Återkommande</h1>
-          <p className="text-muted-foreground mt-1">
-            Översikt över dina återkommande utgifter och inkomster
-          </p>
+          <div className="flex items-start justify-between gap-4 flex-wrap">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">Återkommande</h1>
+              <p className="text-muted-foreground mt-1">
+                Översikt över dina återkommande utgifter och inkomster
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => { setAddType("income"); setIsAddModalOpen(true); }}
+              >
+                <Plus size={16} className="mr-1" /> Inkomst
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => { setAddType("expense"); setIsAddModalOpen(true); }}
+              >
+                <Plus size={16} className="mr-1" /> Utgift
+              </Button>
+            </div>
+          </div>
         </div>
 
         {!hasRecurring ? (
@@ -319,6 +338,22 @@ export default function FastaKostnader() {
         onDelete={handleDeleteIncome}
         income={editingIncome}
         members={household?.members || []}
+      />
+
+      {/* Add Recurring Transaction Modal */}
+      <AddTransactionModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddExpense={async (expense) => {
+          await addExpense(expense);
+        }}
+        onAddIncome={async (income) => {
+          return await addIncome(income);
+        }}
+        groupId={household?.id || ''}
+        members={household?.members || []}
+        defaultType={addType}
+        defaultRepeat="monthly"
       />
     </div>
   );
