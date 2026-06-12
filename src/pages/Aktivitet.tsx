@@ -74,6 +74,8 @@ export default function Aktivitet() {
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([]);
+  const [selectedTypes, setSelectedTypes] = useState<TransactionType[]>(["expense", "income", "settlement"]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [isSwishModalOpen, setIsSwishModalOpen] = useState(false);
