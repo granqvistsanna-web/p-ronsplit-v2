@@ -412,49 +412,7 @@ export default function Analys() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Budget Section */}
-        <div className="mt-12 animate-fade-in" style={{ animationDelay: '160ms' }}>
-          <h2 className="text-xl font-semibold tracking-tight mb-6">Budget</h2>
-
-          {/* Budget Overview */}
-          <div className="mb-6">
-            <BudgetOverviewSection
-              budgets={budgets}
-              expenses={expenses}
-              year={currentYear}
-              period="yearly"
-              onEditBudgets={() => setShowBudgetSettings(true)}
-              loading={budgetsLoading}
-            />
-          </div>
-
-          {/* Budget by Category */}
-          {budgets.length > 0 && (
-            <BudgetCategoryList
-              budgets={budgets}
-              expenses={expenses}
-              year={currentYear}
-              loading={budgetsLoading}
-            />
-          )}
-        </div>
       </main>
-
-      {/* Budget Settings Modal */}
-      <BudgetSettingsModal
-        isOpen={showBudgetSettings}
-        onClose={() => setShowBudgetSettings(false)}
-        onSave={async (budgetsToSave) => {
-          for (const budget of budgetsToSave) {
-            await saveBudget(budget);
-          }
-        }}
-        groupId={household?.id || ''}
-        existingBudgets={budgets}
-        expenses={expenses}
-        period="yearly"
-      />
     </div>
   );
 }
